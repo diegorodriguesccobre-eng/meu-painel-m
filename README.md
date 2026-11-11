@@ -1,11 +1,12 @@
-# Meu Painel M
+# Conduz Cobre — Painel de precificação
 
-Painel em português para precificar produtos e kits no Mercado Livre e na Shopee.
+Painel da Conduz Cobre, em português, para precificar produtos e kits no Mercado Livre e na Shopee.
 Funciona no computador e no celular, com dados salvos no navegador, sem login ou backend.
 
 ## Usar no computador
 
 Abra `index.html` no Chrome, Edge ou outro navegador moderno. Não é necessário instalar nada.
+A logo fornecida da Conduz Cobre está incorporada no HTML, sem depender de outro arquivo ou de internet.
 As instruções de todas as funções estão em [LEIA-ME.txt](LEIA-ME.txt).
 
 ## Recursos
