@@ -13,7 +13,7 @@ As instruções de todas as funções estão em [LEIA-ME.txt](LEIA-ME.txt).
 - Cadastro de produtos com custo, peso, categoria, margem, outros custos e frete.
 - Comparação de preços no Mercado Livre Clássico, Mercado Livre Premium e Shopee.
 - Comissões, taxas fixas, impostos e adicionais configuráveis.
-- Opções da Shopee por produto e kit: Devolução Fácil e eventos oficiais.
+- Duas caixas na área de taxas da Shopee para ativar Devolução Fácil e eventos oficiais.
 - Frete específico do Mercado Livre quando o preço sem esse frete ultrapassa R$ 100.
 - Preço mínimo para manter 10% de margem; alerta abaixo de 15% de margem desejada.
 - Busca, ordenação, tabela no computador e cartões em telas pequenas.
@@ -23,7 +23,9 @@ As instruções de todas as funções estão em [LEIA-ME.txt](LEIA-ME.txt).
 
 As taxas iniciais são ilustrativas. Ajuste-as às condições dos seus anúncios.
 Devolução Fácil começa em R$ 0,49 por venda e eventos oficiais em 2,50 pontos percentuais,
-conforme o modelo solicitado; ambos são editáveis e aplicados quando selecionados.
+conforme o modelo solicitado; ambos são editáveis e aplicados quando as caixas dos
+serviços integrados estão marcadas. Após salvar as taxas, a configuração vale para
+todos os produtos e kits. Desmarcar uma caixa retira somente o respectivo adicional.
 
 ## Publicar no Netlify usando o GitHub
 

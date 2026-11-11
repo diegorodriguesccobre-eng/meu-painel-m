@@ -47,10 +47,10 @@ Se a gravação no navegador falhar, os dados atuais são mantidos.
 Você pode transferir o .json para outro computador ou celular e restaurar no painel
 desse aparelho. Não é preciso login, servidor ou internet. Limite por backup: 20 MB.
 Backups antigos, anteriores à tela de kits, continuam aceitos: eles restauram uma
-lista vazia de kits. Os novos backups usam a versão 3 do formato, incluindo
-comissões e opções da Shopee. As versões 1 e 2 continuam aceitas.
+lista vazia de kits. Os novos backups usam a versão 4 do formato, incluindo
+as duas caixas de serviços da Shopee. As versões 1, 2 e 3 continuam aceitas.
 
-MODALIDADES E ADICIONAIS POR PRODUTO
+MODALIDADES E SERVIÇOS INTEGRADOS
 Em “Taxas dos marketplaces”, preencha a comissão Clássica e a Premium do Mercado
 Livre. A tabela passa a ter preços separados para ML Clássico, ML Premium e Shopee.
 O imposto e a taxa fixa do Mercado Livre valem para ambas as modalidades. O limite
@@ -59,21 +59,26 @@ de frete acima de R$ 100 é avaliado separadamente em cada preço e no mínimo d
 Na Shopee, informe a comissão e a taxa fixa base. Os campos de adicionais começam
 em R$ 0,49 para Devolução Fácil e 2,50 pontos percentuais para eventos oficiais,
 conforme a regra solicitada. Eles podem ser editados em “Taxas dos marketplaces”.
-No cadastro/edição de cada produto, responda às duas perguntas da Shopee:
-- Tem Devolução Fácil? Se marcar, acrescenta R$ 0,49 à taxa fixa por venda.
-- Vem de eventos oficiais? Se marcar, acrescenta 2,50 pontos percentuais à comissão.
+Na área de taxas da Shopee, há duas caixas em “Serviços integrados à Shopee”:
+- Devolução Fácil integrada: se marcar, acrescenta R$ 0,49 à taxa fixa por venda.
+- Participação em Eventos Oficiais: se marcar, acrescenta 2,50 pontos à comissão.
+Depois clique em “Salvar taxas”. A configuração vale para todos os produtos e kits.
+Marque apenas os serviços integrados à sua operação. Caixas desmarcadas não geram
+adicionais. Desmarcar mantém o valor configurado para quando você ativar novamente.
 Exemplo: comissão base de 20% passa para 22,50%; não é 2,50% de 20%.
 Os dois adicionais podem ser ativados juntos e não alteram os preços do Mercado Livre.
 
-As tabelas e os cartões mostram as respostas, a comissão efetiva, a taxa fixa efetiva
+As tabelas e os cartões mostram os serviços ativos, a comissão efetiva, a taxa fixa efetiva
 e o imposto usados. O CSV separa as três modalidades e inclui as escolhas da Shopee.
-O preço mínimo para 10% considera os mesmos adicionais. Os kits têm suas próprias
-perguntas: as escolhas dos produtos componentes não são herdadas pelo anúncio do kit.
+O preço mínimo para 10% considera os mesmos adicionais. Os kits usam a mesma
+configuração global de serviços integrada à Shopee.
 A Devolução Fácil é cobrada uma vez por venda do kit, não por produto dentro dele.
 
 Cadastros antigos mantêm a comissão anterior como Clássica e como Premium até você
-editar e salvar os valores. As opções da Shopee começam desmarcadas nos produtos
-existentes e nos importados por CSV. O backup completo guarda as escolhas e as taxas.
+editar e salvar os valores. As duas caixas da Shopee começam desmarcadas quando
+não há configuração de integração salva. As antigas marcações individuais dos
+produtos/kits foram substituídas pelas caixas globais e não ativam serviços.
+Confira as integrações na área de taxas e salve. O backup guarda as caixas e as taxas.
 
 Teste com custo R$ 30, margem 20%, comissão Shopee 20%, imposto 6%, taxa fixa R$ 4:
 Sem adicionais: R$ 62,97; só Devolução Fácil: R$ 63,88; só evento: R$ 66,02;
