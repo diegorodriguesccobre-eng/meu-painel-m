@@ -47,8 +47,9 @@ Se a gravação no navegador falhar, os dados atuais são mantidos.
 Você pode transferir o .json para outro computador ou celular e restaurar no painel
 desse aparelho. Não é preciso login, servidor ou internet. Limite por backup: 20 MB.
 Backups antigos, anteriores à tela de kits, continuam aceitos: eles restauram uma
-lista vazia de kits. Os novos backups usam a versão 6 do formato, incluindo
-as taxas preservadas por produto e kit. As versões 1, 2, 3, 4 e 5 continuam aceitas.
+lista vazia de kits. Os novos backups usam a versão 7 do formato, incluindo
+os vínculos com anúncios e as taxas preservadas por produto e kit.
+As versões 1, 2, 3, 4, 5 e 6 continuam aceitas.
 
 TAXAS PRESERVADAS POR PRODUTO
 Cada produto guarda uma cópia das comissões Clássica e Premium, taxas fixas,
@@ -204,3 +205,14 @@ O fone fica em vermelho por ter margem de 12%.
 Os resultados detalhados ficam em resultados-testes.json.
 Para repetir os testes de cálculo com Node instalado: node validar.cjs.
 Node não é necessário para usar o painel.
+
+VINCULAR ANÚNCIOS DO MERCADO LIVRE
+Abra o painel publicado e use “Conectar Mercado Livre”. No cadastro do produto,
+use “Escolher do meu catálogo” ou informe o ID MLB/link do anúncio.
+Confira os dados importados, informe o custo de compra e a margem e abra
+“Taxas deste produto” para ajustar as métricas desejadas. Salve para confirmar.
+O preço anunciado é referência, não custo de compra. Peso ausente deve ser informado.
+As consultas não alteram o anúncio no Mercado Livre. O vínculo e as taxas são salvos
+no navegador e no backup; a sessão e as credenciais não entram no backup.
+Esta integração opcional requer configuração das Functions e autorização da conta.
+Veja CONFIGURAR_MERCADO_LIVRE.md para ativar. Sem a conexão, o cadastro manual funciona.

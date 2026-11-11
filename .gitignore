@@ -4,5 +4,6 @@ resultados-testes.json
 .netlify/
 .env
 .env.*
+!.env.example
 *.log
 

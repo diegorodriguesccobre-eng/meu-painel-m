@@ -39,6 +39,22 @@ sua própria cópia das taxas gerais, independente das taxas dos produtos compon
 Os custos e pesos dos componentes continuam atualizados pelo catálogo. A restauração
 de backups antigos usa as taxas do próprio arquivo para preservar produtos e kits.
 
+## Conectar seu catálogo do Mercado Livre
+
+A integração opcional permite autorizar sua conta, escolher anúncios do seu catálogo
+ou consultar por ID/link e vincular os dados a um produto do painel. Importa nome,
+categoria, peso disponível, modalidade, foto e preço anunciado de referência. O custo
+de compra e a margem são informados por você. Em **Taxas deste produto**, é possível
+ajustar comissões, impostos, taxas fixas e serviços sem alterar outros cadastros.
+
+O painel continua funcionando localmente para cadastro manual. A conexão com a API
+usa Functions do Netlify e exige um aplicativo do Mercado Livre e variáveis de ambiente.
+A consulta é somente de leitura e não altera anúncios no marketplace. Credenciais não
+ficam no HTML, no GitHub ou nos backups. A sessão expira em até seis horas.
+
+**Para ativar no endereço publicado, siga [CONFIGURAR_MERCADO_LIVRE.md](CONFIGURAR_MERCADO_LIVRE.md).**
+A integração só estará operacional para sua conta após essa configuração e sua autorização.
+
 ## Testar e preparar a publicação localmente
 
 Com Node.js 24 instalado:
@@ -48,7 +64,8 @@ npm test
 npm run build
 ```
 
-Não há dependências externas. Os testes verificam cálculos, frete, modalidades, adicionais,
+Não há dependências externas. Há testes simulados da API e do fluxo OAuth em
+`tests/mercadolivre.test.cjs`. Os testes do painel verificam cálculos, frete, modalidades, adicionais,
 kits, CSV, backup e eventos com DOM simulado. Eles não substituem testes visuais em navegador
 ou em um celular físico. O resultado detalhado em `resultados-testes.json` é gerado localmente
 e não é versionado.

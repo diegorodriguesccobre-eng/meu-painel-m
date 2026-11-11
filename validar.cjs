@@ -5,11 +5,11 @@ const assert = require('node:assert/strict');
 const html = fs.readFileSync(__dirname + '/index.html', 'utf8');
 const script = html.match(/<script>([\s\S]*?)<\/script>/)[1];
 new vm.Script(script); // Verifica também a sintaxe de todo o aplicativo.
-const context = vm.createContext({});
+const context = vm.createContext({URL});
 vm.runInContext(script.slice(0, script.indexOf('let state=defaults()')) +
   script.slice(script.indexOf('function csvCell'), script.indexOf("$('export').onclick")) +
-  ';globalThis.api={calculate,minimumPrice,defaults,buildCSV,validState,escapeHTML,parseImportCSV,buildBackup,parseBackup,kitTotals,effectiveFee,copyFees,preserveCatalogFees};', context);
-const { calculate, minimumPrice, defaults, buildCSV, validState, escapeHTML,parseImportCSV,buildBackup,parseBackup,kitTotals,effectiveFee,copyFees,preserveCatalogFees } = context.api;
+  ';globalThis.api={calculate,minimumPrice,defaults,buildCSV,validState,escapeHTML,parseImportCSV,buildBackup,parseBackup,kitTotals,effectiveFee,copyFees,preserveCatalogFees,validMlLink,readProductFees};', context);
+const { calculate, minimumPrice, defaults, buildCSV, validState, escapeHTML,parseImportCSV,buildBackup,parseBackup,kitTotals,effectiveFee,copyFees,preserveCatalogFees,validMlLink,readProductFees } = context.api;
 const fees = defaults().fees;
 const products = [
   { id:'1', name:'Garrafa térmica 500 ml',category:'Casa e cozinha',cost:30,weight:.35,margin:20,extra:0 },
@@ -82,7 +82,7 @@ function runtime(storage=new Map()) {
     document:{getElementById:get,querySelectorAll:selector=>selector.includes(' button')?headers.map(th=>th.querySelector()):headers,
       body:{append(){}},createElement(){return {click(){downloads.push({filename:this.download,blob:lastBlob});},remove(){}};}},
     Blob:class{constructor(parts,options){this.parts=parts;this.type=options.type;}},
-    URL:{createObjectURL(blob){lastBlob=blob;return 'blob:teste';},revokeObjectURL(){}},
+    URL:class extends URL{static createObjectURL(blob){lastBlob=blob;return 'blob:teste';}static revokeObjectURL(){}},
     localStorage:{getItem:k=>storage.get(k)??null,setItem:(k,v)=>storage.set(k,v)},
     setTimeout:()=>1,clearTimeout(){},crypto:{randomUUID:()=> 'new-product'}
   });
@@ -267,14 +267,14 @@ const complete={products:products.map((p,i)=>({...p,extra:i+2,mlShipping:18+i}))
 complete.products=complete.products.map(p=>({...p,feeSnapshot:JSON.parse(JSON.stringify(copyFees(complete.fees)))}));
 const backupText=buildBackup(complete),envelope=JSON.parse(backupText);
 assert.equal(envelope.format,'margem-backup');
-assert.equal(envelope.version,6);
+assert.equal(envelope.version,7);
 assert.ok(Number.isFinite(Date.parse(envelope.createdAt)));
 assert.deepEqual(JSON.parse(JSON.stringify(parseBackup(backupText))),complete);
 assert.equal(parseBackup('\uFEFF'+backupText).products.length,3);
 assert.equal(parseBackup(buildBackup(defaults())).products.length,0);
 assert.equal(parseBackup(buildBackup({products,fees})).products[0].mlShipping,0);
 assert.throws(()=>parseBackup('{incompleto'));
-assert.throws(()=>parseBackup(JSON.stringify({...envelope,version:7})));
+assert.throws(()=>parseBackup(JSON.stringify({...envelope,version:8})));
 assert.throws(()=>parseBackup(JSON.stringify({...envelope,format:'outro-app'})));
 assert.throws(()=>parseBackup(JSON.stringify({...envelope,data:{products:[null],fees}})));
 assert.throws(()=>parseBackup(JSON.stringify({...envelope,data:{products:[products[0],products[0]],fees}})));
@@ -614,6 +614,38 @@ const invalidKitFees=JSON.parse(JSON.stringify(fees));invalidKitFees.ml.fixed=-1
 assert.ok(!validState({products,fees,kits:[{...kit,feeSnapshot:invalidKitFees}]}));
 assert.throws(()=>parseBackup(JSON.stringify({format:'margem-backup',version:6,data:{products,fees,kits:[{...kit,feeSnapshot:invalidKitFees}]}})));
 checks+=44;
+// Dados do anúncio são referência e não substituem o custo de compra ou as taxas.
+const mlMetadata={itemId:'MLB1234567890',sellerId:123,title:'Garrafa do catálogo',categoryId:'MLB1234',categoryName:'Casa',catalogProductId:null,listingType:'gold_special',permalink:'https://produto.mercadolivre.com.br/MLB-1234567890-_JM',price:99.9,weight:.35,thumbnail:null,variationCount:0,fetchedAt:'2026-11-11T12:00:00.000Z'};
+assert.ok(validMlLink(mlMetadata));
+assert.ok(!validMlLink({...mlMetadata,permalink:'javascript:alert(1)'}));
+assert.ok(!validMlLink({...mlMetadata,thumbnail:'https://evil.example/foto.png'}));
+assert.ok(!validState({products:[{...products[0],mercadoLivre:{...mlMetadata,sellerId:'123'}}],fees}));
+const mlApp=runtime();addFeeProduct(mlApp,'Produto vinculado');
+mlApp.run('openProduct(state.products[0])');
+const individualRates=JSON.parse(JSON.stringify(copyFees(fees)));individualRates.ml.commission=10;individualRates.ml.premiumCommission=30;individualRates.shopee.easyReturnEnabled=true;individualRates.shopee.officialEventEnabled=true;
+const individualElements=Object.fromEntries(Object.entries(formElements(individualRates)).map(([key,value])=>['product-'+key,value]));
+mlApp.get('product-form').elements={...mlApp.get('product-form').elements,...individualElements};
+mlApp.run(`mlLinkedDraft=${JSON.stringify(mlMetadata)}`);
+mlApp.get('product-form').onsubmit({preventDefault(){},target:mlApp.get('product-form')});
+assert.equal(mlApp.run('state.products[0].cost'),30);
+assert.equal(mlApp.run('state.products[0].mercadoLivre.price'),99.9);
+assert.equal(mlApp.run('state.products[0].feeSnapshot.ml.commission'),10);
+assert.equal(mlApp.run('state.fees.ml.commission'),14);
+assert.equal(mlApp.run("calculate(state.products[0],state.fees.ml,'ml').price"),56.25);
+assert.equal(mlApp.run("calculate(state.products[0],state.fees.shopee,'shopee').price"),66.98);
+assert.ok(mlApp.get('rows').innerHTML.includes('ML vinculado: MLB1234567890'));
+assert.ok(mlApp.run('buildCSV(state.products,state.fees)').includes('MLB1234567890'));
+assert.ok(mlApp.run('buildCSV(state.products,state.fees)').includes('"99,90"'));
+assert.equal(runtime(mlApp.storage).run('state.products[0].mercadoLivre.itemId'),'MLB1234567890');
+const mlBackup=mlApp.run('buildBackup(state)'),mlRestore=runtime();mlRestore.run(`previewRestore(${JSON.stringify(mlBackup)})`);mlRestore.get('restore-form').onsubmit({preventDefault(){}});
+assert.equal(mlRestore.run('state.products[0].mercadoLivre.itemId'),'MLB1234567890');
+assert.equal(mlRestore.run('state.products[0].feeSnapshot.ml.commission'),10);
+mlApp.run('openProduct(state.products[0])');mlApp.get('ml-unlink').onclick();
+assert.equal(mlApp.run('state.products[0].mercadoLivre.itemId'),'MLB1234567890');
+mlApp.get('product-form').onsubmit({preventDefault(){},target:mlApp.get('product-form')});
+assert.equal(mlApp.run('state.products[0].mercadoLivre'),undefined);
+assert.equal(readProductFees({elements:{'product-ml-commission':{value:'abc'}}},fees),null);
+checks+=21;
 console.table(results);
 console.table(shippingResults);
 console.table(minimumResults);
