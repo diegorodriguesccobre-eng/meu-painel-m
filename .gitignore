@@ -1,0 +1,8 @@
+dist/
+node_modules/
+resultados-testes.json
+.netlify/
+.env
+.env.*
+*.log
+

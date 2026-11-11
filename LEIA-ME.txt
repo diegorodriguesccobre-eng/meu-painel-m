@@ -1,0 +1,176 @@
+PAINEL MARGEM — COMO ABRIR
+
+1. No computador, abra a pasta painel_precos e dê dois cliques em index.html.
+   Ele abre no navegador. Não precisa instalar nada, iniciar servidor ou fazer login.
+   O painel funciona sem internet: não usa fontes, bibliotecas nem serviços externos.
+2. Clique em “Carregar 3 exemplos” para experimentar ou em “Novo produto”.
+3. Ajuste as comissões Clássica e Premium do Mercado Livre, as taxas da Shopee,
+   as taxas fixas e os impostos. Clique em “Salvar taxas”.
+   As taxas iniciais são ilustrativas, não tabelas oficiais dos marketplaces.
+4. Clique nos títulos das colunas para ordenar. Use a busca para filtrar.
+5. “Exportar CSV” baixa os produtos visíveis na ordem atual, com as taxas usadas.
+   O CSV usa ponto e vírgula, vírgula decimal e codificação UTF-8 para o Excel.
+
+NO CELULAR
+Transfira apenas index.html para o aparelho e abra-o em um navegador que execute
+arquivos HTML locais. Em telas de até 760 pixels, cada produto aparece em um cartão com custo, peso,
+margem, preços, lucro, frete aplicado e botões para editar e excluir.
+Use “Ordenar produtos por” e o botão de ordem crescente/decrescente para ordenar.
+No computador, os produtos continuam em tabela. Alguns aplicativos de arquivos, principalmente no iPhone,
+mostram só uma prévia de HTML e não executam o painel. Nesse caso é necessário um
+navegador/aplicativo com suporte a HTML local; a prévia do app Arquivos não basta.
+Não houve teste em um celular físico nesta entrega.
+
+SEUS DADOS
+O salvamento usa localStorage: fica neste navegador, perfil, dispositivo e endereço
+do arquivo. Use sempre o mesmo navegador e mantenha o arquivo no mesmo lugar.
+Não há sincronização entre computador e celular. Não use navegação privada para
+guardar o catálogo. Limpar dados do navegador pode apagar os produtos e as taxas.
+Se houver falha de salvamento, o painel mostra um aviso.
+O CSV exportado pode cadastrar novamente nome, custo e peso pela importação abaixo,
+mas não restaura taxas, categorias, margens e custos específicos.
+
+BAIXAR E RESTAURAR BACKUP COMPLETO
+Na seção “Backup dos dados”, clique em “Baixar backup”. O navegador baixa um
+arquivo .json com todos os produtos e suas categorias, custos, pesos, margens,
+fretes e outros custos, todos os kits e suas quantidades, além das comissões,
+taxas fixas e impostos dos dois canais.
+A busca não limita o backup: o catálogo inteiro é incluído. As taxas exportadas
+são as já salvas no painel; salve eventuais edições antes de baixar o backup.
+
+Para recuperar os dados, clique em “Restaurar backup”, escolha o .json e confira
+a quantidade de produtos e as taxas. Clique em “Substituir dados e restaurar”.
+Isso substitui o catálogo, os kits e as taxas atuais, sem juntar os dois cadastros.
+Para preservar o estado atual, baixe um backup dele antes de restaurar outro.
+Arquivos incompatíveis ou inválidos são recusados antes da substituição.
+Se a gravação no navegador falhar, os dados atuais são mantidos.
+Você pode transferir o .json para outro computador ou celular e restaurar no painel
+desse aparelho. Não é preciso login, servidor ou internet. Limite por backup: 20 MB.
+Backups antigos, anteriores à tela de kits, continuam aceitos: eles restauram uma
+lista vazia de kits. Os novos backups usam a versão 3 do formato, incluindo
+comissões e opções da Shopee. As versões 1 e 2 continuam aceitas.
+
+MODALIDADES E ADICIONAIS POR PRODUTO
+Em “Taxas dos marketplaces”, preencha a comissão Clássica e a Premium do Mercado
+Livre. A tabela passa a ter preços separados para ML Clássico, ML Premium e Shopee.
+O imposto e a taxa fixa do Mercado Livre valem para ambas as modalidades. O limite
+de frete acima de R$ 100 é avaliado separadamente em cada preço e no mínimo de 10%.
+
+Na Shopee, informe a comissão e a taxa fixa base. Os campos de adicionais começam
+em R$ 0,49 para Devolução Fácil e 2,50 pontos percentuais para eventos oficiais,
+conforme a regra solicitada. Eles podem ser editados em “Taxas dos marketplaces”.
+No cadastro/edição de cada produto, responda às duas perguntas da Shopee:
+- Tem Devolução Fácil? Se marcar, acrescenta R$ 0,49 à taxa fixa por venda.
+- Vem de eventos oficiais? Se marcar, acrescenta 2,50 pontos percentuais à comissão.
+Exemplo: comissão base de 20% passa para 22,50%; não é 2,50% de 20%.
+Os dois adicionais podem ser ativados juntos e não alteram os preços do Mercado Livre.
+
+As tabelas e os cartões mostram as respostas, a comissão efetiva, a taxa fixa efetiva
+e o imposto usados. O CSV separa as três modalidades e inclui as escolhas da Shopee.
+O preço mínimo para 10% considera os mesmos adicionais. Os kits têm suas próprias
+perguntas: as escolhas dos produtos componentes não são herdadas pelo anúncio do kit.
+A Devolução Fácil é cobrada uma vez por venda do kit, não por produto dentro dele.
+
+Cadastros antigos mantêm a comissão anterior como Clássica e como Premium até você
+editar e salvar os valores. As opções da Shopee começam desmarcadas nos produtos
+existentes e nos importados por CSV. O backup completo guarda as escolhas e as taxas.
+
+Teste com custo R$ 30, margem 20%, comissão Shopee 20%, imposto 6%, taxa fixa R$ 4:
+Sem adicionais: R$ 62,97; só Devolução Fácil: R$ 63,88; só evento: R$ 66,02;
+os dois adicionais: R$ 66,98. Comissões ilustrativas ML de 14% Clássico e 19% Premium,
+taxa fixa R$ 6 e imposto 6% resultam em R$ 60,00 Clássico e R$ 65,46 Premium.
+
+MONTAR KITS
+Clique na aba “Montar kits”, no topo do painel. É uma tela separada dentro do mesmo
+arquivo HTML, disponível também no celular. Os produtos precisam estar cadastrados.
+1. Dê um nome ao kit, selecione os produtos e informe a quantidade de cada um.
+2. Escolha a margem desejada. Os preços são calculados imediatamente.
+3. Se necessário, informe um custo adicional (ex.: embalagem do conjunto) e o frete
+   específico do kit no Mercado Livre. O frete não é somado dos produtos individuais.
+4. Clique em “Salvar kit”. Ele aparece em “Meus kits salvos”, com ações de edição
+   e exclusão. Limpar / novo kit limpa apenas o formulário, mantendo os kits salvos.
+
+O custo do kit é a soma dos custos dos produtos multiplicados pelas quantidades.
+O peso e os outros custos dos produtos também são somados pelas quantidades.
+O custo adicional do conjunto e a taxa fixa de cada canal entram uma única vez.
+O frete próprio do kit segue a regra do preço superior a R$ 100 no Mercado Livre.
+A margem dos produtos individuais não entra no kit: vale a margem escolhida para ele.
+Também mostramos o menor preço para 10% de margem em cada marketplace.
+
+Os kits referenciam os produtos cadastrados e usam sempre os custos atuais. Alterar
+um custo ou as taxas recalcula os preços dos kits. Para excluir um produto usado em
+um kit, primeiro retire-o do kit ou exclua o kit. Excluir o kit mantém os produtos.
+Os kits são salvos neste navegador e incluídos em “Baixar backup”. A exportação
+CSV continua sendo a tabela dos produtos individuais.
+
+Exemplo com as taxas iniciais: duas garrafas de R$ 30 + uma camiseta de R$ 25,
+margem de 20%, adicional de R$ 5 e frete do kit ML de R$ 18:
+custo dos produtos R$ 85, peso 0,900 kg, preço ML R$ 190,00 e Shopee R$ 174,08.
+
+IMPORTAR VÁRIOS PRODUTOS
+Clique em “Importar CSV” e selecione um arquivo com cabeçalho nome, custo e peso.
+Exemplo (peso em kg):
+nome;custo;peso
+Garrafa térmica;30,00;0,350
+Camiseta básica;25,00;0,200
+
+Pode usar ponto e vírgula, vírgula ou tabulação. Sem símbolos de moeda ou separadores
+de milhares. Custo aceita até 2 casas decimais e peso até 3. Se o separador for vírgula,
+use ponto decimal ou coloque os valores com vírgula decimal entre aspas.
+Arquivos UTF-8 e Windows-1252 são aceitos. Limite: 2 MB e 5.000 produtos por arquivo.
+Escolha a categoria e a margem do lote. Frete e outros custos começam em zero.
+Confira a prévia e clique em “Importar produtos”. Se houver erros, corrija o CSV e
+selecione novamente: nenhum produto é cadastrado até todas as linhas estarem válidas.
+Linhas vazias são ignoradas. Nomes repetidos geram novos produtos; os existentes
+são mantidos. Colunas adicionais são ignoradas. A prévia mostra até 10 produtos.
+
+O CÁLCULO
+Margem é a parte do preço de venda que sobra após descontar todos os custos
+informados. Não é um percentual somado ao custo.
+
+Preço = (custo + outros custos + taxa fixa + frete aplicável) /
+        [1 - (comissão + imposto + margem desejada) / 100]
+
+O preço é arredondado para cima ao centavo. O peso é informativo, sem estimativa
+automática de frete. “Outros custos por venda” vale para os dois canais.
+O novo campo “Frete do Mercado Livre” é exclusivo desse marketplace:
+primeiro calculamos o preço sem esse frete. Se o preço arredondado ultrapassar
+R$ 100,00, incluímos o frete e recalculamos para preservar a margem desejada.
+Em R$ 100,00 ou menos, esse frete não entra. A Shopee não usa esse campo.
+Exemplo: custo R$ 90, margem 20%, comissão 14%, imposto 6%, taxa fixa R$ 6
+e frete ML de R$ 18 resultam em preço ML de R$ 190,00 e lucro de R$ 38,00.
+O frete cadastrado e o aplicado são exportados no CSV; o aplicado aparece na tabela.
+Produtos antigos recebem frete ML de R$ 0,00 e mantêm os dados anteriores.
+O antigo campo “Frete + embalagem” agora se chama “Outros custos por venda”;
+se você já incluiu ali o frete ML, retire-o ao preencher o novo campo para
+evitar contar duas vezes o mesmo custo.
+As taxas são um modelo simplificado por marketplace, sem faixas automáticas de
+categoria, tipo de anúncio, preço ou programa comercial. Ajuste ao seu anúncio.
+Se uma mudança de taxas deixar taxas + margem >= 100%, a tabela mostra “Inviável”.
+Produtos com margem desejada abaixo de 15% aparecem em vermelho.
+
+PREÇO MÍNIMO PARA 10% DE MARGEM
+Cada marketplace mostra “Mínimo para 10%”, tanto na tabela quanto nos cartões.
+É o menor preço em centavos que deixa pelo menos 10% da venda como lucro após
+os custos e as taxas informados. A margem desejada do cadastro é mantida.
+O limite de frete do Mercado Livre é reavaliado para o preço mínimo: o frete
+do preço principal pode não ser necessário no mínimo. O mínimo também sai no CSV.
+Se comissão + imposto forem 90% ou mais, o mínimo de 10% é inviável.
+Com as taxas ilustrativas e frete zero, os mínimos ML / Shopee são:
+Garrafa térmica: R$ 51,43 / R$ 53,13.
+Camiseta básica: R$ 44,29 / R$ 45,32.
+Fone Bluetooth: R$ 94,29 / R$ 100,00.
+
+EXEMPLOS VERIFICADOS (frete/embalagem = R$ 0)
+Mercado Livre: comissão 14%, taxa fixa R$ 6, imposto 6%.
+Shopee: comissão 20%, taxa fixa R$ 4, imposto 6%.
+
+Produto                   Custo      Margem   Mercado Livre   Shopee
+Garrafa térmica 500 ml     R$ 30,00   20%      R$ 60,00        R$ 62,97
+Camiseta básica           R$ 25,00   25%      R$ 56,37        R$ 59,19
+Fone Bluetooth            R$ 60,00   12%      R$ 97,06        R$ 103,23
+
+O fone fica em vermelho por ter margem de 12%.
+Os resultados detalhados ficam em resultados-testes.json.
+Para repetir os testes de cálculo com Node instalado: node validar.cjs.
+Node não é necessário para usar o painel.

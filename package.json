@@ -1,0 +1,17 @@
+{
+  "name": "meu-painel-m",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Painel de precificação e kits para marketplaces, com dados locais no navegador.",
+  "scripts": {
+    "test": "node validar.cjs",
+    "build": "node validar.cjs && node preparar-site.cjs"
+  },
+  "engines": {
+    "node": "24.x"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/diegorodriguesccobre-eng/meu-painel-m.git"
+  }
+}

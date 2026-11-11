@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#111214"><title>Margem • Painel de precificação</title>
+<style>
+:root{color-scheme:dark;--bg:#111214;--panel:#1b1d21;--line:#303239;--text:#f4f4f5;--muted:#a6a8b1;--orange:#ff9b50;--red:#ff858b;--green:#8cdbb0}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:17px/1.5 system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}button,input,select{font:inherit}button,a,input,select{outline-offset:4px}button{cursor:pointer}button:disabled{cursor:not-allowed;opacity:.45}.shell{max-width:1600px;margin:auto;display:grid;grid-template-columns:218px 1fr;min-height:100vh}aside{border-right:1px solid var(--line);padding:32px 22px;display:flex;flex-direction:column;gap:38px}.brand{font-size:27px;font-weight:800;letter-spacing:-1px;display:flex;gap:10px;align-items:center}.logo{background:var(--orange);color:#191512;border-radius:12px;width:39px;height:39px;text-align:center;line-height:39px;font-size:27px}nav{display:grid;gap:10px}nav a{padding:12px;border-radius:9px;color:var(--muted);text-decoration:none;font-size:16px}nav a[aria-current="page"]{background:#ff9b5018;color:var(--orange)}.local{margin-top:auto;color:var(--muted);font-size:13px}.dot{color:var(--green)}main{padding:38px 42px;min-width:0}.eyebrow{font-size:12px;letter-spacing:2px;color:var(--orange);font-weight:700;text-transform:uppercase}h1{font-size:clamp(29px,3vw,40px);letter-spacing:-1.5px;margin:6px 0}h2{font-size:21px;letter-spacing:-.4px;margin:0}p{margin:6px 0;color:var(--muted)}.top,.section-head,.actions{display:flex;align-items:center;justify-content:space-between;gap:16px}.top{margin-bottom:28px}.badge{border:1px solid var(--line);border-radius:24px;padding:7px 13px;font-size:13px;color:var(--muted);white-space:nowrap}.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:28px}.stat,.panel{background:var(--panel);border:1px solid var(--line);border-radius:15px}.stat{padding:20px 24px}.stat small{color:var(--muted);font-size:14px}.stat strong{display:block;font-size:31px;margin-top:5px;letter-spacing:-1px}.stat em{font-size:12px;font-style:normal;color:var(--muted)}.stat:last-child strong{color:var(--orange)}.panel{padding:24px;margin-bottom:24px}.section-head{margin-bottom:20px}.section-head p{font-size:14px}.btn{border:1px solid var(--line);border-radius:9px;padding:10px 16px;background:#26282e;color:var(--text);font-weight:600;font-size:15px;white-space:nowrap}.btn:hover{background:#363941}.primary{background:var(--orange);border-color:var(--orange);color:#21170f}.primary:hover{background:#ffaf72}.quiet{background:transparent}.market-grid{display:grid;grid-template-columns:1fr 1fr;gap:26px}.market{border:1px solid var(--line);border-radius:11px;padding:18px}.option-question{display:flex;gap:10px;align-items:flex-start;color:var(--text);font-size:15px;margin-top:12px}.option-question input{width:20px;height:20px;margin-top:3px;flex:none;accent-color:var(--orange)}.fee-info{font-size:12px;color:var(--muted);white-space:normal;max-width:260px;margin-top:8px}.market-title{display:flex;align-items:center;gap:10px;margin-bottom:16px;font-weight:700}.market-icon{display:inline-flex;align-items:center;justify-content:center;background:#ffe074;color:#30260a;width:34px;height:34px;border-radius:8px;font-size:12px}.shopee{background:#ff8159;color:#2d140c}.fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}label{display:block;font-size:13px;color:var(--muted)}input,select{width:100%;background:#121316;color:var(--text);border:1px solid #41434b;border-radius:8px;padding:10px 11px;min-width:0;margin-top:6px;font-size:17px}input:focus,select:focus{border-color:var(--orange)}.help{font-size:13px;margin-top:16px}.toolbar{display:flex;gap:12px;align-items:center;margin-bottom:18px}.toolbar input{margin:0;max-width:360px}.table-wrap{overflow-x:auto}table{width:100%;border-collapse:collapse;text-align:left;white-space:nowrap}th{font-weight:500;color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.6px;border-bottom:1px solid var(--line);padding:12px 14px}th button{font:inherit;color:inherit;background:none;border:0;padding:0;text-transform:inherit;cursor:pointer}td{padding:19px 14px;border-bottom:1px solid var(--line);font-size:16px}tbody tr:last-child td{border:0}.product-name{font-weight:650;white-space:normal;min-width:150px;max-width:260px}.sub{display:block;color:var(--muted);font-size:12px;font-weight:400}.price{font-weight:700}.profit{display:block;color:var(--green);font-size:12px;margin-top:3px}.margin{background:#20392e;color:var(--green);padding:5px 9px;border-radius:6px;font-size:13px;font-weight:650}.low{background:#47252a;color:var(--red)}tr.warning{background:#ff858b06}tr.warning .price,tr.warning .profit{color:var(--red)}.row-action{background:none;border:0;color:var(--muted);padding:7px;font-size:13px}.row-action:hover{color:var(--orange)}.foot{display:flex;justify-content:space-between;gap:14px;border-top:1px solid var(--line);padding-top:15px;margin-top:10px;color:var(--muted);font-size:12px}.empty{text-align:center;padding:40px;color:var(--muted)}.formula{padding:0 4px;margin:20px 0 40px;font-size:14px}.formula summary{cursor:pointer;color:var(--muted)}.formula p{max-width:850px;margin-top:12px}dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:16px;padding:26px;width:min(600px,calc(100% - 28px));max-height:90vh;overflow:auto}dialog::backdrop{background:#0009;backdrop-filter:blur(3px)}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:22px 0}.full{grid-column:1/-1}.dialog-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:20px}.error{color:var(--red);font-size:14px}.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#f4f4f5;color:#161719;box-shadow:0 4px 30px #0005;border-radius:9px;padding:12px 20px;font-size:14px;z-index:5;max-width:90vw}.hidden{display:none!important}.danger-text{color:var(--red)}
+@media(max-width:1100px){.shell{grid-template-columns:1fr}aside{flex-direction:row;padding:16px 26px;border-right:0;border-bottom:1px solid var(--line);align-items:center;justify-content:space-between}nav{display:flex;gap:6px}.local{margin:0}.brand{font-size:23px}main{padding:28px 24px}.market-grid{gap:16px}}
+@media(max-width:650px){body{font-size:16px}aside{padding:15px 18px}nav{display:none}.local{font-size:11px;max-width:130px}main{padding:24px 14px}.top{align-items:flex-start}.top .badge{display:none}.stats{gap:8px}.stat{padding:13px 11px}.stat small{font-size:11px}.stat strong{font-size:25px}.stat em{font-size:10px}.panel{padding:17px 14px}.market-grid{grid-template-columns:1fr}.fields{gap:9px}.market{padding:14px}.section-head{align-items:flex-start;flex-wrap:wrap}.section-head h2{font-size:20px}.toolbar{flex-wrap:wrap}.toolbar input{max-width:none}.actions{gap:8px;flex-wrap:wrap}.btn{padding:10px 12px;font-size:14px}.foot{flex-direction:column}.form-grid{gap:12px}td{padding:16px 10px}h1{letter-spacing:-1px}.fields label{font-size:12px}}
+.dialog-actions{flex-wrap:wrap}.dialog-actions .btn{white-space:normal;min-height:44px}
+.mobile-sort{display:none}
+.minimum{border-top:1px dashed var(--line);margin-top:12px;padding-top:10px;white-space:normal}
+.minimum>span:first-child{display:block;color:var(--muted);font-size:13px}
+.minimum strong{display:block;color:var(--orange);font-size:19px}
+.import-preview{padding:0;list-style:none;max-height:250px;overflow:auto;margin:16px 0}
+.import-preview li{padding:12px 0;border-bottom:1px solid var(--line);overflow-wrap:anywhere}
+.import-preview strong{display:block}.import-preview small{color:var(--muted)}
+fieldset{min-width:0;margin:0}legend{max-width:100%;white-space:normal}.option-question span{min-width:0;overflow-wrap:anywhere}
+.view-tabs{display:flex;gap:10px;margin:0 0 24px}.view-tabs button[aria-pressed="true"]{background:var(--orange);color:#21170f;border-color:var(--orange)}
+.kit-layout{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:20px;align-items:start}
+.kit-picker{list-style:none;padding:0;margin:16px 0;max-height:400px;overflow:auto}
+.kit-picker li{display:grid;grid-template-columns:minmax(0,1fr) 90px;gap:12px;border-bottom:1px solid var(--line);padding:12px 0;align-items:center}
+.kit-choice{display:flex;gap:10px;align-items:flex-start;color:var(--text);font-size:16px;overflow-wrap:anywhere;min-width:0}
+.kit-choice input{width:20px;height:20px;flex:none;margin-top:3px;accent-color:var(--orange)}
+.kit-choice strong{display:block}.kit-choice small{color:var(--muted);font-size:12px}
+.kit-summary{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:18px 0}.kit-summary div{background:#121316;border-radius:10px;padding:12px;min-width:0;overflow-wrap:anywhere}.kit-summary small{color:var(--muted)}.kit-summary strong{display:block;font-size:22px}
+.kit-prices{display:grid;gap:14px}.kit-price,.saved-kit{border:1px solid var(--line);border-radius:12px;padding:18px;overflow-wrap:anywhere;min-width:0}.kit-price .price{font-size:28px}.saved-kits{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.saved-kit h3{font-size:21px;margin:0 0 8px}.saved-kit ul{padding-left:20px;color:var(--muted);font-size:14px}.saved-kit .actions{flex-wrap:wrap;justify-content:flex-start;margin-top:18px}.saved-kit.warning{border-color:#91454d}.kit-price.warning .price{color:var(--red)}
+@media(max-width:900px){.kit-layout{grid-template-columns:1fr}}
+@media(max-width:650px){.saved-kits{grid-template-columns:1fr}.view-tabs .btn{flex:1}.kit-picker li{grid-template-columns:minmax(0,1fr) 75px}.kit-summary strong{font-size:20px}}
+#import-errors{padding-left:22px;max-height:180px;overflow:auto}
+#import-form pre{white-space:pre-wrap;background:#121316;border-radius:8px;padding:12px;font-size:14px}
+@media(max-width:760px){
+ .mobile-sort{display:flex;align-items:flex-end;gap:10px;margin:0 0 18px}
+ .mobile-sort label{flex:1;min-width:0}
+ .mobile-sort .btn{min-height:46px}
+ #produtos .table-wrap{overflow:visible}
+ #produtos table,#produtos tbody{display:block;width:100%;white-space:normal}
+ #produtos thead{display:none}
+ #produtos tbody{display:grid;gap:16px}
+ #produtos tr{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 16px;border:1px solid var(--line);border-radius:12px;padding:16px;background:#151619}
+ #produtos tr.warning{border-color:#91454d;background:#251b20}
+ #produtos td{display:block;grid-column:1/-1;min-width:0;max-width:none;border:0;padding:12px 0;overflow-wrap:anywhere}
+ #produtos td:nth-child(2),#produtos td:nth-child(3){grid-column:auto}
+ #produtos td::before{content:attr(data-label);display:block;color:var(--muted);font-size:13px;font-weight:500;margin-bottom:5px}
+ #produtos td.product-name{font-size:21px;padding-top:0;border-bottom:1px solid var(--line)}
+ #produtos td.product-name::before,#produtos td:last-child::before{display:none}
+ #produtos td:nth-child(5),#produtos td:nth-child(6),#produtos td:nth-child(7){border-top:1px solid var(--line)}
+ #produtos .price{font-size:25px;letter-spacing:-.5px}
+ #produtos .profit,#produtos .sub{font-size:14px}
+ #produtos td:last-child{display:flex;gap:12px;border-top:1px solid var(--line);padding:14px 0 0}
+ #produtos .row-action{flex:1;min-width:0;min-height:44px;border:1px solid var(--line);border-radius:8px;font-size:16px;background:#ffffff06}
+ #produtos .toolbar{flex-wrap:wrap}
+ #produtos .toolbar input{max-width:none}
+ #produtos .toolbar>.actions{flex-wrap:wrap}
+ #produtos .btn{white-space:normal}
+ .foot{overflow-wrap:anywhere}
+}
+</style>
+</head>
+<body>
+<div class="shell"><aside><div class="brand"><span class="logo">↗</span> margem<span style="color:var(--orange)">.</span></div><nav aria-label="Navegação"><a href="#produtos" id="nav-products">▦ &nbsp; Meus produtos</a><a href="#kits" id="nav-kits">▤ &nbsp; Meus kits</a><a href="#taxas" id="nav-fees">⚙ &nbsp; Taxas e impostos</a></nav><div class="local"><span class="dot">●</span> Sem login. Sem servidor.<br>Seus dados neste navegador.</div></aside>
+<main><header class="top"><div><div class="eyebrow">Seu negócio, na ponta do lápis</div><h1 id="screen-title">Preço certo. Margem clara.</h1><p id="screen-description">Saiba por quanto vender em cada marketplace.</p></div><span class="badge" id="save-status" role="status">● Salvo neste navegador</span></header>
+<div class="view-tabs" aria-label="Telas do painel"><button type="button" class="btn" id="view-products" aria-pressed="true">Meus produtos</button><button type="button" class="btn" id="view-kits" aria-pressed="false">Montar kits</button></div><div id="products-view"><section class="stats" aria-label="Resumo"><div class="stat"><small>Produtos no catálogo</small><strong id="count">0</strong><em>Seu catálogo de vendas</em></div><div class="stat"><small>Margem desejada média</small><strong id="average">—</strong><em>Sobre o preço de venda</em></div><div class="stat"><small>Abaixo de 15%</small><strong id="warning-count">0</strong><em>Produtos que merecem atenção</em></div></section>
+<section class="panel" id="taxas"><div class="section-head"><div><h2>Taxas dos marketplaces</h2><p>Informe as comissões Clássica e Premium do Mercado Livre e os adicionais da Shopee.</p></div><span class="badge">Configuração manual</span></div><form id="fees-form"><div class="market-grid" id="market-fields"></div><p class="error" id="fees-error" role="alert"></p><div class="actions" style="margin-top:16px"><p class="help" style="margin:0">Valores iniciais ilustrativos. Confira as taxas do seu anúncio antes de vender.</p><button class="btn" type="submit">Salvar taxas</button></div></form></section>
+<section class="panel" id="produtos"><div class="section-head"><div><h2>Meus produtos</h2><p>Do custo ao preço final, com sua margem em vista.</p></div><button class="btn primary" id="add">＋ Novo produto</button></div><div class="toolbar"><input id="search" type="search" placeholder="Buscar produto ou categoria…" aria-label="Buscar produto ou categoria"><div class="actions"><button class="btn quiet" id="examples">Carregar 3 exemplos</button><button class="btn quiet" id="import">↑ Importar CSV</button><button class="btn quiet" id="export">↓ Exportar CSV</button></div></div><div class="mobile-sort"><label for="mobile-sort">Ordenar produtos por<select id="mobile-sort"><option value="name">Nome</option><option value="cost">Custo</option><option value="weight">Peso</option><option value="margin">Margem</option><option value="ml">ML Clássico</option><option value="mlPremium">ML Premium</option><option value="shopee">Preço na Shopee</option></select></label><button class="btn quiet" id="sort-direction" type="button" aria-label="Inverter a ordem dos produtos">↑ Crescente</button></div><div class="table-wrap"><table role="table"><caption class="hidden">Produtos e preços calculados por marketplace</caption><thead role="rowgroup"><tr role="row"><th data-key="name"><button>Produto ↕</button></th><th data-key="cost"><button>Custo ↕</button></th><th data-key="weight"><button>Peso ↕</button></th><th data-key="margin"><button>Margem ↕</button></th><th data-key="ml"><button>ML Clássico ↕</button></th><th data-key="mlPremium"><button>ML Premium ↕</button></th><th data-key="shopee"><button>Shopee ↕</button></th><th>Ações</th></tr></thead><tbody id="rows" role="rowgroup"></tbody></table></div><div id="empty" class="empty hidden">Seu catálogo começa aqui.<br>Cadastre um produto ou carregue os três exemplos.</div><div class="foot"><span id="table-count">0 produtos</span><span><span class="danger-text">●</span> Vermelho: margem abaixo de 15% &nbsp; · &nbsp; Preços arredondados para cima</span></div></section>
+<section class="panel" id="backup"><div class="section-head"><div><h2>Backup dos dados</h2><p>Guarde todos os produtos, kits e taxas em um arquivo para recuperar depois ou transferir para outro aparelho.</p></div></div><div class="actions" style="justify-content:flex-start;flex-wrap:wrap"><button class="btn" id="download-backup" type="button">↓ Baixar backup</button><button class="btn quiet" id="restore-backup" type="button">↑ Restaurar backup</button></div><p class="help">O backup inclui o catálogo completo, mesmo com a busca ativa. A restauração substitui os produtos, kits e as taxas atuais após sua confirmação.</p></section><details class="formula"><summary>Como o preço é calculado?</summary><p>Preço = (custo + outros custos + taxa fixa + frete aplicável) ÷ [1 − (comissão + imposto + margem desejada) ÷ 100]. Comissão, imposto e margem são percentuais do preço de venda. Arredondamos para cima ao centavo para preservar sua margem.</p><p>O lucro exibido desconta custo, outros custos, comissão, taxa fixa, imposto e o frete aplicável. No Mercado Livre, calculamos primeiro o preço sem o frete específico: se ultrapassar R$ 100,00 após arredondar, recalculamos incluindo o frete cadastrado para preservar sua margem. Em R$ 100,00 ou menos, esse frete é zero. A Shopee não usa esse campo. O peso é informativo: não estimamos frete automaticamente. As taxas são simplificadas por marketplace; ajuste-as ao seu anúncio e à sua operação.</p><p>No Mercado Livre, calculamos os preços Clássico e Premium separadamente. Na Shopee, Devolução Fácil soma o valor configurado à taxa fixa (inicialmente R$ 0,49), e eventos oficiais somam o adicional configurado à comissão (inicialmente 2,50 pontos percentuais). Marque as opções no cadastro de cada produto ou kit; elas podem ser usadas juntas.</p><p>“Mínimo para 10%” mostra o menor preço, em centavos, que mantém ao menos 10% de margem após os custos e as taxas. Ele é calculado separadamente da margem desejada do cadastro. O limite de frete do Mercado Livre é reavaliado para esse preço mínimo. Se comissão e imposto somarem 90% ou mais, o mínimo será inviável.</p><p>Os dados ficam somente neste navegador e dispositivo. Limpar os dados do navegador pode apagá-los. Use “Baixar backup” para guardar todos os dados em um arquivo restaurável. O CSV serve para consulta e cadastro em lote; ele não restaura todas as configurações.</p></details>
+</div><section id="kits-view" class="hidden" aria-label="Montagem de kits"><div class="kit-layout"><section class="panel"><h2 id="kit-editor-title">Monte seu kit</h2><p>Selecione os produtos do catálogo e ajuste as quantidades.</p><form id="kit-form"><div class="form-grid"><label class="full">Nome do kit<input id="kit-name" value="Meu kit" maxlength="120" required></label><label>Margem desejada (%)<input id="kit-margin" type="number" min="0" max="99.99" step="0.01" value="20" required inputmode="decimal"></label><label>Custo adicional do kit (R$)<input id="kit-extra" type="number" min="0" max="1000000000" step="0.01" value="0" required inputmode="decimal"></label><label class="full">Frete do kit no Mercado Livre (R$)<input id="kit-shipping" type="number" min="0" max="1000000000" step="0.01" value="0" required inputmode="decimal"></label><fieldset class="full" style="border:1px solid var(--line);border-radius:9px;padding:14px"><legend>Shopee — opções do anúncio do kit</legend><label class="option-question"><input type="checkbox" id="kit-easy-return"><span id="kit-easy-return-text">O kit tem Devolução Fácil? (+R$ 0,49)</span></label><label class="option-question"><input type="checkbox" id="kit-official-event"><span id="kit-official-event-text">Vem de eventos oficiais? (+2,50 p.p.)</span></label></fieldset></div><label>Buscar produtos para o kit<input id="kit-search" type="search" placeholder="Nome ou categoria…"></label><ul id="kit-picker" class="kit-picker" aria-label="Produtos disponíveis"></ul><p class="help">Somamos custo, peso e outros custos de cada produto conforme a quantidade. O custo adicional acima é cobrado uma vez por kit. O frete é próprio do kit e entra no Mercado Livre apenas acima de R$ 100. As taxas fixas são cobradas uma vez por venda do kit.</p><p id="kit-error" class="error" role="alert"></p><div class="actions" style="flex-wrap:wrap"><button class="btn primary" type="submit" id="kit-save">Salvar kit</button><button class="btn quiet" type="button" id="kit-new">Limpar / novo kit</button></div></form></section><section class="panel" aria-label="Preço do kit"><h2>Seu kit, na ponta do lápis</h2><div id="kit-totals" class="kit-summary"></div><div id="kit-prices" class="kit-prices" aria-live="polite"></div><p class="help">Os preços usam as taxas salvas na tela Meus produtos. Alterações nos produtos e nas taxas atualizam os kits automaticamente.</p></section></div><section class="panel"><div class="section-head"><div><h2>Meus kits salvos</h2><p id="kit-count">0 kits</p></div></div><div id="saved-kits" class="saved-kits"></div><p class="help">Seus kits ficam neste navegador e são incluídos em “Baixar backup”, na tela Meus produtos.</p></section></section>
+<footer style="color:var(--muted);font-size:12px">margem. &nbsp; / &nbsp; Mais clareza para sua próxima venda.</footer></main></div>
+<dialog id="product-dialog" aria-labelledby="dialog-title"><form id="product-form"><div class="section-head"><h2 id="dialog-title">Novo produto</h2><button type="button" class="row-action" id="close-dialog" aria-label="Fechar">✕</button></div><div class="form-grid"><label class="full">Nome do produto<input name="name" required maxlength="120" placeholder="Ex.: Garrafa térmica 500 ml"></label><label class="full">Categoria<input name="category" required maxlength="80" placeholder="Ex.: Casa e cozinha" list="categories"></label><datalist id="categories"><option value="Casa e cozinha"><option value="Moda"><option value="Eletrônicos"><option value="Beleza"><option value="Esporte"></datalist><label>Custo do produto (R$)<input name="cost" type="number" min="0.01" max="1000000000" step="0.01" required inputmode="decimal"></label><label>Peso (kg)<input name="weight" type="number" min="0" max="1000000" step="0.001" required inputmode="decimal"></label><label>Margem desejada (%)<input name="margin" type="number" min="0" max="99.99" step="0.01" required inputmode="decimal" value="20"></label><label>Outros custos por venda (R$)<input name="extra" type="number" min="0" max="1000000000" step="0.01" required inputmode="decimal" value="0"></label><label class="full">Frete do Mercado Livre (R$)<input name="mlShipping" type="number" min="0" max="1000000000" step="0.01" required inputmode="decimal" value="0" aria-describedby="shipping-help"></label><fieldset class="full" style="border:1px solid var(--line);border-radius:9px;padding:14px"><legend>Shopee — opções deste produto</legend><label class="option-question"><input type="checkbox" name="shopeeEasyReturn"><span id="product-easy-return-text">O produto tem Devolução Fácil? (+R$ 0,49)</span></label><label class="option-question"><input type="checkbox" name="shopeeOfficialEvent"><span id="product-official-event-text">Vem de eventos oficiais? (+2,50 p.p.)</span></label></fieldset></div><p class="help" id="shipping-help">Este frete entra apenas no Mercado Livre se o preço calculado sem ele ultrapassar R$ 100,00. Em R$ 100,00 exatos, não entra. Outros custos (ex.: embalagem) valem para os dois marketplaces; evite repetir o mesmo frete nos dois campos.</p><p id="product-error" class="error" role="alert"></p><div class="dialog-actions"><button class="btn quiet" type="button" id="cancel">Cancelar</button><button class="btn primary" type="submit">Salvar produto</button></div></form></dialog>
+<dialog id="import-dialog" aria-labelledby="import-title"><form id="import-form"><h2 id="import-title">Importar produtos por CSV</h2><p>Escolha um arquivo com as colunas nome, custo e peso. Peso em kg; valores sem R$ e sem separador de milhares.</p><pre>nome;custo;peso
+Garrafa térmica;30,00;0,350
+Camiseta básica;25,00;0,200</pre><label>Arquivo CSV (até 2 MB e 5.000 produtos)<input id="import-file" type="file" accept=".csv,text/csv" required></label><div class="form-grid"><label>Categoria do lote<input id="import-category" value="Importados" required maxlength="80"></label><label>Margem desejada do lote (%)<input id="import-margin" type="number" min="0" max="99.99" step="0.01" value="20" inputmode="decimal" required></label></div><p class="help">Aceita ponto e vírgula, vírgula ou tabulação. Com vírgula como separador, use ponto decimal ou números entre aspas. Frete e outros custos começam em zero. Colunas adicionais são ignoradas. Nomes repetidos criam novos produtos; o catálogo existente é mantido.</p><p id="import-status" role="status" aria-live="polite"></p><ul id="import-errors" class="error" aria-live="polite"></ul><ul id="import-preview" class="import-preview" aria-label="Prévia dos produtos"></ul><div class="dialog-actions"><button id="import-cancel" class="btn quiet" type="button">Cancelar</button><button id="import-confirm" class="btn primary" type="submit" disabled>Importar produtos</button></div></form></dialog>
+<dialog id="restore-dialog" aria-labelledby="restore-title"><form id="restore-form"><h2 id="restore-title">Restaurar backup</h2><p>Escolha o arquivo JSON baixado pelo painel. Você poderá conferir o conteúdo antes de restaurar.</p><label style="margin-top:18px">Arquivo de backup (JSON, até 20 MB)<input id="restore-file" type="file" accept=".json,application/json" required></label><p id="restore-status" role="status" aria-live="polite" style="margin-top:18px"></p><p id="restore-summary" style="white-space:pre-line"></p><p id="restore-error" class="error" role="alert"></p><p class="help">Ao confirmar, todos os produtos, kits e taxas atuais serão substituídos. Para guardar o estado atual, cancele e use “Baixar backup” primeiro.</p><div class="dialog-actions"><button class="btn quiet" id="restore-cancel" type="button">Cancelar</button><button class="btn primary" id="restore-confirm" type="submit" disabled>Substituir dados e restaurar</button></div></form></dialog>
+<dialog id="kit-delete-dialog" aria-labelledby="kit-delete-title"><h2 id="kit-delete-title">Excluir kit?</h2><p id="kit-delete-text"></p><div class="dialog-actions"><button class="btn quiet" id="kit-delete-cancel" type="button">Cancelar</button><button class="btn primary" id="kit-delete-confirm" type="button">Excluir kit</button></div></dialog><dialog id="delete-dialog" aria-labelledby="delete-title"><h2 id="delete-title">Excluir produto?</h2><p id="delete-text"></p><div class="dialog-actions"><button class="btn quiet" id="delete-cancel">Cancelar</button><button class="btn primary" id="delete-confirm">Excluir produto</button></div></dialog><div class="toast hidden" id="toast" role="status"></div>
+<script>
+'use strict';
+const KEY='margem.painel.v1';
+const MARKETS={ml:'Mercado Livre',shopee:'Shopee'};
+const SCENARIOS={ml:'Mercado Livre Clássico',mlPremium:'Mercado Livre Premium',shopee:'Shopee'};
+const marketOf=scenario=>scenario==='mlPremium'?'ml':scenario;
+const defaults=()=>({products:[],kits:[],fees:{ml:{commission:14,premiumCommission:19,fixed:6,tax:6},shopee:{commission:20,fixed:4,tax:6,easyReturnFee:.49,officialEventRate:2.5}}});
+function effectiveFee(product,fee,scenario){
+ return {commission:(scenario==='mlPremium'?(fee.premiumCommission??fee.commission):fee.commission)+(scenario==='shopee'&&product.shopeeOfficialEvent?(fee.officialEventRate??2.5):0),fixed:fee.fixed+(scenario==='shopee'&&product.shopeeEasyReturn?(fee.easyReturnFee??.49):0),tax:fee.tax};
+}
+function validOptions(data){return ['shopeeEasyReturn','shopeeOfficialEvent'].every(k=>data[k]===undefined||typeof data[k]==='boolean');}
+function optionalOptions(data){return Object.fromEntries(['shopeeEasyReturn','shopeeOfficialEvent'].filter(k=>data[k]!==undefined).map(k=>[k,data[k]]));}
+function validFeeOptions(fees){return (fees.ml.premiumCommission===undefined||(Number.isFinite(fees.ml.premiumCommission)&&fees.ml.premiumCommission>=0&&fees.ml.premiumCommission+fees.ml.tax<100))&&['easyReturnFee','officialEventRate'].every(k=>fees.shopee[k]===undefined||(Number.isFinite(fees.shopee[k])&&fees.shopee[k]>=0));}
+function calculate(product,fee,market){
+ fee=effectiveFee(product,fee,market);
+ const denominator=1-(fee.commission+fee.tax+product.margin)/100;
+ if(!Number.isFinite(denominator)||denominator<=0)return null;
+ const roundUp=value=>Math.ceil(Number((value*100).toFixed(7)))/100;
+ const baseCost=product.cost+product.extra+fee.fixed;
+ const basePrice=roundUp(baseCost/denominator);
+ // O limite é avaliado no preço sem este frete, já arredondado ao centavo.
+ // Assim, um frete alto não ativa a própria cobrança em produtos até R$ 100.
+ const shippingApplied=marketOf(market)==='ml'&&basePrice>100?(product.mlShipping??0):0;
+ if(!Number.isFinite(shippingApplied)||shippingApplied<0)return null;
+ const price=roundUp((baseCost+shippingApplied)/denominator);
+ const profit=price*(1-(fee.commission+fee.tax)/100)-baseCost-shippingApplied;
+ if(!Number.isFinite(price)||price<=0||!Number.isFinite(profit))return null;
+ return {price,profit,margin:profit/price*100,shippingApplied,feesApplied:fee};
+}
+function minimumPrice(product,fee,market){return calculate({...product,margin:10},fee,market);}
+function kitTotals(kit,products){
+ if(!kit||!Array.isArray(kit.items)||!kit.items.length)return null;
+ const byId=new Map(products.map(p=>[p.id,p])),seen=new Set();let cost=0,extra=0,weight=0,units=0;
+ for(const item of kit.items){
+  if(!item||typeof item.productId!=='string')return null;
+  const p=byId.get(item.productId);
+  if(!p||seen.has(item.productId)||!Number.isInteger(item.quantity)||item.quantity<1||item.quantity>9999)return null;
+  seen.add(item.productId);cost+=Math.round(p.cost*100)*item.quantity;extra+=Math.round(p.extra*100)*item.quantity;weight+=p.weight*item.quantity;units+=item.quantity;
+ }
+ if(!Number.isFinite(kit.margin)||kit.margin<0||kit.margin>=100||!Number.isFinite(kit.extra)||kit.extra<0||!Number.isFinite(kit.mlShipping)||kit.mlShipping<0)return null;
+ return {cost:cost/100,extra:extra/100+kit.extra,weight:Math.round(weight*1000)/1000,units,margin:kit.margin,mlShipping:kit.mlShipping,shopeeEasyReturn:Boolean(kit.shopeeEasyReturn),shopeeOfficialEvent:Boolean(kit.shopeeOfficialEvent)};
+}
+function validKits(kits,products){
+ if(!Array.isArray(kits))return false;const ids=new Set();
+ return kits.every(k=>{if(!k||!validOptions(k)||typeof k.id!=='string'||!k.id.trim()||ids.has(k.id)||typeof k.name!=='string'||!k.name.trim()||k.name.length>120||!kitTotals(k,products))return false;ids.add(k.id);return true;});
+}
+function splitCSV(text,delimiter){
+ const records=[];let cells=[],value='',quoted=false,closed=false,line=1,start=1;
+ function cell(){cells.push(value);value='';closed=false;}
+ function row(){cell();if(cells.some(c=>c.trim()))records.push({cells,line:start});cells=[];start=line+1;}
+ for(let i=0;i<text.length;i++){
+  const c=text[i];
+  if(quoted){if(c==='"'){if(text[i+1]==='"'){value+='"';i++;}else{quoted=false;closed=true;}}else{value+=c;if(c==='\n')line++;}continue;}
+  if(c==='"'){if(value.trim()||closed)throw Error(`Linha ${line}: aspas fora do início do campo.`);value='';quoted=true;}
+  else if(c===delimiter)cell();
+  else if(c==='\r'||c==='\n'){row();if(c==='\r'&&text[i+1]==='\n')i++;line++;}
+  else if(closed){if(!/\s/.test(c))throw Error(`Linha ${line}: texto após o fechamento das aspas.`);}
+  else value+=c;
+ }
+ if(quoted)throw Error(`Linha ${start}: campo com aspas não foi fechado.`);
+ row();return records;
+}
+function importNumber(value,precision){
+ const s=value.trim();
+ // Vírgula ou ponto decimal, sem separador de milhares para evitar ambiguidades.
+ if(!new RegExp('^\\d+(?:[.,]\\d{1,'+precision+'})?$').test(s))return NaN;
+ return Number(s.replace(',','.'));
+}
+function parseImportCSV(text,options){
+ if(text.length>2*1024*1024)throw Error('O CSV deve ter no máximo 2 MB.');
+ text=text.replace(/^\uFEFF/,'');
+ let delimiter,first='',quoted=false;
+ const sep=text.match(/^sep=([;,\t])\r?\n/i);
+ if(sep){delimiter=sep[1];text=text.slice(sep[0].length);}
+ else{
+  const headerText=text.replace(/^(?:[ \t]*\r?\n)+/,'');
+  for(let i=0;i<headerText.length;i++){const c=headerText[i];if(c==='"'){if(quoted&&headerText[i+1]==='"'){i++;continue;}quoted=!quoted;}if(!quoted&&(c==='\n'||c==='\r'))break;if(!quoted)first+=c;}
+  delimiter=[';',',','\t'].sort((a,b)=>first.split(b).length-first.split(a).length)[0];
+ }
+ const records=splitCSV(text,delimiter);
+ if(!records.length)throw Error('O arquivo está vazio.');
+ const normalize=s=>s.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+ const headers=records.shift().cells.map(normalize);
+ const aliases={name:['nome','produto'],cost:['custo','custo (r$)'],weight:['peso','peso (kg)']};
+ const columns={};
+ for(const [key,names] of Object.entries(aliases)){
+  const found=headers.map((h,i)=>names.includes(h)?i:-1).filter(i=>i>=0);
+  if(found.length!==1)throw Error(`O cabeçalho deve conter uma única coluna “${names[0]}”.`);
+  columns[key]=found[0];
+ }
+ if(!records.length)throw Error('O CSV tem cabeçalho, mas não tem produtos.');
+ if(records.length>5000)throw Error('Importe até 5.000 produtos por arquivo.');
+ const category=options.category.trim(),margin=Number(options.margin);
+ if(!category||category.length>80)throw Error('Informe uma categoria com até 80 caracteres.');
+ if(!Number.isFinite(margin)||margin<0||margin>=100)throw Error('Informe uma margem de 0 a 99,99%.');
+ const products=[],errors=[];
+ for(const {cells,line} of records){
+  if(cells.length!==headers.length){errors.push(`Linha ${line}: número de campos diferente do cabeçalho. Use aspas se o campo contiver o separador.`);continue;}
+  const name=cells[columns.name].trim(),cost=importNumber(cells[columns.cost],2),weight=importNumber(cells[columns.weight],3);
+  const problems=[];
+  if(!name||name.length>120)problems.push('nome vazio ou com mais de 120 caracteres');
+  if(!Number.isFinite(cost)||cost<.01||cost>1e9)problems.push('custo inválido (mínimo 0,01; até 2 casas decimais)');
+  if(!Number.isFinite(weight)||weight<0||weight>1e6)problems.push('peso inválido (em kg; até 3 casas decimais)');
+  if(problems.length){errors.push(`Linha ${line}: ${problems.join('; ')}.`);continue;}
+  products.push({name,cost,weight,category,margin,extra:0,mlShipping:0});
+ }
+ return {products,errors,total:records.length};
+}
+const money=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});
+const number=(v,d=2)=>v.toLocaleString('pt-BR',{maximumFractionDigits:d});
+const escapeHTML=v=>String(v).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function feeFields(market){return market==='ml'?[['commission','Comissão Clássica (%)'],['premiumCommission','Comissão Premium (%)'],['fixed','Taxa fixa (R$)'],['tax','Imposto (%)']]:[['commission','Comissão base (%)'],['fixed','Taxa fixa base (R$)'],['tax','Imposto (%)'],['easyReturnFee','Devolução Fácil (R$)'],['officialEventRate','Eventos oficiais (+ p.p.)']];}
+function feeValue(fee,field){return fee[field]??({premiumCommission:fee.commission,easyReturnFee:.49,officialEventRate:2.5}[field]);}
+function feeDetailsHTML(product,fee,scenario){
+ const f=effectiveFee(product,fee,scenario);
+ return `<div class="fee-info">Comissão: ${number(f.commission)}% · taxa fixa: ${money(f.fixed)} · imposto: ${number(f.tax)}%${scenario==='shopee'?`<br>Devolução Fácil: ${product.shopeeEasyReturn?'Sim (+'+money(feeValue(fee,'easyReturnFee'))+')':'Não'}<br>Evento oficial: ${product.shopeeOfficialEvent?'Sim (+'+number(feeValue(fee,'officialEventRate'))+' p.p.)':'Não'}`:''}</div>`;
+}
+function validState(s){return s&&Array.isArray(s.products)&&s.fees&&Object.keys(MARKETS).every(k=>s.fees[k]&&['commission','fixed','tax'].every(f=>Number.isFinite(s.fees[k][f])&&s.fees[k][f]>=0)&&s.fees[k].commission+s.fees[k].tax<100)&&s.products.every(p=>p&&typeof p.id==='string'&&typeof p.name==='string'&&p.name.trim()&&typeof p.category==='string'&&['cost','weight','margin','extra'].every(k=>Number.isFinite(p[k])&&p[k]>=0)&&(p.mlShipping===undefined||(Number.isFinite(p.mlShipping)&&p.mlShipping>=0))&&p.cost>0&&p.margin<100&&validOptions(p))&&validFeeOptions(s.fees)&&validKits(s.kits??[],s.products);}
+function backupData(data){
+ if(!validState(data))throw Error('O arquivo contém produtos ou taxas inválidos.');
+ const ids=new Set();
+ const products=data.products.map(p=>{
+  if(!p.id.trim()||ids.has(p.id)||!p.category.trim())throw Error('O arquivo contém identificadores repetidos ou campos obrigatórios vazios.');
+  ids.add(p.id);
+  return {...Object.fromEntries(['id','name','category','cost','weight','margin','extra','mlShipping'].map(k=>[k,k==='mlShipping'?(p[k]??0):p[k]])),...optionalOptions(p)};
+ });
+ const fees=Object.fromEntries(Object.keys(MARKETS).map(k=>[k,Object.fromEntries(['commission','fixed','tax',...(k==='ml'?['premiumCommission']:['easyReturnFee','officialEventRate'])].filter(f=>data.fees[k][f]!==undefined).map(f=>[f,data.fees[k][f]]))]));
+ return {products,fees,kits:(data.kits??[]).map(k=>({id:k.id,name:k.name,margin:k.margin,extra:k.extra,mlShipping:k.mlShipping,...optionalOptions(k),items:k.items.map(i=>({productId:i.productId,quantity:i.quantity}))}))};
+}
+function buildBackup(data){return JSON.stringify({format:'margem-backup',version:3,createdAt:new Date().toISOString(),data:backupData(data)},null,2);}
+function parseBackup(text){
+ if(text.length>20*1024*1024)throw Error('O backup deve ter no máximo 20 MB.');
+ let backup;try{backup=JSON.parse(text.replace(/^\uFEFF/,''));}catch{throw Error('Não foi possível ler o JSON. Selecione um arquivo gerado por “Baixar backup”.');}
+ if(!backup||backup.format!=='margem-backup'||![1,2,3].includes(backup.version))throw Error('Formato ou versão de backup incompatível. Use um arquivo gerado por este painel.');
+ return backupData(backup.data);
+}
+let state=defaults(),storageProblem='';
+try{const saved=localStorage.getItem(KEY);if(saved){const parsed=JSON.parse(saved);if(!validState(parsed))throw Error('Dados inválidos');state={...parsed,kits:parsed.kits??[],products:parsed.products.map(p=>({...p,mlShipping:p.mlShipping??0}))};}}catch{storageProblem='Não foi possível ler os dados salvos. Esta sessão começa vazia; confira seu backup antes de salvar novos dados.';}
+let sort={key:'name',direction:1},editing=null,deleting=null,toastTimer;
+const $=id=>document.getElementById(id);
+function toast(message){$('toast').textContent=message;$('toast').classList.remove('hidden');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.add('hidden'),4500);}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(state));$('save-status').textContent='● Salvo neste navegador';return true;}catch{$('save-status').textContent='⚠ Dados só nesta sessão';toast('Não foi possível salvar. Baixe um backup antes de fechar.');return false;}}
+function renderFees(){
+ $('market-fields').innerHTML=Object.entries(MARKETS).map(([key,name])=>`<div class="market"><div class="market-title"><span class="market-icon ${key==='shopee'?'shopee':''}">${key==='ml'?'ML':'S'}</span>${name}</div><div class="fields">${feeFields(key).map(([field,label])=>`<label>${label}<input name="${key}-${field}" type="number" step="0.01" min="0" max="${['fixed','easyReturnFee'].includes(field)?'1000000000':'99.99'}" required inputmode="decimal" value="${feeValue(state.fees[key],field)}"></label>`).join('')}</div>${key==='shopee'?'<p class="help">No cadastro de cada produto ou kit, responda se tem Devolução Fácil ou participa de eventos oficiais. Os adicionais são aplicados somente quando marcados.</p>':'<p class="help">Comparamos as duas modalidades. As taxas fixas e o imposto informados valem para ambas. Em cadastros antigos, a comissão anterior é usada nas duas modalidades até você editar.</p>'}</div>`).join('');
+ for(const prefix of ['product','kit']){ $(prefix+'-easy-return-text').textContent=(prefix==='kit'?'O kit':'O produto')+' tem Devolução Fácil? (+'+money(feeValue(state.fees.shopee,'easyReturnFee'))+')';$(prefix+'-official-event-text').textContent='Vem de eventos oficiais? (+'+number(feeValue(state.fees.shopee,'officialEventRate'))+' p.p.)';}
+}
+function visibleProducts(){const query=$('search').value.trim().toLocaleLowerCase('pt-BR');return state.products.filter(p=>(p.name+' '+p.category).toLocaleLowerCase('pt-BR').includes(query)).sort((a,b)=>{const value=p=>SCENARIOS[sort.key]?(calculate(p,state.fees[marketOf(sort.key)],sort.key)?.price??Infinity):p[sort.key];const av=value(a),bv=value(b);return sort.direction*(typeof av==='string'?av.localeCompare(bv,'pt-BR'):av===bv?0:av>bv?1:-1);});}
+function render(){
+ const products=visibleProducts();$('count').textContent=state.products.length;$('average').textContent=state.products.length?number(state.products.reduce((s,p)=>s+p.margin,0)/state.products.length,1)+'%':'—';$('warning-count').textContent=state.products.filter(p=>p.margin<15).length;
+ $('rows').innerHTML=products.map(p=>`<tr role="row" class="${p.margin<15?'warning':''}"><td role="cell" class="product-name" data-label="Produto">${escapeHTML(p.name)}<span class="sub">${escapeHTML(p.category)}</span></td><td role="cell" data-label="Custo">${money(p.cost)}<span class="sub">+ ${money(p.extra)} outros custos</span></td><td role="cell" data-label="Peso">${number(p.weight,3)} kg</td><td role="cell" data-label="Margem desejada"><span class="margin ${p.margin<15?'low':''}">${p.margin<15?'↓ ':''}${number(p.margin)}%</span></td>${Object.keys(SCENARIOS).map(k=>{
+ const fee=state.fees[marketOf(k)],c=calculate(p,fee,k),minimum=minimumPrice(p,fee,k);
+ return `<td role="cell" data-label="${SCENARIOS[k]}">${c?`<span class="price">${money(c.price)}</span><span class="profit">${money(c.profit)} lucro · ${number(c.margin)}%</span>${marketOf(k)==='ml'?`<span class="sub">Frete aplicado: ${money(c.shippingApplied)}</span>`:''}`:`<span class="danger-text">Inviável</span><span class="sub">Taxas + margem ≥ 100%</span>`}<div class="minimum"><span>Mínimo para 10%</span>${minimum?`<strong>${money(minimum.price)}</strong>${minimum.shippingApplied>0?`<span class="sub">Inclui ${money(minimum.shippingApplied)} de frete</span>`:''}`:`<span class="danger-text">Inviável com estas taxas</span>`}</div>${feeDetailsHTML(p,fee,k)}</td>`;
+}).join('')}<td role="cell" data-label="Ações"><button class="row-action" data-edit="${escapeHTML(p.id)}" aria-label="Editar ${escapeHTML(p.name)}">Editar</button><button class="row-action" data-delete="${escapeHTML(p.id)}" aria-label="Excluir ${escapeHTML(p.name)}">Excluir</button></td></tr>`).join('');
+ $('empty').classList.toggle('hidden',products.length>0);$('empty').innerHTML=state.products.length?'Nenhum produto corresponde à busca.':'Seu catálogo começa aqui.<br>Cadastre um produto ou carregue os três exemplos.';$('table-count').textContent=`${products.length} de ${state.products.length} produtos`;$('export').disabled=products.length===0;
+ $('mobile-sort').value=sort.key;$('sort-direction').textContent=sort.direction===1?'↑ Crescente':'↓ Decrescente';
+ renderKitScreen();
+ document.querySelectorAll('th[data-key]').forEach(th=>{th.setAttribute('aria-sort',sort.key===th.dataset.key?(sort.direction===1?'ascending':'descending'):'none');const b=th.querySelector('button');b.textContent=b.textContent.replace(/ [↕↑↓]$/,'')+' '+(sort.key===th.dataset.key?(sort.direction===1?'↑':'↓'):'↕');});
+}
+function openProduct(p){editing=p?.id??null;$('product-form').reset();$('product-error').textContent='';$('dialog-title').textContent=p?'Editar produto':'Novo produto';if(p)for(const key of ['name','category','cost','weight','margin','extra','mlShipping'])$('product-form').elements[key].value=p[key];for(const key of ['shopeeEasyReturn','shopeeOfficialEvent'])if($('product-form').elements[key])$('product-form').elements[key].checked=Boolean(p?.[key]);$('product-dialog').showModal();}
+$('add').onclick=()=>openProduct();$('cancel').onclick=$('close-dialog').onclick=()=>$('product-dialog').close();
+$('product-form').onsubmit=e=>{e.preventDefault();const form=e.target;const p={id:editing??(globalThis.crypto?.randomUUID?.()??Date.now().toString(36)+Math.random().toString(36).slice(2)),name:form.elements.name.value.trim(),category:form.elements.category.value.trim(),...Object.fromEntries(['cost','weight','margin','extra','mlShipping'].map(k=>[k,Number(form.elements[k].value)])),shopeeEasyReturn:Boolean(form.elements.shopeeEasyReturn?.checked),shopeeOfficialEvent:Boolean(form.elements.shopeeOfficialEvent?.checked)};if(!p.name||!p.category){$('product-error').textContent='Preencha nome e categoria.';return;}if(Object.keys(SCENARIOS).some(k=>!calculate(p,state.fees[marketOf(k)],k))){$('product-error').textContent='A comissão, o imposto e a margem devem somar menos de 100% nos dois marketplaces.';return;}if(editing)state.products=state.products.map(old=>old.id===editing?p:old);else state.products.push(p);persist();render();$('product-dialog').close();};
+$('fees-form').onsubmit=e=>{e.preventDefault();const fees={};for(const k of Object.keys(MARKETS))fees[k]=Object.fromEntries(feeFields(k).map(([f])=>[f,Number(e.target.elements[k+'-'+f].value)]));if(!validState({...state,fees})){$('fees-error').textContent='Confira os valores. Cada comissão do Mercado Livre e a comissão base da Shopee, somadas ao imposto, devem ficar abaixo de 100%.';return;}state.fees=fees;$('fees-error').textContent='';if(persist())toast('Taxas salvas. Todos os preços foram recalculados.');renderFees();render();};
+$('mobile-sort').onchange=e=>{sort={key:e.target.value,direction:sort.direction};render();};
+$('sort-direction').onclick=()=>{sort.direction*=-1;render();};
+$('search').oninput=render;document.querySelectorAll('th[data-key] button').forEach(b=>b.onclick=()=>{const key=b.parentElement.dataset.key;sort={key,direction:sort.key===key?-sort.direction:1};render();});
+$('rows').onclick=e=>{const button=e.target.closest('button');if(!button)return;if(button.dataset.edit)openProduct(state.products.find(p=>p.id===button.dataset.edit));if(button.dataset.delete){if(state.kits.some(k=>k.items.some(i=>i.productId===button.dataset.delete))){toast('Este produto faz parte de um kit. Edite ou exclua o kit antes de remover o produto.');return;}deleting=button.dataset.delete;$('delete-text').textContent=state.products.find(p=>p.id===deleting).name+' será removido do catálogo.';$('delete-dialog').showModal();}};
+$('delete-cancel').onclick=()=>$('delete-dialog').close();$('delete-confirm').onclick=()=>{if(state.kits.some(k=>k.items.some(i=>i.productId===deleting))){toast('Este produto faz parte de um kit. Edite ou exclua o kit antes de remover o produto.');$('delete-dialog').close();return;}state.products=state.products.filter(p=>p.id!==deleting);persist();render();$('delete-dialog').close();};
+const examples=[{name:'Garrafa térmica 500 ml',category:'Casa e cozinha',cost:30,weight:.35,margin:20,extra:0},{name:'Camiseta básica',category:'Moda',cost:25,weight:.2,margin:25,extra:0},{name:'Fone Bluetooth',category:'Eletrônicos',cost:60,weight:.15,margin:12,extra:0}];
+$('examples').onclick=()=>{let added=0;for(const p of examples){if(!state.products.some(old=>old.id==='example-'+p.name)){state.products.push({...p,mlShipping:0,id:'example-'+p.name});added++;}}persist();render();toast(added?'Exemplos adicionados. Usam as taxas salvas atualmente.':'Os três exemplos já estão no catálogo.');};
+function csvCell(value){let s=String(value);if(/^[\s]*[=+@-]/.test(s))s="'"+s;return '"'+s.replace(/"/g,'""')+'"';}
+function buildCSV(products,fees){
+ const header=['Produto','Categoria','Custo (R$)','Peso (kg)','Outros custos por venda (R$)','Frete ML cadastrado (R$)','Margem desejada (%)','Shopee - Devolução Fácil','Shopee - Evento oficial',...Object.values(SCENARIOS).flatMap(n=>[n+' - preço (R$)',n+' - lucro (R$)',n+' - margem efetiva (%)',n+' - comissão efetiva (%)',n+' - taxa fixa efetiva (R$)',n+' - imposto (%)',n+' - frete aplicado (R$)',n+' - preço mínimo para margem de 10% (R$)'])];
+ const decimal=n=>n.toFixed(2).replace('.',',');
+ return '\uFEFF'+[header,...products.map(p=>[p.name,p.category,decimal(p.cost),String(p.weight).replace('.',','),decimal(p.extra),decimal(p.mlShipping??0),decimal(p.margin),p.shopeeEasyReturn?'Sim':'Não',p.shopeeOfficialEvent?'Sim':'Não',...Object.keys(SCENARIOS).flatMap(k=>{const base=fees[marketOf(k)],f=effectiveFee(p,base,k),c=calculate(p,base,k),minimum=minimumPrice(p,base,k);return [...(c?[decimal(c.price),decimal(c.profit),decimal(c.margin)]:['Inviável','','']),decimal(f.commission),decimal(f.fixed),decimal(f.tax),c?decimal(c.shippingApplied):'',minimum?decimal(minimum.price):'Inviável'];})])].map(row=>row.map(csvCell).join(';')).join('\r\n');
+}
+$('export').onclick=()=>{const blob=new Blob([buildCSV(visibleProducts(),state.fees)],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='precos-marketplaces-'+new Date().toLocaleDateString('sv-SE')+'.csv';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);toast('CSV exportado com os produtos visíveis, na ordem da tabela.');};
+let importText=null,importBatch=[],importReadVersion=0;
+function resetImportPreview(){importBatch=[];$('import-confirm').disabled=true;$('import-preview').innerHTML='';$('import-errors').innerHTML='';}
+function previewImport(){
+ resetImportPreview();if(importText===null)return;
+ try{
+  const result=parseImportCSV(importText,{category:$('import-category').value,margin:$('import-margin').value});
+  if(Object.keys(SCENARIOS).some(k=>{const f=effectiveFee({},state.fees[marketOf(k)],k);return f.commission+f.tax+Number($('import-margin').value)>=100;}))throw Error('A margem do lote, a comissão e o imposto devem somar menos de 100% nos dois marketplaces. Ajuste a margem ou as taxas.');
+  $('import-status').textContent=result.errors.length?`${result.errors.length} linha(s) com erro. Corrija o arquivo e selecione novamente. Nenhum produto será importado enquanto houver erros.`:`${result.total} produto(s) prontos para importar. Prévia dos primeiros ${Math.min(10,result.total)}:`;
+  $('import-errors').innerHTML=result.errors.slice(0,20).map(error=>`<li>${escapeHTML(error)}</li>`).join('')+(result.errors.length>20?'<li>Outros erros omitidos; revise também as demais linhas.</li>':'');
+  $('import-preview').innerHTML=result.products.slice(0,10).map(p=>`<li><strong>${escapeHTML(p.name)}</strong><small>${money(p.cost)} · ${number(p.weight,3)} kg · ${escapeHTML(p.category)} · margem ${number(p.margin)}%</small></li>`).join('');
+  if(!result.errors.length){importBatch=result.products;$('import-confirm').disabled=false;}
+ }catch(error){$('import-status').textContent='Não foi possível preparar a importação.';$('import-errors').innerHTML=`<li>${escapeHTML(error.message)}</li>`;}
+}
+$('import').onclick=()=>{importReadVersion++;importText=null;resetImportPreview();$('import-file').value='';$('import-status').textContent='Selecione um CSV para conferir os produtos antes de importar.';$('import-dialog').showModal();};
+$('import-cancel').onclick=()=>{importReadVersion++;importText=null;resetImportPreview();$('import-dialog').close();};
+$('import-dialog').oncancel=()=>{importReadVersion++;importText=null;resetImportPreview();};
+$('import-file').onchange=async e=>{
+ const version=++importReadVersion,file=e.target.files[0];importText=null;resetImportPreview();
+ if(!file){$('import-status').textContent='Selecione um CSV.';return;}
+ if(file.size>2*1024*1024){$('import-status').textContent='O CSV deve ter no máximo 2 MB.';return;}
+ $('import-status').textContent='Lendo arquivo…';
+ try{
+  const bytes=await file.arrayBuffer();if(version!==importReadVersion)return;
+  try{importText=new TextDecoder('utf-8',{fatal:true}).decode(bytes);}catch{importText=new TextDecoder('windows-1252').decode(bytes);}
+  previewImport();
+ }catch{if(version===importReadVersion)$('import-status').textContent='Não foi possível ler o arquivo. Selecione-o novamente.';}
+};
+$('import-category').oninput=$('import-margin').oninput=previewImport;
+$('import-form').onsubmit=e=>{
+ e.preventDefault();previewImport();if(!importBatch.length)return;
+ const added=importBatch.map((p,i)=>({...p,id:'csv-'+(globalThis.crypto?.randomUUID?.()??Date.now().toString(36)+Math.random().toString(36).slice(2))+'-'+i}));
+ state.products.push(...added);const saved=persist();render();importReadVersion++;importText=null;resetImportPreview();$('import-dialog').close();
+ if(saved)toast(`${added.length} produto(s) importados e salvos neste navegador.`);
+};
+let restoreCandidate=null,restoreReadVersion=0;
+function clearRestore(){restoreCandidate=null;$('restore-confirm').disabled=true;$('restore-summary').textContent='';$('restore-error').textContent='';}
+function previewRestore(text){
+ clearRestore();
+ try{
+  restoreCandidate=parseBackup(text);
+  $('restore-status').textContent=`Backup válido: ${restoreCandidate.products.length} produto(s) e ${restoreCandidate.kits.length} kit(s). Atualmente há ${state.products.length} produto(s) neste navegador.`;
+  $('restore-summary').textContent=Object.entries(MARKETS).map(([k,name])=>{const f=restoreCandidate.fees[k];return k==='ml'?`${name}: Clássica ${number(f.commission)}%, Premium ${number(feeValue(f,'premiumCommission'))}%, taxa fixa ${money(f.fixed)}, imposto ${number(f.tax)}%.`:`${name}: comissão base ${number(f.commission)}%, taxa fixa ${money(f.fixed)}, imposto ${number(f.tax)}%, Devolução Fácil +${money(feeValue(f,'easyReturnFee'))}, eventos oficiais +${number(feeValue(f,'officialEventRate'))} p.p.`;}).join('\n');
+  $('restore-confirm').disabled=false;
+ }catch(error){$('restore-status').textContent='Este arquivo não pode ser restaurado.';$('restore-error').textContent=error.message;}
+}
+$('download-backup').onclick=()=>{
+ try{
+  const blob=new Blob([buildBackup(state)],{type:'application/json;charset=utf-8;'});
+  const url=URL.createObjectURL(blob),a=document.createElement('a');
+  a.href=url;a.download='margem-backup-'+new Date().toISOString().replace(/[:.]/g,'-')+'.json';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);
+  toast('Download do backup iniciado: todos os produtos, kits e taxas foram incluídos.');
+ }catch(error){toast('Não foi possível gerar o backup: '+error.message);}
+};
+$('restore-backup').onclick=()=>{restoreReadVersion++;clearRestore();$('restore-file').value='';$('restore-status').textContent='Selecione um backup para conferir o conteúdo.';$('restore-dialog').showModal();};
+$('restore-cancel').onclick=()=>{restoreReadVersion++;clearRestore();$('restore-dialog').close();};
+$('restore-dialog').oncancel=()=>{restoreReadVersion++;clearRestore();};
+$('restore-file').onchange=async e=>{
+ const version=++restoreReadVersion,file=e.target.files[0];clearRestore();
+ if(!file){$('restore-status').textContent='Selecione um backup.';return;}
+ if(file.size>20*1024*1024){$('restore-status').textContent='O backup deve ter no máximo 20 MB.';return;}
+ $('restore-status').textContent='Lendo e validando backup…';
+ try{const text=await file.text();if(version===restoreReadVersion)previewRestore(text);}
+ catch{if(version===restoreReadVersion){$('restore-status').textContent='Falha na leitura do backup.';$('restore-error').textContent='Selecione o arquivo novamente.';}}
+};
+$('restore-form').onsubmit=e=>{
+ e.preventDefault();if(!restoreCandidate)return;
+ let restored;
+ try{
+  restored=backupData(restoreCandidate);
+  // Grave primeiro: se o armazenamento falhar, o catálogo atual fica intacto.
+  localStorage.setItem(KEY,JSON.stringify(restored));
+ }catch{$('restore-error').textContent='Não foi possível salvar o backup no navegador. Seus dados atuais foram mantidos. Verifique o espaço disponível e tente novamente.';return;}
+ state=restored;editing=null;sort={key:'name',direction:1};$('search').value='';$('fees-error').textContent='';$('save-status').textContent='● Salvo neste navegador';
+ importReadVersion++;importText=null;resetImportPreview();resetKitEditor();renderFees();render();restoreReadVersion++;clearRestore();$('restore-dialog').close();toast('Backup restaurado: produtos, kits e taxas salvos neste navegador.');
+};
+let kitItems=new Map(),kitEditing=null,kitDeleting=null;
+function readKitDraft(){return {name:$('kit-name').value.trim(),margin:Number($('kit-margin').value),extra:Number($('kit-extra').value),mlShipping:Number($('kit-shipping').value),shopeeEasyReturn:Boolean($('kit-easy-return').checked),shopeeOfficialEvent:Boolean($('kit-official-event').checked),items:Array.from(kitItems,([productId,quantity])=>({productId,quantity}))};}
+function kitPricesHTML(totals){
+ return Object.entries(SCENARIOS).map(([k,name])=>{
+  const fee=state.fees[marketOf(k)],c=calculate(totals,fee,k),minimum=minimumPrice(totals,fee,k);
+  return `<div class="kit-price ${totals.margin<15?'warning':''}"><h3 style="font-size:17px;margin:0 0 8px">${name}</h3>${c?`<strong class="price">${money(c.price)}</strong><span class="profit">${money(c.profit)} lucro · ${number(c.margin)}% de margem</span>${marketOf(k)==='ml'?`<span class="sub">Frete aplicado: ${money(c.shippingApplied)}</span>`:''}`:'<span class="danger-text">Margem inviável com as taxas atuais</span>'}<div class="minimum"><span>Mínimo para 10%</span>${minimum?`<strong>${money(minimum.price)}</strong>`:'<span class="danger-text">Inviável</span>'}</div>${feeDetailsHTML(totals,fee,k)}</div>`;
+ }).join('');
+}
+function renderKitPicker(){
+ const query=$('kit-search').value.trim().toLocaleLowerCase('pt-BR');
+ const products=state.products.filter(p=>(p.name+' '+p.category).toLocaleLowerCase('pt-BR').includes(query));
+ $('kit-picker').innerHTML=products.length?products.map(p=>`<li><label class="kit-choice"><input type="checkbox" data-kit-product="${escapeHTML(p.id)}" ${kitItems.has(p.id)?'checked':''}><span><strong>${escapeHTML(p.name)}</strong><small>${money(p.cost)} · ${number(p.weight,3)} kg · ${escapeHTML(p.category)}</small></span></label><label>Quantidade<input type="number" min="1" max="9999" step="1" required inputmode="numeric" data-kit-quantity="${escapeHTML(p.id)}" aria-label="Quantidade de ${escapeHTML(p.name)}" value="${kitItems.get(p.id)??1}" ${kitItems.has(p.id)?'':'disabled'}></label></li>`).join(''):`<li>${state.products.length?'Nenhum produto encontrado.':'Cadastre produtos na tela Meus produtos para montar seu kit.'}</li>`;
+}
+function renderKitPreview(){
+ const draft=readKitDraft(),totals=kitTotals(draft,state.products);
+ $('kit-error').textContent='';$('kit-save').disabled=true;
+ if(!totals){$('kit-totals').innerHTML='';$('kit-prices').innerHTML='<p>Selecione ao menos um produto com quantidade válida para calcular o kit.</p>';if(draft.items.length)$('kit-error').textContent='Confira as quantidades, a margem e os custos do kit.';return;}
+ $('kit-totals').innerHTML=`<div><small>Custo dos produtos</small><strong>${money(totals.cost)}</strong></div><div><small>Outros custos totais</small><strong>${money(totals.extra)}</strong></div><div><small>Peso total</small><strong>${number(totals.weight,3)} kg</strong></div><div><small>Unidades no kit</small><strong>${totals.units}</strong><span class="sub">${draft.items.length} produto(s) diferente(s)</span></div>`;
+ $('kit-prices').innerHTML=kitPricesHTML(totals);
+ const feasible=Object.keys(SCENARIOS).every(k=>calculate(totals,state.fees[marketOf(k)],k));
+ if(!feasible)$('kit-error').textContent='A margem, a comissão e o imposto devem somar menos de 100% nos dois marketplaces.';
+ $('kit-save').disabled=!feasible||!draft.name||draft.name.length>120;
+}
+function renderKitScreen(){
+ renderKitPicker();renderKitPreview();$('kit-count').textContent=`${state.kits.length} kit(s) salvo(s)`;
+ $('saved-kits').innerHTML=state.kits.length?state.kits.map(kit=>{
+  const totals=kitTotals(kit,state.products);
+  return `<article class="saved-kit ${kit.margin<15?'warning':''}"><h3>${escapeHTML(kit.name)}</h3><span class="margin ${kit.margin<15?'low':''}">Margem desejada: ${number(kit.margin)}%</span><ul>${kit.items.map(i=>`<li>${i.quantity} × ${escapeHTML(state.products.find(p=>p.id===i.productId)?.name??'Produto indisponível')}</li>`).join('')}</ul>${totals?`<p>Custo: ${money(totals.cost)} · outros custos: ${money(totals.extra)} · ${number(totals.weight,3)} kg</p><div class="kit-prices">${kitPricesHTML(totals)}</div>`:'<p class="error">Revise os produtos e as quantidades deste kit.</p>'}<div class="actions"><button class="btn quiet" data-edit-kit="${escapeHTML(kit.id)}">Editar kit</button><button class="btn quiet" data-delete-kit="${escapeHTML(kit.id)}">Excluir kit</button></div></article>`;
+ }).join(''):'<p>Nenhum kit salvo. Monte o primeiro usando os produtos cadastrados.</p>';
+}
+function resetKitEditor(){kitItems=new Map();kitEditing=null;$('kit-name').value='Meu kit';$('kit-margin').value='20';$('kit-extra').value='0';$('kit-shipping').value='0';$('kit-search').value='';$('kit-easy-return').checked=false;$('kit-official-event').checked=false;$('kit-editor-title').textContent='Monte seu kit';}
+function showScreen(screen){
+ const kits=screen==='kits';$('products-view').classList.toggle('hidden',kits);$('kits-view').classList.toggle('hidden',!kits);
+ $('nav-products').setAttribute('aria-current',kits?'false':'page');$('nav-kits').setAttribute('aria-current',kits?'page':'false');
+ $('view-products').setAttribute('aria-pressed',String(!kits));$('view-kits').setAttribute('aria-pressed',String(kits));
+ $('screen-title').textContent=kits?'Produtos juntos. Margem na medida.':'Preço certo. Margem clara.';
+ $('screen-description').textContent=kits?'Monte kits com seu catálogo e descubra por quanto vender.':'Saiba por quanto vender em cada marketplace.';
+ if(kits)renderKitScreen();
+}
+$('view-products').onclick=()=>showScreen('products');$('view-kits').onclick=()=>showScreen('kits');
+$('nav-products').onclick=e=>{e.preventDefault();showScreen('products');};$('nav-kits').onclick=e=>{e.preventDefault();showScreen('kits');};$('nav-fees').onclick=()=>showScreen('products');
+$('kit-search').oninput=renderKitPicker;
+$('kit-picker').onchange=e=>{
+ const input=e.target;
+ if(input.dataset.kitProduct){if(input.checked)kitItems.set(input.dataset.kitProduct,1);else kitItems.delete(input.dataset.kitProduct);renderKitPicker();}
+ else if(input.dataset.kitQuantity)kitItems.set(input.dataset.kitQuantity,Number(input.value));
+ renderKitPreview();
+};
+$('kit-picker').oninput=e=>{if(e.target.dataset.kitQuantity){kitItems.set(e.target.dataset.kitQuantity,Number(e.target.value));renderKitPreview();}};
+for(const id of ['kit-name','kit-margin','kit-extra','kit-shipping','kit-easy-return','kit-official-event'])$(id).oninput=renderKitPreview;
+$('kit-new').onclick=()=>{resetKitEditor();renderKitScreen();};
+$('kit-form').onsubmit=e=>{
+ e.preventDefault();renderKitPreview();if($('kit-save').disabled)return;
+ const draft=readKitDraft(),id=kitEditing??('kit-'+(globalThis.crypto?.randomUUID?.()??Date.now().toString(36)+Math.random().toString(36).slice(2)));
+ const kit={...draft,id};if(kitEditing)state.kits=state.kits.map(k=>k.id===id?kit:k);else state.kits.push(kit);
+ const saved=persist();resetKitEditor();renderKitScreen();if(saved)toast('Kit salvo. Os preços acompanham os custos atuais dos produtos.');
+};
+$('saved-kits').onclick=e=>{
+ const button=e.target.closest('button');if(!button)return;
+ if(button.dataset.editKit){const kit=state.kits.find(k=>k.id===button.dataset.editKit);if(!kit)return;kitEditing=kit.id;kitItems=new Map(kit.items.map(i=>[i.productId,i.quantity]));$('kit-name').value=kit.name;$('kit-margin').value=kit.margin;$('kit-extra').value=kit.extra;$('kit-shipping').value=kit.mlShipping;$('kit-easy-return').checked=Boolean(kit.shopeeEasyReturn);$('kit-official-event').checked=Boolean(kit.shopeeOfficialEvent);$('kit-search').value='';$('kit-editor-title').textContent='Editar kit';renderKitScreen();}
+ if(button.dataset.deleteKit){kitDeleting=button.dataset.deleteKit;$('kit-delete-text').textContent=state.kits.find(k=>k.id===kitDeleting).name+' será removido. Os produtos individuais serão mantidos.';$('kit-delete-dialog').showModal();}
+};
+$('kit-delete-cancel').onclick=()=>$('kit-delete-dialog').close();$('kit-delete-confirm').onclick=()=>{state.kits=state.kits.filter(k=>k.id!==kitDeleting);if(kitEditing===kitDeleting)resetKitEditor();persist();renderKitScreen();$('kit-delete-dialog').close();};
+resetKitEditor();showScreen('products');renderFees();render();if(storageProblem){$('save-status').textContent='⚠ Verifique o armazenamento';toast(storageProblem);}
+</script>
+</body></html>
