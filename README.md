@@ -39,33 +39,6 @@ sua própria cópia das taxas gerais, independente das taxas dos produtos compon
 Os custos e pesos dos componentes continuam atualizados pelo catálogo. A restauração
 de backups antigos usa as taxas do próprio arquivo para preservar produtos e kits.
 
-## Publicar no Netlify usando o GitHub
-
-1. No Netlify, adicione um projeto importando um repositório existente do GitHub.
-2. Selecione `diegorodriguesccobre-eng/meu-painel-m` e a branch `main`.
-3. O arquivo `netlify.toml` define o comando `npm run build` e a pasta de publicação `dist`.
-4. Confira essas configurações e publique. Não são necessárias variáveis de ambiente ou chaves.
-
-O build executa os testes e copia apenas `index.html` para `dist/index.html`.
-Nenhuma função de servidor é utilizada. O Node.js é usado somente durante os testes e o build.
-Com o repositório conectado, os próximos commits na branch de produção podem gerar novas
-publicações automaticamente.
-
-Referências oficiais: [criar um projeto](https://docs.netlify.com/manage/projects/add-new-project/),
-[configuração por arquivo](https://docs.netlify.com/build/configure-builds/file-based-configuration/)
-e [versão do Node.js](https://docs.netlify.com/build/configure-builds/manage-dependencies/).
-
-## Transferir seu catálogo para o site publicado
-
-1. No painel local, clique em **Baixar backup**.
-2. Abra o painel no endereço publicado no Netlify.
-3. Clique em **Restaurar backup**, escolha o JSON e confira o resumo antes de confirmar.
-
-O catálogo fica no armazenamento local de cada navegador, perfil e endereço. Ele não é enviado
-ao GitHub ou ao Netlify, nem sincronizado entre dispositivos. Limpar os dados do navegador pode
-apagar o catálogo. Guarde backups. Mantenha o mesmo endereço publicado para conservar o acesso
-aos dados desse navegador.
-
 ## Testar e preparar a publicação localmente
 
 Com Node.js 24 instalado:
