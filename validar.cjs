@@ -8,8 +8,8 @@ new vm.Script(script); // Verifica também a sintaxe de todo o aplicativo.
 const context = vm.createContext({});
 vm.runInContext(script.slice(0, script.indexOf('let state=defaults()')) +
   script.slice(script.indexOf('function csvCell'), script.indexOf("$('export').onclick")) +
-  ';globalThis.api={calculate,minimumPrice,defaults,buildCSV,validState,escapeHTML,parseImportCSV,buildBackup,parseBackup,kitTotals,effectiveFee};', context);
-const { calculate, minimumPrice, defaults, buildCSV, validState, escapeHTML,parseImportCSV,buildBackup,parseBackup,kitTotals,effectiveFee } = context.api;
+  ';globalThis.api={calculate,minimumPrice,defaults,buildCSV,validState,escapeHTML,parseImportCSV,buildBackup,parseBackup,kitTotals,effectiveFee,copyFees,preserveProductFees};', context);
+const { calculate, minimumPrice, defaults, buildCSV, validState, escapeHTML,parseImportCSV,buildBackup,parseBackup,kitTotals,effectiveFee,copyFees,preserveProductFees } = context.api;
 const fees = defaults().fees;
 const products = [
   { id:'1', name:'Garrafa térmica 500 ml',category:'Casa e cozinha',cost:30,weight:.35,margin:20,extra:0 },
@@ -264,16 +264,17 @@ assert.ok(bulk.get('import-preview').innerHTML.includes('&lt;img'));
 checks+=45;
 // Backup completo, validação do formato e restauração atômica.
 const complete={products:products.map((p,i)=>({...p,extra:i+2,mlShipping:18+i})),kits:[],fees:{ml:{commission:15,fixed:5,tax:7},shopee:{commission:19,fixed:3,tax:5}}};
+complete.products=complete.products.map(p=>({...p,feeSnapshot:JSON.parse(JSON.stringify(copyFees(complete.fees)))}));
 const backupText=buildBackup(complete),envelope=JSON.parse(backupText);
 assert.equal(envelope.format,'margem-backup');
-assert.equal(envelope.version,4);
+assert.equal(envelope.version,5);
 assert.ok(Number.isFinite(Date.parse(envelope.createdAt)));
 assert.deepEqual(JSON.parse(JSON.stringify(parseBackup(backupText))),complete);
 assert.equal(parseBackup('\uFEFF'+backupText).products.length,3);
 assert.equal(parseBackup(buildBackup(defaults())).products.length,0);
 assert.equal(parseBackup(buildBackup({products,fees})).products[0].mlShipping,0);
 assert.throws(()=>parseBackup('{incompleto'));
-assert.throws(()=>parseBackup(JSON.stringify({...envelope,version:5})));
+assert.throws(()=>parseBackup(JSON.stringify({...envelope,version:6})));
 assert.throws(()=>parseBackup(JSON.stringify({...envelope,format:'outro-app'})));
 assert.throws(()=>parseBackup(JSON.stringify({...envelope,data:{products:[null],fees}})));
 assert.throws(()=>parseBackup(JSON.stringify({...envelope,data:{products:[products[0],products[0]],fees}})));
@@ -422,8 +423,8 @@ const integrationElements=formElements(bothFees);
 modes.get('fees-form').onsubmit({preventDefault(){},target:{elements:integrationElements}});
 assert.equal(modes.run('state.fees.shopee.easyReturnEnabled'),true);
 assert.equal(modes.run('state.fees.shopee.officialEventEnabled'),true);
-assert.ok(modes.get('rows').innerHTML.includes('Devolução Fácil: Sim'));
-assert.ok(modes.get('rows').innerHTML.includes('Evento oficial: Sim'));
+assert.ok(modes.get('rows').innerHTML.includes('Devolução Fácil: Não'));
+assert.ok(modes.get('rows').innerHTML.includes('Evento oficial: Não'));
 assert.ok(modes.get('saved-kits').innerHTML.includes('173,77'));
 assert.ok(modes.get('saved-kits').innerHTML.includes('Evento oficial: Sim'));
 assert.equal(runtime(modes.storage).run('state.fees.shopee.easyReturnEnabled'),true);
@@ -433,7 +434,7 @@ assert.equal(kitCharge.feesApplied.fixed,4.49); // Uma cobrança por venda do ki
 assert.equal(kitCharge.feesApplied.commission,22.5);
 integrationElements['shopee-easyReturnEnabled'].checked=false;
 modes.get('fees-form').onsubmit({preventDefault(){},target:{elements:integrationElements}});
-assert.ok(modes.get('rows').innerHTML.includes('66,02'));
+assert.ok(modes.get('rows').innerHTML.includes('62,97'));
 assert.ok(modes.get('rows').innerHTML.includes('Devolução Fácil: Não'));
 integrationElements['shopee-officialEventEnabled'].checked=false;
 modes.get('fees-form').onsubmit({preventDefault(){},target:{elements:integrationElements}});
@@ -456,11 +457,83 @@ separateRates['ml-commission'].value='12';separateRates['ml-premiumCommission'].
 modes.get('fees-form').onsubmit({preventDefault(){},target:{elements:separateRates}});
 assert.equal(modes.run('state.fees.ml.commission'),12);
 assert.equal(modes.run('state.fees.ml.premiumCommission'),18);
-assert.ok(modes.get('rows').innerHTML.includes('58,07'));
-assert.ok(modes.get('rows').innerHTML.includes('64,29'));
+assert.ok(modes.get('rows').innerHTML.includes('60,00'));
+assert.ok(modes.get('rows').innerHTML.includes('65,46'));
 modes.get('mobile-sort').onchange({target:{value:'mlPremium'}});
 assert.equal(modes.run('visibleProducts()[0].name'),'Camiseta básica');
 checks+=93;
+// Cada produto mantém as taxas completas do momento do cadastro.
+const snapshotApp=runtime();snapshotApp.run("let feeTestId=0;crypto.randomUUID=()=> 'fee-test-'+(++feeTestId)");
+function addFeeProduct(app,name){
+ app.get('add').onclick();
+ const form={elements:Object.fromEntries(Object.entries({name,category:'Teste',cost:30,weight:.35,margin:20,extra:0,mlShipping:0}).map(([k,v])=>[k,{value:String(v)}]))};
+ app.get('product-form').elements=form.elements;app.get('product-form').onsubmit({preventDefault(){},target:form});
+ return form;
+}
+addFeeProduct(snapshotApp,'Produto anterior');
+const originalSnapshot=snapshotApp.run('JSON.stringify(state.products[0].feeSnapshot)');
+const changedFees={ml:{commission:30,premiumCommission:35,fixed:10,tax:8},shopee:{commission:25,fixed:7,tax:9,easyReturnFee:.99,officialEventRate:3,easyReturnEnabled:true,officialEventEnabled:true}};
+snapshotApp.get('fees-form').onsubmit({preventDefault(){},target:{elements:formElements(changedFees)}});
+assert.equal(snapshotApp.run('JSON.stringify(state.products[0].feeSnapshot)'),originalSnapshot);
+assert.equal(snapshotApp.run("calculate(state.products[0],state.fees.ml,'ml').price"),60);
+assert.equal(snapshotApp.run("calculate(state.products[0],state.fees.ml,'mlPremium').price"),65.46);
+assert.equal(snapshotApp.run("calculate(state.products[0],state.fees.shopee,'shopee').price"),62.97);
+assert.equal(snapshotApp.run("minimumPrice(state.products[0],state.fees.shopee,'shopee').price"),53.13);
+assert.ok(snapshotApp.get('rows').innerHTML.includes('Devolução Fácil: Não'));
+addFeeProduct(snapshotApp,'Produto novo');
+assert.equal(snapshotApp.run('state.products[1].feeSnapshot.ml.fixed'),10);
+assert.equal(snapshotApp.run('state.products[1].feeSnapshot.ml.commission'),30);
+assert.equal(snapshotApp.run('state.products[1].feeSnapshot.ml.premiumCommission'),35);
+assert.equal(snapshotApp.run('state.products[1].feeSnapshot.shopee.easyReturnEnabled'),true);
+assert.equal(snapshotApp.run("calculate(state.products[1],state.fees.ml,'ml').price"),95.24);
+assert.equal(snapshotApp.run("calculate(state.products[1],state.fees.ml,'mlPremium').price"),108.11);
+assert.equal(snapshotApp.run("calculate(state.products[1],state.fees.shopee,'shopee').price"),88.35);
+assert.equal(snapshotApp.run("minimumPrice(state.products[1],state.fees.shopee,'shopee').price"),71.68);
+assert.ok(snapshotApp.run('state.products[0].feeSnapshot!==state.fees && state.products[1].feeSnapshot.shopee!==state.fees.shopee'));
+snapshotApp.run('state.fees.ml.fixed=99;state.fees.shopee.easyReturnFee=5;render()');
+assert.equal(snapshotApp.run('state.products[1].feeSnapshot.ml.fixed'),10);
+assert.equal(snapshotApp.run('state.products[1].feeSnapshot.shopee.easyReturnFee'),.99);
+assert.equal(snapshotApp.run("calculate(state.products[1],state.fees.shopee,'shopee').price"),88.35);
+// Editar nome, custo e margem mantém a mesma cópia de taxas.
+snapshotApp.run('openProduct(state.products[0])');
+snapshotApp.get('product-form').elements.name.value='Produto anterior editado';
+snapshotApp.get('product-form').elements.cost.value='40';
+snapshotApp.get('product-form').onsubmit({preventDefault(){},target:snapshotApp.get('product-form')});
+assert.equal(snapshotApp.run('JSON.stringify(state.products[0].feeSnapshot)'),originalSnapshot);
+assert.equal(snapshotApp.run("calculate(state.products[0],state.fees.ml,'ml').price"),76.67);
+const mixedCSV=snapshotApp.run('buildCSV(state.products,state.fees)');
+assert.ok(mixedCSV.split('\r\n')[1].includes('"14,00";"6,00";"6,00"'));
+assert.ok(mixedCSV.split('\r\n')[2].includes('"30,00";"10,00";"8,00"'));
+assert.ok(mixedCSV.split('\r\n')[1].includes('"Não";"Não"'));
+assert.ok(mixedCSV.split('\r\n')[2].includes('"Sim";"Sim"'));
+const snapshotReload=runtime(snapshotApp.storage);
+assert.equal(snapshotReload.run('JSON.stringify(state.products[0].feeSnapshot)'),originalSnapshot);
+assert.equal(snapshotReload.run("calculate(state.products[1],state.fees.shopee,'shopee').price"),88.35);
+const snapshotBackup=snapshotApp.run('buildBackup(state)'),snapshotRestore=runtime();
+snapshotRestore.run(`previewRestore(${JSON.stringify(snapshotBackup)})`);snapshotRestore.get('restore-form').onsubmit({preventDefault(){}});
+assert.equal(snapshotRestore.run('JSON.stringify(state.products[0].feeSnapshot)'),originalSnapshot);
+assert.equal(snapshotRestore.run('state.products[1].feeSnapshot.ml.fixed'),10);
+assert.equal(snapshotRestore.run("calculate(state.products[1],state.fees.shopee,'shopee').price"),88.35);
+// Produtos antigos capturam e gravam as taxas atuais na primeira abertura.
+const migrateStorage=new Map([['margem.painel.v1',JSON.stringify({products,fees})]]),migrated=runtime(migrateStorage);
+assert.equal(migrated.run('state.products[0].feeSnapshot.ml.commission'),14);
+assert.ok(JSON.parse(migrateStorage.get('margem.painel.v1')).products.every(p=>p.feeSnapshot));
+migrated.get('fees-form').onsubmit({preventDefault(){},target:{elements:formElements(changedFees)}});
+assert.equal(migrated.run("calculate(state.products[0],state.fees.ml,'ml').price"),60);
+assert.equal(runtime(migrateStorage).run('state.products[0].feeSnapshot.ml.fixed'),6);
+// Um backup antigo usa as taxas do próprio arquivo, não as do navegador de destino.
+const oldSnapshotBackup=JSON.stringify({format:'margem-backup',version:4,data:{products,fees:{ml:{commission:11,fixed:3,tax:5},shopee:{commission:12,fixed:2,tax:4}}}});
+snapshotRestore.run(`previewRestore(${JSON.stringify(oldSnapshotBackup)})`);snapshotRestore.get('restore-form').onsubmit({preventDefault(){}});
+assert.equal(snapshotRestore.run('state.products[0].feeSnapshot.ml.commission'),11);
+assert.equal(snapshotRestore.run('state.products[0].feeSnapshot.ml.premiumCommission'),11);
+assert.ok(!validState({products:[{...products[0],feeSnapshot:{ml:{commission:'14'},shopee:{}}}],fees}));
+const importedSnapshot=runtime();importedSnapshot.get('import-category').value='Importados';importedSnapshot.get('import-margin').value='20';
+importedSnapshot.run(`importText=${JSON.stringify(simpleCSV)};previewImport()`);importedSnapshot.get('import-form').onsubmit({preventDefault(){}});
+assert.equal(importedSnapshot.run('state.products[0].feeSnapshot.ml.fixed'),6);
+importedSnapshot.get('fees-form').onsubmit({preventDefault(){},target:{elements:formElements(changedFees)}});
+assert.equal(importedSnapshot.run("calculate(state.products[0],state.fees.ml,'ml').price"),60);
+assert.ok(importedSnapshot.run('state.products[0].feeSnapshot.ml!==state.products[1].feeSnapshot.ml'));
+checks+=40;
 console.table(results);
 console.table(shippingResults);
 console.table(minimumResults);

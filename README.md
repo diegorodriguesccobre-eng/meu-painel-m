@@ -14,6 +14,7 @@ As instruções de todas as funções estão em [LEIA-ME.txt](LEIA-ME.txt).
 - Cadastro de produtos com custo, peso, categoria, margem, outros custos e frete.
 - Comparação de preços no Mercado Livre Clássico, Mercado Livre Premium e Shopee.
 - Comissões, taxas fixas, impostos e adicionais configuráveis.
+- Cada produto preserva as taxas e os serviços vigentes quando foi cadastrado.
 - Duas caixas na área de taxas da Shopee para ativar Devolução Fácil e eventos oficiais.
 - Frete específico do Mercado Livre quando o preço sem esse frete ultrapassa R$ 100.
 - Preço mínimo para manter 10% de margem; alerta abaixo de 15% de margem desejada.
@@ -26,7 +27,15 @@ As taxas iniciais são ilustrativas. Ajuste-as às condições dos seus anúncio
 Devolução Fácil começa em R$ 0,49 por venda e eventos oficiais em 2,50 pontos percentuais,
 conforme o modelo solicitado; ambos são editáveis e aplicados quando as caixas dos
 serviços integrados estão marcadas. Após salvar as taxas, a configuração vale para
-todos os produtos e kits. Desmarcar uma caixa retira somente o respectivo adicional.
+os próximos cadastros de produtos e para a simulação de kits. Os produtos existentes
+mantêm suas taxas e opções originais, mesmo ao editar custo ou margem. A tabela,
+o preço mínimo para 10%, o CSV e o backup respeitam as taxas guardadas em cada produto.
+
+Ao abrir esta versão, produtos antigos sem taxas próprias recebem uma cópia das
+taxas atuais salvas no navegador. Valores históricos que nunca foram registrados
+não podem ser recuperados. O cadastro manual, os exemplos e a importação CSV guardam
+as taxas vigentes no momento de incluir cada produto. A restauração de backups
+antigos usa as taxas do próprio arquivo para preservar os produtos restaurados.
 
 ## Publicar no Netlify usando o GitHub
 
