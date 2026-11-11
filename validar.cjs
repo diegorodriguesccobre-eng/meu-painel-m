@@ -8,8 +8,8 @@ new vm.Script(script); // Verifica também a sintaxe de todo o aplicativo.
 const context = vm.createContext({});
 vm.runInContext(script.slice(0, script.indexOf('let state=defaults()')) +
   script.slice(script.indexOf('function csvCell'), script.indexOf("$('export').onclick")) +
-  ';globalThis.api={calculate,minimumPrice,defaults,buildCSV,validState,escapeHTML,parseImportCSV,buildBackup,parseBackup,kitTotals,effectiveFee,copyFees,preserveProductFees};', context);
-const { calculate, minimumPrice, defaults, buildCSV, validState, escapeHTML,parseImportCSV,buildBackup,parseBackup,kitTotals,effectiveFee,copyFees,preserveProductFees } = context.api;
+  ';globalThis.api={calculate,minimumPrice,defaults,buildCSV,validState,escapeHTML,parseImportCSV,buildBackup,parseBackup,kitTotals,effectiveFee,copyFees,preserveCatalogFees};', context);
+const { calculate, minimumPrice, defaults, buildCSV, validState, escapeHTML,parseImportCSV,buildBackup,parseBackup,kitTotals,effectiveFee,copyFees,preserveCatalogFees } = context.api;
 const fees = defaults().fees;
 const products = [
   { id:'1', name:'Garrafa térmica 500 ml',category:'Casa e cozinha',cost:30,weight:.35,margin:20,extra:0 },
@@ -267,14 +267,14 @@ const complete={products:products.map((p,i)=>({...p,extra:i+2,mlShipping:18+i}))
 complete.products=complete.products.map(p=>({...p,feeSnapshot:JSON.parse(JSON.stringify(copyFees(complete.fees)))}));
 const backupText=buildBackup(complete),envelope=JSON.parse(backupText);
 assert.equal(envelope.format,'margem-backup');
-assert.equal(envelope.version,5);
+assert.equal(envelope.version,6);
 assert.ok(Number.isFinite(Date.parse(envelope.createdAt)));
 assert.deepEqual(JSON.parse(JSON.stringify(parseBackup(backupText))),complete);
 assert.equal(parseBackup('\uFEFF'+backupText).products.length,3);
 assert.equal(parseBackup(buildBackup(defaults())).products.length,0);
 assert.equal(parseBackup(buildBackup({products,fees})).products[0].mlShipping,0);
 assert.throws(()=>parseBackup('{incompleto'));
-assert.throws(()=>parseBackup(JSON.stringify({...envelope,version:6})));
+assert.throws(()=>parseBackup(JSON.stringify({...envelope,version:7})));
 assert.throws(()=>parseBackup(JSON.stringify({...envelope,format:'outro-app'})));
 assert.throws(()=>parseBackup(JSON.stringify({...envelope,data:{products:[null],fees}})));
 assert.throws(()=>parseBackup(JSON.stringify({...envelope,data:{products:[products[0],products[0]],fees}})));
@@ -534,6 +534,86 @@ importedSnapshot.get('fees-form').onsubmit({preventDefault(){},target:{elements:
 assert.equal(importedSnapshot.run("calculate(state.products[0],state.fees.ml,'ml').price"),60);
 assert.ok(importedSnapshot.run('state.products[0].feeSnapshot.ml!==state.products[1].feeSnapshot.ml'));
 checks+=40;
+// Kits também preservam suas taxas, independentemente das taxas dos componentes.
+const frozenKits=runtime();frozenKits.run("let kitFeeId=0;crypto.randomUUID=()=> 'kit-fee-'+(++kitFeeId)");frozenKits.get('examples').onclick();
+function saveFeeKit(app,name){
+ app.get('kit-new').onclick();app.get('kit-name').value=name;app.get('kit-margin').value='20';app.get('kit-extra').value='5';app.get('kit-shipping').value='18';
+ app.get('kit-picker').onchange({target:{dataset:{kitProduct:'example-Garrafa térmica 500 ml'},checked:true}});
+ app.get('kit-picker').onchange({target:{dataset:{kitQuantity:'example-Garrafa térmica 500 ml'},value:'2'}});
+ app.get('kit-picker').onchange({target:{dataset:{kitProduct:'example-Camiseta básica'},checked:true}});
+ app.get('kit-form').onsubmit({preventDefault(){}});
+}
+function savedKitPrice(app,index,scenario,minimum=false){return app.run(`${minimum?'minimumPrice':'calculate'}(kitTotals(state.kits[${index}],state.products),state.fees[marketOf('${scenario}')],'${scenario}').price`);}
+saveFeeKit(frozenKits,'Kit anterior');
+const firstKitId=frozenKits.run('state.kits[0].id'),kitOriginalFees=frozenKits.run('JSON.stringify(state.kits[0].feeSnapshot)');
+assert.equal(savedKitPrice(frozenKits,0,'ml'),190);
+assert.equal(savedKitPrice(frozenKits,0,'mlPremium'),207.28);
+assert.equal(savedKitPrice(frozenKits,0,'shopee'),174.08);
+assert.equal(savedKitPrice(frozenKits,0,'shopee',true),146.88);
+frozenKits.get('fees-form').onsubmit({preventDefault(){},target:{elements:formElements(changedFees)}});
+assert.equal(frozenKits.run('JSON.stringify(state.kits[0].feeSnapshot)'),kitOriginalFees);
+assert.equal(savedKitPrice(frozenKits,0,'ml'),190);
+assert.equal(savedKitPrice(frozenKits,0,'mlPremium'),207.28);
+assert.equal(savedKitPrice(frozenKits,0,'shopee'),174.08);
+assert.equal(savedKitPrice(frozenKits,0,'shopee',true),146.88);
+assert.ok(frozenKits.get('saved-kits').innerHTML.includes('Devolução Fácil: Não'));
+saveFeeKit(frozenKits,'Kit novo');
+assert.equal(frozenKits.run('state.kits.length'),2);
+assert.equal(frozenKits.run('state.kits[1].feeSnapshot.ml.commission'),30);
+assert.equal(frozenKits.run('state.products[0].feeSnapshot.ml.commission'),14);
+assert.equal(savedKitPrice(frozenKits,1,'ml'),280.96);
+assert.equal(savedKitPrice(frozenKits,1,'mlPremium'),318.92);
+assert.equal(savedKitPrice(frozenKits,1,'shopee'),227.89);
+assert.equal(savedKitPrice(frozenKits,1,'shopee',true),184.89);
+assert.ok(frozenKits.get('saved-kits').innerHTML.includes('Devolução Fácil: Sim'));
+assert.ok(frozenKits.run('state.kits[1].feeSnapshot!==state.fees && state.kits[1].feeSnapshot.ml!==state.kits[0].feeSnapshot.ml'));
+frozenKits.run('state.fees.ml.fixed=99;state.fees.shopee.easyReturnFee=5;render()');
+assert.equal(frozenKits.run('state.kits[1].feeSnapshot.ml.fixed'),10);
+assert.equal(frozenKits.run('state.kits[1].feeSnapshot.shopee.easyReturnFee'),.99);
+assert.equal(savedKitPrice(frozenKits,1,'shopee'),227.89);
+// Uma configuração geral incompatível com a margem não impede editar o kit antigo.
+const highFees={ml:{commission:85,premiumCommission:85,fixed:10,tax:8},shopee:{...changedFees.shopee,commission:80}};
+frozenKits.get('fees-form').onsubmit({preventDefault(){},target:{elements:formElements(highFees)}});
+frozenKits.get('kit-new').onclick();
+frozenKits.get('kit-picker').onchange({target:{dataset:{kitProduct:'example-Garrafa térmica 500 ml'},checked:true}});
+assert.equal(frozenKits.get('kit-save').disabled,true);
+frozenKits.get('saved-kits').onclick({target:{closest(){return {dataset:{editKit:firstKitId}};}}});
+assert.equal(frozenKits.get('kit-save').disabled,false);
+assert.ok(frozenKits.get('kit-prices').innerHTML.includes('190,00'));
+frozenKits.get('kit-name').value='Kit anterior editado';
+frozenKits.get('kit-picker').onchange({target:{dataset:{kitQuantity:'example-Garrafa térmica 500 ml'},value:'1'}});
+assert.ok(frozenKits.get('kit-prices').innerHTML.includes('140,00'));
+frozenKits.get('kit-form').onsubmit({preventDefault(){}});
+assert.equal(frozenKits.run('state.kits.length'),2);
+assert.equal(frozenKits.run('JSON.stringify(state.kits[0].feeSnapshot)'),kitOriginalFees);
+assert.equal(savedKitPrice(frozenKits,0,'ml'),140);
+assert.equal(savedKitPrice(frozenKits,0,'ml',true),94.29);
+// Custos dos componentes continuam atuais; somente as taxas ficam preservadas.
+frozenKits.run('state.products[0].cost=40;persist();render()');
+assert.equal(savedKitPrice(frozenKits,0,'ml'),156.67);
+assert.equal(frozenKits.run('JSON.stringify(state.kits[0].feeSnapshot)'),kitOriginalFees);
+const frozenReload=runtime(frozenKits.storage);
+assert.equal(frozenReload.run('JSON.stringify(state.kits[0].feeSnapshot)'),kitOriginalFees);
+assert.equal(savedKitPrice(frozenReload,0,'ml'),156.67);
+const frozenBackup=frozenKits.run('buildBackup(state)'),restoredKits=runtime();
+restoredKits.run(`previewRestore(${JSON.stringify(frozenBackup)})`);restoredKits.get('restore-form').onsubmit({preventDefault(){}});
+assert.equal(restoredKits.run('JSON.stringify(state.kits[0].feeSnapshot)'),kitOriginalFees);
+assert.equal(restoredKits.run('state.kits[1].feeSnapshot.ml.fixed'),10);
+assert.equal(savedKitPrice(restoredKits,0,'ml'),156.67);
+const legacyKitData={products:products.map(p=>({...p,mlShipping:0,feeSnapshot:JSON.parse(JSON.stringify(copyFees(fees)))})),kits:[kit],fees:changedFees};
+const kitMigrationStorage=new Map([['margem.painel.v1',JSON.stringify(legacyKitData)]]),kitMigrated=runtime(kitMigrationStorage);
+assert.equal(kitMigrated.run('state.kits[0].feeSnapshot.ml.commission'),30);
+assert.equal(kitMigrated.run('state.products[0].feeSnapshot.ml.commission'),14);
+assert.equal(JSON.parse(kitMigrationStorage.get('margem.painel.v1')).kits[0].feeSnapshot.ml.fixed,10);
+assert.equal(savedKitPrice(kitMigrated,0,'ml'),280.96);
+const legacyKitBackup=JSON.stringify({format:'margem-backup',version:5,data:legacyKitData});
+restoredKits.run(`previewRestore(${JSON.stringify(legacyKitBackup)})`);restoredKits.get('restore-form').onsubmit({preventDefault(){}});
+assert.equal(restoredKits.run('state.kits[0].feeSnapshot.ml.commission'),30);
+assert.equal(savedKitPrice(restoredKits,0,'ml'),280.96);
+const invalidKitFees=JSON.parse(JSON.stringify(fees));invalidKitFees.ml.fixed=-1;
+assert.ok(!validState({products,fees,kits:[{...kit,feeSnapshot:invalidKitFees}]}));
+assert.throws(()=>parseBackup(JSON.stringify({format:'margem-backup',version:6,data:{products,fees,kits:[{...kit,feeSnapshot:invalidKitFees}]}})));
+checks+=44;
 console.table(results);
 console.table(shippingResults);
 console.table(minimumResults);
