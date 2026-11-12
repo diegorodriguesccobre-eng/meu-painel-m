@@ -178,11 +178,15 @@ evitar contar duas vezes o mesmo custo.
 As taxas são um modelo simplificado por marketplace, sem faixas automáticas de
 categoria, tipo de anúncio, preço ou programa comercial. Ajuste ao seu anúncio.
 Se uma mudança de taxas deixar taxas + margem >= 100%, a tabela mostra “Inviável”.
-Cada produto e kit mostra a margem média calculada: some as margens do Mercado
-Livre Clássico, Premium e Shopee e divida por três. A cor do resumo segue essa média:
-vermelho abaixo de 10%, amarelo de 10% a menos de 15% e verde a partir de 15%.
-Cada canal também mostra sua classificação individual. Se algum cálculo estiver
-pendente, a média fica indisponível até atualizar a cotação. O CSV inclui a média.
+Cada canal tem um cartão com preço final, lucro líquido em reais, margem efetiva
+e descontos: custo do produto, outros custos, imposto, tarifas e frete.
+As cores usam lucro líquido / preço de venda x 100: vermelho abaixo de 10%,
+amarelo de 10% a menos de 15% e verde a partir de 15%. A margem desejada digitada
+não determina a cor. O selo “Maior lucro” compara os valores líquidos em reais.
+Cada produto e kit mostra o lucro médio estimado por venda nos três canais;
+a cor do resumo usa a média simples dos três percentuais. Isso não representa
+faturamento real e não considera quantidades vendidas. Se houver uma cotação
+pendente, a média fica indisponível. O CSV inclui os valores e classificações.
 
 PREÇO MÍNIMO PARA 10% DE MARGEM
 Cada marketplace mostra “Mínimo para 10%”, tanto na tabela quanto nos cartões.

@@ -28,10 +28,11 @@ A configuração anterior do Netlify continua disponível durante a migração.
 - Duas caixas na área de taxas da Shopee para ativar Devolução Fácil e eventos oficiais.
 - Frete específico do Mercado Livre quando o preço sem esse frete ultrapassa R$ 100.
 - Preço mínimo para manter 10% de margem.
-- Classificação pela margem média: vermelho abaixo de 10%, amarelo de 10% a menos de 15%, verde a partir de 15%.
-- Cada produto ou kit mostra a média aritmética das margens calculadas no Mercado Livre Clássico, Premium e Shopee, e sua cor segue essa média. Cada marketplace também mostra sua classificação individual. Cotações pendentes pedem recálculo.
-- Resumo com contagem de produtos por faixa, margem média do catálogo e médias/classificações incluídas na exportação CSV.
-- Busca, ordenação, tabela no computador e cartões em telas pequenas.
+- Cartões por marketplace com preço final, lucro líquido em reais, margem efetiva neutra e descontos discriminados. O selo “Maior lucro” compara o lucro em reais dos três canais.
+- Cores pelo lucro líquido calculado dividido pelo preço de venda: vermelho abaixo de 10%, amarelo de 10% a menos de 15%, verde a partir de 15%. A margem desejada do cadastro não determina a cor.
+- Cada produto ou kit mostra o lucro médio estimado em reais por venda entre Clássico, Premium e Shopee. A classificação do resumo usa a média simples dos três percentuais de lucro. Cotações pendentes pedem recálculo.
+- Resumo com contagem de produtos por faixa, lucro médio estimado por venda e médias/classificações incluídas no CSV. Não representa faturamento real nem considera quantidades vendidas.
+- Busca, ordenação e cartões responsivos no computador e no celular.
 - Importação de produtos por CSV e exportação dos preços calculados.
 - Montagem de kits com produtos e quantidades, usando os custos atuais do catálogo.
 - Backup completo em JSON, com validação e confirmação antes da restauração.
