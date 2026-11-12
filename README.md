@@ -95,3 +95,5 @@ Edite o `index.html` da raiz, execute os testes e registre suas alterações em 
 A pasta `dist` é gerada pelo build e não precisa ser enviada ao GitHub.
 
 O frete automático não usa o antigo limite manual de R$100. Consulta todas as faixas, inclusive quando o comprador paga o envio. Para produtos novos em Full, Coleta ou Agências, simula frete rápido a partir de R$79, de acordo com a [tabela oficial 40538](https://www.mercadolivre.com.br/ajuda/40538). O peso faturável e eventuais condições da conta continuam determinados pela API.
+
+Se o endpoint de frete responder HTTP403, o painel usa os valores da tabela oficial 40538 conferida em 12/11/2026, apenas após verificar reputação verde/MercadoLíder/sem reputação e logística elegível. A interface identifica a estimativa pela tabela, sua data e a ausência de dimensões quando aplicável. Produtos usados, logística não coberta e categorias com tabela específica exigem conferência manual. A tabela é um retrato da data indicada, sem promessa de atualização automática.

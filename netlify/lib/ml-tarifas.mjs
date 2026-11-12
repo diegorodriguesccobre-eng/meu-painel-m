@@ -12,9 +12,11 @@ export async function officialPricing({item,input,api,now=Date.now}){
  const shippingMode=item.shipping?.mode,logisticType=item.shipping?.logistic_type;
  if(!/^[a-z0-9_]{2,40}$/.test(shippingMode??'')||!/^[a-z0-9_]{2,40}$/.test(logisticType??''))fail('O anúncio não informou modo de envio e logística. Use as taxas manuais até conferir esses dados no Mercado Livre.');
  const cache=new Map(),shippingCache=new Map(),automatic=input.autoShipping===true;
+ let profilePromise,shippingForbidden=false;
+ const shippingApi=path=>path==='/users/me'?(profilePromise??=api(path)):api(path);
  async function freight(price,scenario,forceFree){
   const key=[price.toFixed(2),scenario,forceFree].join(':');
-  if(!shippingCache.has(key))shippingCache.set(key,shippingQuote({item,price,listingType:MODES[scenario],forceFree,weight,api,now}));
+  if(!shippingCache.has(key))shippingCache.set(key,shippingQuote({item,price,listingType:MODES[scenario],forceFree,weight,api:shippingApi,now,preferTable:shippingForbidden,onForbidden:()=>{shippingForbidden=true;}}));
   return shippingCache.get(key);
  }
  async function quote(price,scenario,billableWeight){

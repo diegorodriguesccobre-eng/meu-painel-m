@@ -69,9 +69,35 @@ test('list_cost descontado é usado uma vez e frete ausente nunca se torna zero'
  const q=await shippingQuote({item:own,price:150,weight:.75,api:async path=>{assert.equal(new URL('https://api.mercadolibre.com'+path).searchParams.get('dimensions'),'10x20x30,750');return {coverage:{all_country:{list_cost:12,currency_id:'BRL',billable_weight:1000},discount:{rate:.4,promoted_amount:20}}};}});
  assert.equal(q.amount,12);assert.equal(q.billableWeight,1000);
  await assert.rejects(shippingQuote({item:own,api:async()=>({coverage:{all_country:{currency_id:'BRL'}}})}),/incompleta/);
- await assert.rejects(shippingQuote({item:own,api:async()=>{throw Object.assign(Error('denied'),{status:403});}}),/não foi considerado zero/);
+ const fallback=await shippingQuote({item:own,price:150,api:async path=>{if(path==='/users/me')return {seller_reputation:{level_id:'5_green'}};throw Object.assign(Error('denied'),{status:403});}});assert.equal(fallback.source,'mercadolivre-shipping-table');assert.equal(fallback.amount,21.35);
  const zero=await shippingQuote({item:own,api:async()=>({coverage:{all_country:{currency_id:'BRL',list_cost:0}}})});assert.equal(zero.amount,0);
  await assert.rejects(shippingQuote({item:{...own,shipping:{mode:'custom'}},api:async()=>{throw Error('não chamar');}}),/não usa Mercado Envios/);
+});
+
+test('tabela 40538: limites de peso, preço, meia tarifa e reputação elegível',async()=>{
+ const {tableShippingQuote}=await import('../netlify/lib/ml-tabela-frete.mjs');
+ const own={...item,seller_id:123,listing_type_id:'gold_special'},base={item:own,price:60,listingType:'gold_special',freeShipping:false,weight:.3,profile:{seller_reputation:{level_id:'5_green'}}};
+ assert.equal(tableShippingQuote(base).amount,8.15);
+ assert.equal(tableShippingQuote({...base,price:24}).amount,6.85);
+ assert.equal(tableShippingQuote({...base,weight:.301}).amount,8.25);
+ assert.equal(tableShippingQuote({...base,price:79,freeShipping:true}).amount,12.95);
+ assert.equal(tableShippingQuote({...base,price:100,freeShipping:true}).amount,14.95);
+ assert.equal(tableShippingQuote({...base,price:10}).amount,5);
+ assert.equal(tableShippingQuote({...base,price:60,freeShipping:true}).amount,12.95);
+ assert.equal(tableShippingQuote({...base,profile:{seller_reputation:{level_id:null}}}).amount,8.15);
+ assert.throws(()=>tableShippingQuote({...base,profile:{seller_reputation:{level_id:'2_orange'}}}),/reputação/);
+ assert.throws(()=>tableShippingQuote({...base,item:{...own,condition:'used'}}),/específica/);
+ assert.throws(()=>tableShippingQuote({...base,weight:0}),/peso/);
+});
+
+test('cotação mantém margem usando tabela quando API de frete retorna 403, sem repetir a recusa em cada preço',async()=>{
+ const {officialPricing}=await load,fees=simulator((p,i)=>({rate:11.5+i*5,fixed:0}));let denied=0,profiles=0;
+ const api=async path=>{if(path==='/users/me'){profiles++;return {seller_reputation:{level_id:'5_green'}};}if(path.includes('shipping_options/free')){denied++;throw Object.assign(Error('Forbidden'),{status:403});}return fees.api(path);};
+ const result=await officialPricing({item:{...item,seller_id:123,listing_type_id:'gold_special'},input:{...input,cost:15,weight:.156,autoShipping:true},api});
+ assert.equal(result.shippingQuote.source,'mercadolivre-shipping-table');assert.equal(result.shippingQuote.amount,6.85);
+ assert.equal(result.quotes.ml.desired.price,34.96);assert.equal(result.quotes.mlPremium.desired.price,38);
+ assert.ok(result.quotes.ml.desired.margin>=20);assert.ok(result.quotes.mlPremium.desired.margin>=20);
+ assert.ok(denied<=2);assert.equal(profiles,1);
 });
 
 test('regras oficiais: cobra custo retornado abaixo de 79 e simula frete rápido a partir de 79',async()=>{
