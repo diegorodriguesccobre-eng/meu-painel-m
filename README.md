@@ -18,9 +18,9 @@ As instruções de todas as funções estão em [LEIA-ME.txt](LEIA-ME.txt).
 - Duas caixas na área de taxas da Shopee para ativar Devolução Fácil e eventos oficiais.
 - Frete específico do Mercado Livre quando o preço sem esse frete ultrapassa R$ 100.
 - Preço mínimo para manter 10% de margem.
-- Classificação pela margem calculada: vermelho abaixo de 15%, amarelo de 15% a menos de 20%, verde a partir de 20%.
-- Cada marketplace mostra sua classificação; o resumo do produto ou kit usa a menor margem entre os canais. Cotações pendentes pedem recálculo.
-- Resumo com contagem de produtos por faixa e classificações incluídas na exportação CSV.
+- Classificação pela margem média: vermelho abaixo de 10%, amarelo de 10% a menos de 15%, verde a partir de 15%.
+- Cada produto ou kit mostra a média aritmética das margens calculadas no Mercado Livre Clássico, Premium e Shopee, e sua cor segue essa média. Cada marketplace também mostra sua classificação individual. Cotações pendentes pedem recálculo.
+- Resumo com contagem de produtos por faixa, margem média do catálogo e médias/classificações incluídas na exportação CSV.
 - Busca, ordenação, tabela no computador e cartões em telas pequenas.
 - Importação de produtos por CSV e exportação dos preços calculados.
 - Montagem de kits com produtos e quantidades, usando os custos atuais do catálogo.

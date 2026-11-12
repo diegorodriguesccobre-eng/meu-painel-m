@@ -178,7 +178,11 @@ evitar contar duas vezes o mesmo custo.
 As taxas são um modelo simplificado por marketplace, sem faixas automáticas de
 categoria, tipo de anúncio, preço ou programa comercial. Ajuste ao seu anúncio.
 Se uma mudança de taxas deixar taxas + margem >= 100%, a tabela mostra “Inviável”.
-Produtos com margem desejada abaixo de 15% aparecem em vermelho.
+Cada produto e kit mostra a margem média calculada: some as margens do Mercado
+Livre Clássico, Premium e Shopee e divida por três. A cor do resumo segue essa média:
+vermelho abaixo de 10%, amarelo de 10% a menos de 15% e verde a partir de 15%.
+Cada canal também mostra sua classificação individual. Se algum cálculo estiver
+pendente, a média fica indisponível até atualizar a cotação. O CSV inclui a média.
 
 PREÇO MÍNIMO PARA 10% DE MARGEM
 Cada marketplace mostra “Mínimo para 10%”, tanto na tabela quanto nos cartões.
