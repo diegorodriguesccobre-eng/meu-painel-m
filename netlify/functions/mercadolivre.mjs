@@ -53,7 +53,7 @@ export function createHandler({env=process.env,fetchImpl=globalThis.fetch,now=Da
  const cookie=(name,value,seconds)=>`${name}=${value}; Path=/; Max-Age=${seconds}; Secure; HttpOnly; SameSite=Lax`;
  function cookies(req){return Object.fromEntries((req.headers.get('cookie')??'').split(';').map(s=>s.trim().split('=')));}
  async function api(path,token){
-  const response=await fetchImpl(API+path,{headers:{Authorization:'Bearer '+token,Accept:'application/json'},redirect:'error',signal:AbortSignal.timeout(12000)});
+  const response=await fetchImpl(API+path,{headers:{Authorization:'Bearer '+token,Accept:'application/json'},redirect:'manual',signal:AbortSignal.timeout(12000)});
   if(!response.ok){const e=new Error('API_ERROR');e.status=response.status;try{const body=await response.json();if(typeof body.error==='string'&&/^[a-zA-Z0-9_.-]{1,80}$/.test(body.error))e.apiCode=body.error;}catch{}throw e;}
   return response.json();
  }
@@ -85,7 +85,7 @@ export function createHandler({env=process.env,fetchImpl=globalThis.fetch,now=Da
     if(query.has('error')){failure='denied';throw Error('AUTHORIZATION_DENIED');}
     failure='code';const code=query.get('code');if(!code||code.length>4096)throw Error('INVALID_CODE');
     failure='exchange';
-    const response=await fetchImpl(API+'/oauth/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded',Accept:'application/json'},body:new URLSearchParams({grant_type:'authorization_code',client_id:cfg.id,client_secret:cfg.secret,redirect_uri:cfg.redirect,code,code_verifier:flow.verifier}),redirect:'error',signal:AbortSignal.timeout(12000)});
+    const response=await fetchImpl(API+'/oauth/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded',Accept:'application/json'},body:new URLSearchParams({grant_type:'authorization_code',client_id:cfg.id,client_secret:cfg.secret,redirect_uri:cfg.redirect,code,code_verifier:flow.verifier}),redirect:'manual',signal:AbortSignal.timeout(12000)});
     if(!response.ok){failure='exchange_'+response.status;try{const body=await response.json();if(['invalid_client','invalid_grant','invalid_request','unauthorized_client','invalid_scope'].includes(body.error))failure+='_'+body.error;}catch{}throw Error('TOKEN_EXCHANGE_FAILED');}
     failure='token_payload';const token=await response.json();
     if(typeof token.access_token!=='string'||!Number.isFinite(token.expires_in)||token.expires_in<60)throw Error('INVALID_TOKEN');

@@ -12,7 +12,7 @@ function request(action,{method='GET',cookie,query={},ownOrigin=origin,header=tr
 async function setup(options={}){
  const {createHandler}=await modulePromise;let time=Date.parse('2026-11-11T12:00:00Z');const calls=[];
  const fetchImpl=async(url,init={})=>{
-  calls.push({url,init});if(options.fetch)return options.fetch(url,init);
+  assert.equal(init.redirect,'manual');calls.push({url,init});if(options.fetch)return options.fetch(url,init);
   const path=new URL(url).pathname;
   if(path==='/oauth/token')return Response.json({access_token:'TEST_ACCESS_TOKEN_NOT_REAL',refresh_token:'DO_NOT_STORE_REFRESH_TOKEN',expires_in:21600});
   assert.equal(init.headers.Authorization,'Bearer TEST_ACCESS_TOKEN_NOT_REAL');
@@ -158,4 +158,11 @@ test('diagnóstico OAuth informa só a etapa e o código permitido, sem expor a 
  const response=await app.handler(request('callback',{cookie,query:{state:auth.searchParams.get('state'),code:'TEST_AUTHORIZATION_CODE'}})),location=response.headers.get('location');
  assert.equal(new URL(location).searchParams.get('ml_reason'),'exchange_400_invalid_client');
  assert.ok(!/TEST_SECRET|TEST_TOKEN|TEST_AUTHORIZATION_CODE/.test(location));
+});
+
+test('redirecionamento inesperado no token é rejeitado sem seguir outro destino',async()=>{
+ const app=await setup({fetch:async()=>new Response('',{status:302,headers:{Location:'https://outro.example'}})});
+ const start=await app.handler(request('connect',{method:'POST'})),auth=new URL((await start.json()).authorizationUrl),cookie=start.headers.get('set-cookie').split(';')[0];
+ const response=await app.handler(request('callback',{cookie,query:{state:auth.searchParams.get('state'),code:'TEST_ONLY'}}));
+ assert.equal(new URL(response.headers.get('location')).searchParams.get('ml_reason'),'exchange_302');assert.equal(app.calls.length,1);assert.equal(app.calls[0].url,'https://api.mercadolibre.com/oauth/token');
 });

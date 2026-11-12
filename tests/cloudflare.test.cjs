@@ -41,7 +41,7 @@ test('Worker completa OAuth e calcula os dois anúncios com frete dentro do orç
   const origin = 'https://painel.example', calls = [];
   const env = { ML_CLIENT_ID: '123456', ML_CLIENT_SECRET: 'TEST_ONLY', ML_SESSION_SECRET: 'ab'.repeat(32), ML_REDIRECT_URI: origin + '/api/ml/callback' };
   const worker = createWorker({ fetchImpl: async (url, init) => {
-    const u = new URL(url); calls.push({ path: u.pathname, method: init.method ?? 'GET' });
+    assert.equal(init.redirect, 'manual'); const u = new URL(url); calls.push({ path: u.pathname, method: init.method ?? 'GET' });
     if (u.pathname === '/oauth/token') return Response.json({ access_token: 'TEST_ONLY', expires_in: 21600 });
     if (u.pathname === '/users/me') return Response.json({ id: 123, nickname: 'TESTE' });
     if (u.pathname === '/items/MLB1234567890') return Response.json({ id: 'MLB1234567890', seller_id: 123, category_id: 'MLB1234', listing_type_id: 'gold_special', condition: 'new', shipping: { mode: 'me2', logistic_type: 'cross_docking' } });
@@ -68,4 +68,14 @@ test('Worker completa OAuth e calcula os dois anúncios com frete dentro do orç
   }
   assert.ok(calls.length - before <= 45);
   assert.ok(calls.filter(c => c.path !== '/oauth/token').every(c => c.method === 'GET'));
+});
+
+test('fetch padrão preserva o contexto global exigido pelo runtime',async()=>{
+ const {createWorker}=await load,original=globalThis.fetch,origin='https://painel.example';
+ const env={ML_CLIENT_ID:'123456',ML_CLIENT_SECRET:'TEST_ONLY',ML_SESSION_SECRET:'ab'.repeat(32),ML_REDIRECT_URI:origin+'/api/ml/callback'};
+ let calls=0;globalThis.fetch=function(url,init){assert.equal(this,globalThis);assert.equal(init.redirect,'manual');calls++;return Promise.resolve(Response.json(String(url).endsWith('/oauth/token')?{access_token:'TEST_ONLY',expires_in:21600}:{id:123,nickname:'TESTE'}));};
+ try{const worker=createWorker(),start=await worker.fetch(new Request(origin+'/api/ml/connect',{method:'POST',headers:{Origin:origin,'X-Conduz-Action':'mercadolivre'}}),env),auth=new URL((await start.json()).authorizationUrl),cookie=start.headers.get('set-cookie').split(';')[0];
+ const response=await worker.fetch(new Request(origin+'/api/ml/callback?'+new URLSearchParams({state:auth.searchParams.get('state'),code:'TEST_ONLY'}),{headers:{Cookie:cookie}}),env);
+ assert.equal(new URL(response.headers.get('location')).searchParams.get('ml'),'connected');assert.equal(calls,2);
+ }finally{globalThis.fetch=original;}
 });
