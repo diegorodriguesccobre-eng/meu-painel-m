@@ -1,5 +1,5 @@
 import { randomBytes, createCipheriv, createDecipheriv, createHash, timingSafeEqual } from 'node:crypto';
-import { officialPricing } from '../lib/ml-tarifas.mjs';
+import { officialPricing, commissionReference } from '../lib/ml-tarifas.mjs';
 import { shippingQuote } from '../lib/ml-frete.mjs';
 
 const API='https://api.mercadolibre.com';
@@ -129,7 +129,9 @@ export function createHandler({env=process.env,fetchImpl=globalThis.fetch,now=Da
    let shipping=null,shippingMessage=null;
    try{shipping=await shippingQuote({item,price,api:path=>api(path,s.accessToken),now});}catch(error){if(action==='shipping')throw error;shippingMessage=error.shipping?error.message:'Não foi possível consultar o frete do vendedor. Tente novamente.';}
    if(action==='shipping')return json({shipping});
-   return json({item:{...normalized,categoryName,price,sellerId:s.userId,fetchedAt:new Date(now()).toISOString(),...(shipping?{shippingQuote:shipping}:{})},shippingMessage});
+   let commissions=null;
+   try{commissions=await commissionReference({item,price,billableWeight:shipping?.billableWeight,api:path=>api(path,s.accessToken),now});}catch{}
+   return json({item:{...normalized,categoryName,price,sellerId:s.userId,fetchedAt:new Date(now()).toISOString(),...(shipping?{shippingQuote:shipping}:{})},shippingMessage,commissions});
   }catch(error){
    if(error.pricing)return json({error:'PRICING_UNAVAILABLE',message:error.message},422);
    const status=error.status;

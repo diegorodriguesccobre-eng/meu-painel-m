@@ -683,6 +683,27 @@ const tableFreightRestored=parseBackup(buildBackup({products:[tableFreightProduc
 assert.equal(tableFreightRestored.mercadoLivre.shippingQuote.source,'mercadolivre-shipping-table');assert.equal(tableFreightRestored.mlPricing.shippingQuote.dimensionsKnown,false);
 assert.ok(buildCSV([tableFreightRestored],fees).includes('Tabela oficial 40538'));
 checks+=3;
+// Os campos visíveis exibem a consulta oficial e preservam a alternativa manual.
+const fieldApp=runtime();addFeeProduct(fieldApp,'Campos de comissão');
+fieldApp.run('openProduct(state.products[0])');
+const fieldForm=fieldApp.get('product-form');fieldForm.elements={...fieldForm.elements,...Object.fromEntries(Object.entries(formElements(fees)).map(([k,v])=>['product-'+k,v]))};
+fieldForm.elements.mlShipping.value='20';
+const displayedPricing=JSON.parse(JSON.stringify(freightProduct.mlPricing));displayedPricing.quotes.ml.desired.commission=11.5;displayedPricing.quotes.mlPremium.desired.commission=16.5;
+fieldApp.run(`mlLinkedDraft=${JSON.stringify(freightProduct.mercadoLivre)};mlPricingDraft=${JSON.stringify(displayedPricing)}`);
+fieldApp.get('ml-auto-fees').checked=true;fieldApp.run('renderAutoPricing()');
+assert.equal(fieldForm.elements['product-ml-commission'].value,'11.5');assert.equal(fieldForm.elements['product-ml-premiumCommission'].value,'16.5');
+assert.equal(fieldForm.elements['product-ml-commission'].readOnly,true);assert.equal(fieldForm.elements['product-ml-commission'].disabled,false);assert.equal(fieldForm.elements['product-ml-commission'].required,false);
+assert.ok(fieldApp.get('product-ml-commission-info').textContent.includes('Categoria: Casa'));
+assert.equal(fieldApp.run('state.fees.ml.commission'),14);
+fieldForm.elements.cost.value='31';fieldApp.run('renderAutoPricing()');
+assert.equal(fieldForm.elements['product-ml-commission'].value,'');assert.equal(fieldForm.elements['product-ml-premiumCommission'].value,'');
+fieldApp.get('ml-auto-fees').checked=false;fieldApp.run('renderAutoPricing()');
+assert.equal(fieldForm.elements['product-ml-commission'].value,'14');assert.equal(fieldForm.elements['product-ml-premiumCommission'].value,'19');assert.equal(fieldForm.elements['product-ml-commission'].readOnly,false);
+const referenceFixture={itemId:mlMetadata.itemId,categoryId:mlMetadata.categoryId,price:60,fetchedAt:'2026-11-12T16:40:00.000Z',quotes:{ml:{commission:11.5,fixed:0,feeAmount:6.9},mlPremium:{commission:16.5,fixed:0,feeAmount:9.9}}};
+fieldForm.elements.cost.value='';fieldApp.run(`mlCommissionReference=${JSON.stringify(referenceFixture)}`);fieldApp.get('ml-auto-fees').checked=true;fieldApp.run('renderAutoPricing()');
+assert.equal(fieldForm.elements['product-ml-commission'].value,'11.5');assert.equal(fieldForm.elements['product-ml-premiumCommission'].value,'16.5');
+assert.ok(fieldApp.get('product-ml-commission-info').textContent.includes('Referência do anúncio'));
+checks+=15;
 console.table(results);
 console.table(shippingResults);
 console.table(minimumResults);

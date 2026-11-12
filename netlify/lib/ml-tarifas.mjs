@@ -5,6 +5,21 @@ const MODES={ml:'gold_special',mlPremium:'gold_pro'};
 const up=n=>Math.ceil(Number((n*100).toFixed(7)))/100;
 const fail=message=>{throw Object.assign(new Error(message),{pricing:true});};
 
+export async function commissionReference({item,price,api,billableWeight,now=Date.now}){
+ if(!Number.isFinite(price)||price<=0||!/^MLB\d+$/.test(item.category_id??''))return null;
+ if(!item.shipping?.mode||!item.shipping?.logistic_type)return null;
+ const params=new URLSearchParams({price:price.toFixed(2),category_id:item.category_id,currency_id:'BRL',shipping_mode:item.shipping.mode,logistic_type:item.shipping.logistic_type,quantity:'1'});
+ if(Number.isFinite(billableWeight)&&billableWeight>0)params.set('billable_weight',String(Math.ceil(billableWeight)));
+ if(item.tags?.includes('supermarket_eligible'))params.set('tags','supermarket_eligible');
+ const result=await api('/sites/MLB/listing_prices?'+params),rows=Array.isArray(result)?result:[result],quotes={};
+ for(const [scenario,type] of Object.entries(MODES)){
+  const row=rows.find(r=>r.listing_type_id===type),commission=row?.sale_fee_details?.percentage_fee,fixed=row?.sale_fee_details?.fixed_fee;
+  if(row?.currency_id!=='BRL'||![commission,fixed,row?.sale_fee_amount,row?.listing_fee_amount].every(v=>typeof v==='number'&&Number.isFinite(v)&&v>=0)||commission>=100)return null;
+  quotes[scenario]={commission,fixed,feeAmount:row.sale_fee_amount+row.listing_fee_amount};
+ }
+ return {itemId:item.id,categoryId:item.category_id,price,fetchedAt:new Date(now()).toISOString(),quotes};
+}
+
 export async function officialPricing({item,input,api,now=Date.now}){
  const {cost,extra,margin,tax,mlShipping,weight}=input;
  if(![cost,extra,margin,tax,mlShipping,weight].every(Number.isFinite)||cost<=0||cost>1e9||extra<0||extra>1e9||mlShipping<0||mlShipping>1e9||weight<0||weight>1e6||margin<0||margin>=100||tax<0||tax>=100)fail('Confira custo, peso, margem, imposto e frete antes de consultar.');
