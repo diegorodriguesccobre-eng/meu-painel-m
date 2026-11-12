@@ -16,7 +16,8 @@ export async function shippingQuote({item,price=null,listingType=item.listing_ty
  let data;
  try{data=await api(`/users/${item.seller_id}/shipping_options/free?${params}`);}catch(error){
   if([401,429].includes(error.status))throw error;
-  unavailable('O Mercado Livre não retornou o custo de frete deste anúncio. O valor não foi considerado zero; tente consultar novamente.');
+  const status=Number.isInteger(error.status)?` (HTTP ${error.status}${error.apiCode?'; '+error.apiCode:''})`:'';
+  unavailable('O Mercado Livre não retornou o custo de frete deste anúncio'+status+'. O valor não foi considerado zero; tente consultar novamente.');
  }
  const value=data?.coverage?.all_country;
  if(value?.currency_id!=='BRL'||typeof value.list_cost!=='number'||!Number.isFinite(value.list_cost)||value.list_cost<0||value.list_cost>1e9)unavailable('A cotação de frete veio incompleta. Consulte novamente antes de salvar.');

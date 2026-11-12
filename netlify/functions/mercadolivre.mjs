@@ -53,7 +53,7 @@ export function createHandler({env=process.env,fetchImpl=globalThis.fetch,now=Da
  function cookies(req){return Object.fromEntries((req.headers.get('cookie')??'').split(';').map(s=>s.trim().split('=')));}
  async function api(path,token){
   const response=await fetchImpl(API+path,{headers:{Authorization:'Bearer '+token,Accept:'application/json'},redirect:'error',signal:AbortSignal.timeout(12000)});
-  if(!response.ok){const e=new Error('API_ERROR');e.status=response.status;throw e;}
+  if(!response.ok){const e=new Error('API_ERROR');e.status=response.status;try{const body=await response.json();if(typeof body.error==='string'&&/^[a-zA-Z0-9_.-]{1,80}$/.test(body.error))e.apiCode=body.error;}catch{}throw e;}
   return response.json();
  }
  function session(req,cfg){return unseal(cookies(req)[SESSION],cfg.key,'session');}
