@@ -1,5 +1,6 @@
 import { randomBytes, createCipheriv, createDecipheriv, createHash, timingSafeEqual } from 'node:crypto';
 import { officialPricing } from '../lib/ml-tarifas.mjs';
+import { shippingQuote } from '../lib/ml-frete.mjs';
 
 const API='https://api.mercadolibre.com';
 const SESSION='__Host-conduz_ml_session', FLOW='__Host-conduz_ml_oauth';
@@ -94,7 +95,7 @@ export function createHandler({env=process.env,fetchImpl=globalThis.fetch,now=Da
    if(!sameOrigin())return json({error:'INVALID_ORIGIN'},403);
    return json({connected:false},200,{'Set-Cookie':cookie(SESSION,'',0)});
   }
-  if(!['items','item','pricing'].includes(action))return json({error:'NOT_FOUND'},404);
+  if(!['items','item','pricing','shipping'].includes(action))return json({error:'NOT_FOUND'},404);
   if(req.method!==(action==='pricing'?'POST':'GET'))return json({error:'METHOD_NOT_ALLOWED'},405);
   if(action==='pricing'&&!sameOrigin())return json({error:'INVALID_ORIGIN'},403);
   if(req.headers.get('origin')&&req.headers.get('origin')!==cfg.origin)return json({error:'INVALID_ORIGIN'},403);
@@ -125,7 +126,10 @@ export function createHandler({env=process.env,fetchImpl=globalThis.fetch,now=Da
    const normalized=normalizeItem(item);let categoryName=normalized.categoryId,price=null;
    if(normalized.categoryId)try{const category=await api('/categories/'+normalized.categoryId,s.accessToken);if(typeof category.name==='string')categoryName=category.name.slice(0,80);}catch{}
    try{const sale=await api('/items/'+id+'/sale_price',s.accessToken);if(sale.currency_id==='BRL'&&Number.isFinite(sale.amount)&&sale.amount>=0)price=sale.amount;}catch{}
-   return json({item:{...normalized,categoryName,price,sellerId:s.userId,fetchedAt:new Date(now()).toISOString()}});
+   let shipping=null,shippingMessage=null;
+   try{shipping=await shippingQuote({item,price,api:path=>api(path,s.accessToken),now});}catch(error){if(action==='shipping')throw error;shippingMessage=error.shipping?error.message:'Não foi possível consultar o frete do vendedor. Tente novamente.';}
+   if(action==='shipping')return json({shipping});
+   return json({item:{...normalized,categoryName,price,sellerId:s.userId,fetchedAt:new Date(now()).toISOString(),...(shipping?{shippingQuote:shipping}:{})},shippingMessage});
   }catch(error){
    if(error.pricing)return json({error:'PRICING_UNAVAILABLE',message:error.message},422);
    const status=error.status;

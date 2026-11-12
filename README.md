@@ -63,16 +63,16 @@ Informe custo, peso, margem e imposto: o painel consulta o recurso oficial
 tarifa no preço sugerido para Clássico, Premium e a referência de margem de 10%.
 `sale_fee_amount` já contém a parcela fixa; ela não é somada novamente.
 
-A cotação, seus parâmetros e a data ficam preservados no produto, CSV e backup v8.
+A cotação, seus parâmetros e a data ficam preservados no produto, CSV e backup v9.
 Alterar taxas gerais não modifica cotações salvas. Editar custo, peso, margem, imposto
 ou frete exige nova consulta; é possível atualizar manualmente pelo botão da cotação.
 Sem API disponível, o painel informa o erro e impede salvar uma cotação desatualizada.
 Desmarcar a opção permite usar as taxas manuais. Cadastros antigos continuam como estavam.
 
-O peso informado é enviado em gramas. Confira o peso faturável na sua operação;
+O peso informado é enviado em gramas. Havendo cotação de frete, o peso faturável retornado pelo Mercado Livre é usado na consulta das tarifas. Confira o peso faturável na sua operação;
 o custo final pode variar com a logística, dimensões, promoções e regras do Mercado Livre.
 Em mudanças descontínuas de tarifa, o preço para 10% é uma referência validada,
-sem garantia de mínimo global. Impostos não são obtidos por esta API. Kits continuam
+sem garantia de mínimo global. O frete é preenchido automaticamente ao vincular, usando a estimativa oficial do vendedor e os descontos retornados em `coverage.all_country.list_cost`. Com tarifas oficiais, o frete é consultado novamente para cada preço e modalidade. Nunca é usada a tarifa do comprador. Erros de consulta deixam um aviso explícito, sem presumir frete zero. Impostos não são obtidos por esta API. Kits continuam
 com suas próprias taxas: a categoria de um kit não pode ser inferida dos componentes.
 Fonte: [Custos por vender](https://developers.mercadolivre.com.br/pt_br/comissao-por-vender).
 
@@ -93,3 +93,5 @@ e não é versionado.
 
 Edite o `index.html` da raiz, execute os testes e registre suas alterações em commits.
 A pasta `dist` é gerada pelo build e não precisa ser enviada ao GitHub.
+
+O frete automático não usa o antigo limite manual de R$100. Consulta todas as faixas, inclusive quando o comprador paga o envio. Para produtos novos em Full, Coleta ou Agências, simula frete rápido a partir de R$79, de acordo com a [tabela oficial 40538](https://www.mercadolivre.com.br/ajuda/40538). O peso faturável e eventuais condições da conta continuam determinados pela API.

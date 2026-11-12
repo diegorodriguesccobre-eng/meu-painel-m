@@ -114,5 +114,4 @@ a conta. Ela não é considerada validada apenas pelos testes simulados.
 A cotação automática também usa o acesso de leitura já autorizado. Não exige novas
 variáveis, permissões de escrita ou alteração nos anúncios. As chamadas usam o anúncio
 do próprio vendedor e o recurso `/sites/MLB/listing_prices`. A API calcula comissão e
-parcela fixa por preço, categoria, modalidade e logística. Imposto e frete adicional
-continuam informados no painel. Cada produto guarda a cotação usada ao salvar.
+parcela fixa por preço, categoria, modalidade e logística. O frete do vendedor é consultado automaticamente em `/users/{id}/shipping_options/free`, com `item_id`, preço, modalidade, logística e `free_shipping`. O valor é estimado; não é o frete cobrado do comprador. Imposto continua informado no painel. Cada produto guarda a cotação usada ao salvar.

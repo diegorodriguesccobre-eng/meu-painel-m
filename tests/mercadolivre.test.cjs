@@ -26,6 +26,7 @@ async function setup(options={}){
   }
   if(path==='/categories/MLB1234')return Response.json({name:'Categoria teste'});
   if(path==='/items/'+fixture.id+'/sale_price')return options.noPrice?Response.json({message:'Denied'}, {status:403}):Response.json({amount:54.9,currency_id:'BRL'});
+  if(path==='/users/123/shipping_options/free')return Response.json({coverage:{all_country:{list_cost:options.shippingCost??18.5,currency_id:'BRL',billable_weight:750},discount:{rate:.4,promoted_amount:30.83}}});
   throw Error('Endpoint inesperado: '+url);
  };
  const handler=createHandler({env:options.env??env,fetchImpl,now:()=>time});
@@ -125,4 +126,17 @@ test('cotação oficial exige sessão e origem, deriva categoria/logística do a
  const other=await setup({item:{...fixture,seller_id:999}}),otherAuth=await authorize(other);
  assert.equal((await other.handler(request('pricing',{method:'POST',cookie:otherAuth.cookie,body}))).status,403);
  assert.ok(!other.calls.some(c=>c.url.includes('listing_prices')));
+});
+
+test('importar anúncio preenche estimativa de frete e endpoint de frete não consulta anúncios de outra conta',async()=>{
+ const app=await setup({item:{...fixture,shipping:{mode:'me2',logistic_type:'cross_docking',free_shipping:true}}}),auth=await authorize(app);
+ const data=await (await app.handler(request('item',{cookie:auth.cookie,query:{id:fixture.id}}))).json();
+ assert.equal(data.item.shippingQuote.amount,18.5);assert.equal(data.item.shippingQuote.price,54.9);assert.equal(data.shippingMessage,null);
+ const frete=await (await app.handler(request('shipping',{cookie:auth.cookie,query:{id:fixture.id}}))).json();assert.equal(frete.shipping.amount,18.5);
+ const call=app.calls.find(c=>c.url.includes('/shipping_options/free')),query=new URL(call.url).searchParams;
+ assert.equal(query.get('item_id'),fixture.id);assert.equal(query.get('free_shipping'),'true');assert.equal(query.get('verbose'),'true');assert.equal(query.get('item_price'),'54.90');
+ assert.equal((await app.handler(request('shipping',{query:{id:fixture.id}}))).status,401);
+ const other=await setup({item:{...fixture,seller_id:999}}),otherAuth=await authorize(other);
+ assert.equal((await other.handler(request('shipping',{cookie:otherAuth.cookie,query:{id:fixture.id}}))).status,403);
+ assert.ok(!other.calls.some(c=>c.url.includes('shipping_options/free')));
 });
