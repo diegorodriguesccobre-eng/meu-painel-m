@@ -9,8 +9,8 @@ export async function shippingQuote({item,price=null,listingType=item.listing_ty
  // Abaixo dessa faixa, a API ainda pode retornar custo para o vendedor.
  const freeShipping=forceFree||(hasPrice&&tableApplies?price>=79||item.shipping.free_shipping===true&&!mandatoryCurrent:item.shipping.free_shipping===true||mandatoryCurrent);
  const fromTable=async()=>tableShippingQuote({item,price,listingType,freeShipping,weight,profile:await api('/users/me'),now});
- if(preferTable)return fromTable();
- const params=new URLSearchParams({item_id:item.id,listing_type_id:listingType,currency_id:'BRL',mode:'me2',logistic_type:item.shipping.logistic_type,free_shipping:String(freeShipping),verbose:'true'});
+ if(preferTable||item.isKit&&!item.shipping.dimensions)return fromTable();
+ const params=new URLSearchParams({...(item.isKit?{category_id:item.category_id}:{item_id:item.id}),listing_type_id:listingType,currency_id:'BRL',mode:'me2',logistic_type:item.shipping.logistic_type,free_shipping:String(freeShipping),verbose:'true'});
  if(Number.isFinite(price)&&price>0)params.set('item_price',price.toFixed(2));
  if(['new','used','not_specified'].includes(item.condition))params.set('condition',item.condition);
  // Mantém dimensões reais; nunca cria um pacote fictício para obter um frete.

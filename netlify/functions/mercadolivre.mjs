@@ -1,6 +1,7 @@
 import { randomBytes, createCipheriv, createDecipheriv, createHash, timingSafeEqual } from 'node:crypto';
 import { officialPricing, commissionReference } from '../lib/ml-tarifas.mjs';
 import { shippingQuote } from '../lib/ml-frete.mjs';
+import { kitPricing } from '../lib/ml-kits.mjs';
 
 const API='https://api.mercadolibre.com';
 const SESSION='__Host-conduz_ml_session', FLOW='__Host-conduz_ml_oauth';
@@ -95,22 +96,29 @@ export function createHandler({env=process.env,fetchImpl=globalThis.fetch,now=Da
    if(!sameOrigin())return json({error:'INVALID_ORIGIN'},403);
    return json({connected:false},200,{'Set-Cookie':cookie(SESSION,'',0)});
   }
-  if(!['items','item','pricing','shipping'].includes(action))return json({error:'NOT_FOUND'},404);
-  if(req.method!==(action==='pricing'?'POST':'GET'))return json({error:'METHOD_NOT_ALLOWED'},405);
-  if(action==='pricing'&&!sameOrigin())return json({error:'INVALID_ORIGIN'},403);
+  if(!['items','item','pricing','shipping','categories','kit-pricing'].includes(action))return json({error:'NOT_FOUND'},404);
+  if(req.method!==(['pricing','kit-pricing'].includes(action)?'POST':'GET'))return json({error:'METHOD_NOT_ALLOWED'},405);
+  if(['pricing','kit-pricing'].includes(action)&&!sameOrigin())return json({error:'INVALID_ORIGIN'},403);
   if(req.headers.get('origin')&&req.headers.get('origin')!==cfg.origin)return json({error:'INVALID_ORIGIN'},403);
   const s=session(req,cfg);if(!s)return json({error:'CONNECT_REQUIRED',message:'Conecte sua conta do Mercado Livre para consultar os anúncios.'},401);
   try{
-   if(action==='pricing'){
+   if(action==='pricing'||action==='kit-pricing'){
     if(Number(req.headers.get('content-length'))>4096)return json({message:'Consulta muito grande.'},413);
     const raw=await req.text();if(raw.length>4096)return json({message:'Consulta muito grande.'},413);
     let input;try{input=JSON.parse(raw);}catch{return json({message:'Dados de cotação inválidos.'},400);}
+    if(action==='kit-pricing')return json({pricing:await kitPricing({input,sellerId:s.userId,api:path=>api(path,s.accessToken),now})});
     const id=itemId(input?.itemId);if(!id)return json({message:'Vincule um anúncio da sua conta para consultar suas tarifas.'},400);
     const item=await api('/items/'+id,s.accessToken);if(Number(item.seller_id)!==s.userId)return json({message:'Este anúncio não pertence à conta conectada.'},403);
     const pricing=await officialPricing({item,input,api:path=>api(path,s.accessToken),now});
     return json({pricing});
    }
    const query=new URL(req.url).searchParams;
+   if(action==='categories'){
+    const q=(query.get('q')??'').trim();if(q.length<3||q.length>120)return json({message:'Digite de 3 a 120 caracteres para buscar a categoria do kit.'},400);
+    const rows=await api('/sites/MLB/domain_discovery/search?'+new URLSearchParams({q,limit:'8'}),s.accessToken);
+    const categories=(Array.isArray(rows)?rows:[]).filter(r=>/^MLB\d+$/.test(r.category_id)&&typeof r.category_name==='string').map(r=>({id:r.category_id,name:r.category_name.slice(0,80)}));
+    return json({categories:[...new Map(categories.map(c=>[c.id,c])).values()]});
+   }
    if(action==='items'){
     const cursor=query.get('cursor')??'';if(cursor.length>4096)return json({error:'INVALID_CURSOR'},400);
     const params=new URLSearchParams({search_type:'scan',limit:'20'});if(cursor)params.set('scroll_id',cursor);

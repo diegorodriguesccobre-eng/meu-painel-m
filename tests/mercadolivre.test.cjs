@@ -16,7 +16,7 @@ async function setup(options={}){
   const path=new URL(url).pathname;
   if(path==='/oauth/token')return Response.json({access_token:'TEST_ACCESS_TOKEN_NOT_REAL',refresh_token:'DO_NOT_STORE_REFRESH_TOKEN',expires_in:21600});
   assert.equal(init.headers.Authorization,'Bearer TEST_ACCESS_TOKEN_NOT_REAL');
-  if(path==='/users/me')return Response.json({id:123,nickname:'CONDUZ_TESTE'});
+  if(path==='/users/me')return Response.json({id:123,nickname:'CONDUZ_TESTE',seller_reputation:{level_id:'5_green'}});
   if(path==='/users/123/items/search')return Response.json({results:[fixture.id],scroll_id:'cursor-teste'});
   if(path==='/items/bulk')return Response.json([{id:fixture.id,status_code:200,body:fixture},{id:'MLB9876543210',status_code:403,body:{message:'no access'}}]);
   if(path==='/items/'+fixture.id)return Response.json(options.item??fixture);
@@ -24,7 +24,8 @@ async function setup(options={}){
    const price=Number(new URL(url).searchParams.get('price'));
    return Response.json(['gold_special','gold_pro'].map((listing_type_id,i)=>({listing_type_id,currency_id:'BRL',listing_fee_amount:0,sale_fee_amount:Math.round(price*(14+i*5))/100+6,sale_fee_details:{percentage_fee:14+i*5,fixed_fee:6}})));
   }
-  if(path==='/categories/MLB1234')return Response.json({name:'Categoria teste'});
+  if(path==='/categories/MLB1234')return Response.json({id:'MLB1234',name:'Categoria teste',children_categories:[],settings:{listing_allowed:true,status:'enabled',shipping_modes:['me2']}});
+  if(path==='/sites/MLB/domain_discovery/search')return Response.json([{category_id:'MLB1234',category_name:'Categoria teste'},{category_id:'MLB1234',category_name:'Categoria teste'},{category_id:'evil',category_name:'Inválida'}]);
   if(path==='/items/'+fixture.id+'/sale_price')return options.noPrice?Response.json({message:'Denied'}, {status:403}):Response.json({amount:54.9,currency_id:'BRL'});
   if(path==='/users/123/shipping_options/free')return Response.json({coverage:{all_country:{list_cost:options.shippingCost??18.5,currency_id:'BRL',billable_weight:750},discount:{rate:.4,promoted_amount:30.83}}});
   throw Error('Endpoint inesperado: '+url);
@@ -140,4 +141,13 @@ test('importar anúncio preenche estimativa de frete e endpoint de frete não co
  const other=await setup({item:{...fixture,seller_id:999}}),otherAuth=await authorize(other);
  assert.equal((await other.handler(request('shipping',{cookie:otherAuth.cookie,query:{id:fixture.id}}))).status,403);
  assert.ok(!other.calls.some(c=>c.url.includes('shipping_options/free')));
+});
+
+test('categorias e kit exigem sessão, origem e identificadores válidos',async()=>{
+ const app=await setup(),auth=await authorize(app),body={cost:30,extra:0,weight:.75,margin:20,tax:6,mlShipping:0,context:{categoryId:'MLB1234',categoryName:'Teste',referenceItemId:fixture.id,dimensions:null}};
+ assert.equal((await app.handler(request('kit-pricing',{method:'POST',body}))).status,401);
+ assert.equal((await app.handler(request('kit-pricing',{method:'POST',body,cookie:auth.cookie,ownOrigin:'https://evil.example'}))).status,403);
+ const response=await app.handler(request('kit-pricing',{method:'POST',body,cookie:auth.cookie}));assert.equal(response.status,200);assert.equal((await response.json()).pricing.kind,'kit');
+ const categories=await app.handler(request('categories',{cookie:auth.cookie,query:{q:'kit disjuntores'}}));assert.deepEqual((await categories.json()).categories,[{id:'MLB1234',name:'Categoria teste'}]);
+ assert.equal((await app.handler(request('categories',{cookie:auth.cookie,query:{q:'a'}}))).status,400);
 });

@@ -63,7 +63,7 @@ Informe custo, peso, margem e imposto: o painel consulta o recurso oficial
 tarifa no preço sugerido para Clássico, Premium e a referência de margem de 10%.
 `sale_fee_amount` já contém a parcela fixa; ela não é somada novamente.
 
-A cotação, seus parâmetros e a data ficam preservados no produto, CSV e backup v9.
+A cotação, seus parâmetros e a data ficam preservados no produto, CSV e backup v10.
 Alterar taxas gerais não modifica cotações salvas. Editar custo, peso, margem, imposto
 ou frete exige nova consulta; é possível atualizar manualmente pelo botão da cotação.
 Sem API disponível, o painel informa o erro e impede salvar uma cotação desatualizada.
@@ -72,8 +72,7 @@ Desmarcar a opção permite usar as taxas manuais. Cadastros antigos continuam c
 O peso informado é enviado em gramas. Havendo cotação de frete, o peso faturável retornado pelo Mercado Livre é usado na consulta das tarifas. Confira o peso faturável na sua operação;
 o custo final pode variar com a logística, dimensões, promoções e regras do Mercado Livre.
 Em mudanças descontínuas de tarifa, o preço para 10% é uma referência validada,
-sem garantia de mínimo global. O frete é preenchido automaticamente ao vincular, usando a estimativa oficial do vendedor e os descontos retornados em `coverage.all_country.list_cost`. Com tarifas oficiais, o frete é consultado novamente para cada preço e modalidade. Nunca é usada a tarifa do comprador. Erros de consulta deixam um aviso explícito, sem presumir frete zero. Impostos não são obtidos por esta API. Kits continuam
-com suas próprias taxas: a categoria de um kit não pode ser inferida dos componentes.
+sem garantia de mínimo global. O frete é preenchido automaticamente ao vincular, usando a estimativa oficial do vendedor e os descontos retornados em `coverage.all_country.list_cost`. Com tarifas oficiais, o frete é consultado novamente para cada preço e modalidade. Nunca é usada a tarifa do comprador. Erros de consulta deixam um aviso explícito, sem presumir frete zero. Impostos não são obtidos por esta API. Kits possuem categoria própria e também podem consultar frete e comissões oficiais. A categoria sugerida a partir dos componentes deve ser conferida.
 Fonte: [Custos por vender](https://developers.mercadolivre.com.br/pt_br/comissao-por-vender).
 
 Com Node.js 24 instalado:
@@ -99,3 +98,9 @@ O frete automático não usa o antigo limite manual de R$100. Consulta todas as 
 Se o endpoint de frete responder HTTP403, o painel usa os valores da tabela oficial 40538 conferida em 12/11/2026, apenas após verificar reputação verde/MercadoLíder/sem reputação e logística elegível. A interface identifica a estimativa pela tabela, sua data e a ausência de dimensões quando aplicável. Produtos usados, logística não coberta e categorias com tabela específica exigem conferência manual. A tabela é um retrato da data indicada, sem promessa de atualização automática.
 
 Os campos **Comissão Clássica (%)** e **Comissão Premium (%)** permanecem visíveis no cadastro. Ao importar um anúncio, recebem a consulta oficial no preço anunciado; após informar custo e margem, exibem as comissões da cotação para os preços sugeridos. Cada campo informa categoria, preço e data da consulta e fica somente leitura no modo automático. Mudanças que invalidam a cotação removem os valores antigos até a nova consulta. O modo manual recupera os valores anteriores do formulário.
+
+## Tarifas e frete automáticos para kits
+
+Na tela Montar kits, selecione os componentes e as quantidades, confira a categoria própria do kit e a referência de logística da conta. Se os componentes vinculados usam uma categoria em comum, ela é sugerida; também é possível buscar uma categoria oficial. A referência não fornece o preço, peso ou embalagem do kit: apenas identifica o modo de envio e a logística da conta.
+
+O painel consulta Clássico, Premium e a referência para 10% com custo e peso somados. Medidas opcionais são da embalagem do conjunto. Sem medidas, o frete é estimado pela tabela oficial com o peso total; a embalagem volumétrica pode mudar o custo. São preservados categoria, referência, dimensões, frete, comissões, imposto e data da consulta no kit e no backup v10. Kits antigos mantêm o modo manual e suas taxas até serem editados. Alterações nos custos ou pesos dos componentes invalidam a cotação anterior e pedem atualização, sem alterar silenciosamente as tarifas guardadas.
