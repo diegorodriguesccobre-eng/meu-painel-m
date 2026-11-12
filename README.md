@@ -11,6 +11,8 @@ As instruções de todas as funções estão em [LEIA-ME.txt](LEIA-ME.txt).
 
 ## Hospedagem gratuita no Cloudflare
 
+Painel publicado: https://precificacaoconduz.conduz-cobre.workers.dev/
+
 O projeto inclui um adaptador para Cloudflare Workers Free com arquivos estáticos,
 integração com o Mercado Livre e limite por operação de 45 chamadas externas.
 Veja [CONFIGURAR_CLOUDFLARE.md](CONFIGURAR_CLOUDFLARE.md) para publicar pelo GitHub,

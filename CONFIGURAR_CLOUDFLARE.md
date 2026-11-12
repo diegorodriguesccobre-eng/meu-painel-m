@@ -1,5 +1,7 @@
 # Publicar no Cloudflare Workers Free
 
+Endereço publicado: https://precificacaoconduz.conduz-cobre.workers.dev/
+
 O mesmo repositório publica o painel e a integração de consulta do Mercado Livre.
 Use exclusivamente Workers Free e o endereço gratuito `workers.dev`.
 Não são necessários banco de dados, domínio pago, R2, Durable Objects ou plano pago.
@@ -50,3 +52,11 @@ o tempo de CPU cobrado no Cloudflare.
 
 Não publique arquivos `.env`, `.dev.vars`, tokens ou backups no repositório.
 Não altere o aplicativo antigo `conduz-cobre-ml-api`; ele é independente deste painel.
+
+## Validação da migração
+
+Em 12/11/2026, a publicação pelo GitHub foi validada no plano Workers Free ($0).
+Foram conferidos login OAuth, leitura do catálogo e consultas oficiais de tarifas
+e frete para um produto e um kit. Os rascunhos de teste não foram salvos no catálogo.
+O backup foi restaurado no navegador usado durante a migração. Outros computadores
+precisam restaurar o mesmo backup para ter uma cópia do catálogo.
