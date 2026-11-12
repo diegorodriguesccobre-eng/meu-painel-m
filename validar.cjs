@@ -8,8 +8,8 @@ new vm.Script(script); // Verifica também a sintaxe de todo o aplicativo.
 const context = vm.createContext({URL});
 vm.runInContext(script.slice(0, script.indexOf('let state=defaults()')) +
   script.slice(script.indexOf('function csvCell'), script.indexOf("$('export').onclick")) +
-  ';globalThis.api={calculate,minimumPrice,defaults,buildCSV,validState,escapeHTML,parseImportCSV,buildBackup,parseBackup,kitTotals,effectiveFee,copyFees,preserveCatalogFees,validMlLink,readProductFees};', context);
-const { calculate, minimumPrice, defaults, buildCSV, validState, escapeHTML,parseImportCSV,buildBackup,parseBackup,kitTotals,effectiveFee,copyFees,preserveCatalogFees,validMlLink,readProductFees } = context.api;
+  ';globalThis.api={calculate,minimumPrice,defaults,buildCSV,validState,escapeHTML,parseImportCSV,buildBackup,parseBackup,kitTotals,effectiveFee,copyFees,preserveCatalogFees,validMlLink,readProductFees,marginHealth,pricingHealth};', context);
+const { calculate, minimumPrice, defaults, buildCSV, validState, escapeHTML,parseImportCSV,buildBackup,parseBackup,kitTotals,effectiveFee,copyFees,preserveCatalogFees,validMlLink,readProductFees,marginHealth,pricingHealth } = context.api;
 const fees = defaults().fees;
 const products = [
   { id:'1', name:'Garrafa térmica 500 ml',category:'Casa e cozinha',cost:30,weight:.35,margin:20,extra:0 },
@@ -100,7 +100,7 @@ assert.equal(app.get('count').textContent,0);
 app.get('examples').onclick();
 assert.equal(app.get('count').textContent,3);
 assert.equal(app.get('warning-count').textContent,1);
-assert.ok(app.get('rows').innerHTML.includes('class="warning"'));
+assert.ok(app.get('rows').innerHTML.includes('class="health-low"'));
 assert.ok(app.get('rows').innerHTML.includes('103,23'));
 app.get('examples').onclick();
 assert.equal(app.get('count').textContent,3); // Não duplica exemplos.
@@ -730,6 +730,24 @@ autoKitApp.get('kit-picker').oninput({target:{dataset:{kitQuantity:'1'},value:'2
 assert.ok(autoKitApp.get('kit-prices').innerHTML.includes('Aguardando cotação oficial'));
 assert.equal(autoKitApp.run('state.kits[0].mlPricing.inputs.cost'),55);
 checks+=20;
+// Classificação usa margens efetivas, respeita as fronteiras e não sinaliza cotações pendentes como seguras.
+for(const [margin,level] of [[-1,'low'],[0,'low'],[14.99,'low'],[15,'risk'],[19.99,'risk'],[20,'safe'],[35,'safe'],[20-1e-12,'safe'],[15-1e-12,'risk'],[null,'pending'],[undefined,'pending'],[NaN,'pending']]){assert.equal(marginHealth(margin).level,level);checks++;}
+const zeroFees=copyFees(fees);Object.assign(zeroFees.ml,{commission:0,premiumCommission:0,fixed:0,tax:0});Object.assign(zeroFees.shopee,{commission:0,fixed:0,tax:0});
+const roundedHealthProduct={...products[0],cost:.01,extra:0,margin:12,feeSnapshot:zeroFees};
+assert.equal(calculate(roundedHealthProduct,fees.ml,'ml').margin,50);
+assert.equal(pricingHealth(roundedHealthProduct,fees).level,'safe');
+assert.equal(pricingHealth({...officialProduct,cost:31},fees).level,'pending');
+assert.equal(pricingHealth(null,fees).level,'pending');
+checks+=4;
+const healthProducts=products.map((p,i)=>({...p,margin:[12,18,25][i],feeSnapshot:copyFees(fees)}));
+const healthKits=[12,18,25].map((margin,i)=>({id:'health-kit-'+i,name:'Kit margem '+margin,margin,extra:0,mlShipping:0,feeSnapshot:copyFees(fees),items:[{productId:'1',quantity:1}]}));
+const healthApp=runtime(new Map([['margem.painel.v1',JSON.stringify({products:healthProducts,fees,kits:healthKits})]]));
+assert.equal(healthApp.get('warning-count').textContent,1);assert.equal(healthApp.get('risk-count').textContent,1);assert.equal(healthApp.get('safe-count').textContent,1);
+for(const cls of ['health-low','health-risk','health-safe']){assert.ok(healthApp.get('rows').innerHTML.includes('class="'+cls+'"'));assert.ok(healthApp.get('saved-kits').innerHTML.includes('class="saved-kit '+cls+'"'));checks+=2;}
+const healthCSV=buildCSV(healthProducts,fees);
+assert.ok(healthCSV.includes('Classificação por margem'));assert.ok(healthCSV.includes('"Margem baixa";"Margem baixa";"Margem baixa";"Margem baixa"'));assert.ok(healthCSV.includes('"Em risco";"Em risco";"Em risco";"Em risco"'));assert.ok(healthCSV.includes('"Seguro";"Seguro";"Seguro";"Seguro"'));
+const staleHealth=runtime(new Map([['margem.painel.v1',JSON.stringify({products:[{...officialProduct,cost:31}],fees,kits:[]})]]));assert.equal(staleHealth.get('safe-count').textContent,0);assert.equal(staleHealth.get('pending-count').textContent,'1 para recalcular');assert.ok(staleHealth.get('rows').innerHTML.includes('class="health-pending"'));
+checks+=10;
 console.table(results);
 console.table(shippingResults);
 console.table(minimumResults);
