@@ -13,7 +13,7 @@ export function budgetedFetch(fetchImpl, limit = MAX_EXTERNAL_REQUESTS) {
   };
 }
 
-export function createWorker({ fetchImpl = globalThis.fetch, now = Date.now } = {}) {
+export function createWorker({ fetchImpl = (...args) => globalThis.fetch(...args), now = Date.now } = {}) {
   return {
     async fetch(request, env) {
       const { pathname } = new URL(request.url);

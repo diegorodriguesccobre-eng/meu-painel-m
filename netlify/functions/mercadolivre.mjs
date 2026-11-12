@@ -96,6 +96,7 @@ export function createHandler({env=process.env,fetchImpl=globalThis.fetch,now=Da
    }catch(error){
     // Somente etapa e códigos permitidos; nunca inclui tokens, descrições da API ou credenciais.
     if(failure==='profile'&&Number.isInteger(error.status))failure+='_'+error.status;
+    if(failure==='exchange')failure+=['TimeoutError','AbortError'].includes(error.name)?'_timeout':/illegal invocation|incorrect this/i.test(error.message??'')?'_binding':/redirect/i.test(error.message??'')?'_redirect':'_network';
     destination.searchParams.set('ml_reason',failure);
    }
    h.set('Location',destination.href);return new Response(null,{status:303,headers:h});
