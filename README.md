@@ -26,9 +26,9 @@ As instruções de todas as funções estão em [LEIA-ME.txt](LEIA-ME.txt).
 As taxas iniciais são ilustrativas. Ajuste-as às condições dos seus anúncios.
 Devolução Fácil começa em R$ 0,49 por venda e eventos oficiais em 2,50 pontos percentuais,
 conforme o modelo solicitado; ambos são editáveis e aplicados quando as caixas dos
-serviços integrados estão marcadas. Após salvar as taxas, a configuração vale para
-os próximos cadastros de produtos e kits. Os cadastros existentes mantêm suas taxas
-e opções originais, mesmo ao editar custo, quantidades ou margem. A tabela, os cartões,
+serviços integrados estão marcadas em **Taxas deste produto**, dentro do cadastro.
+A tela principal não possui mais um formulário geral de taxas. Cada produto mantém
+suas configurações individuais. A tabela, os cartões,
 o preço mínimo para 10%, o CSV de produtos e o backup respeitam as taxas guardadas.
 
 Ao abrir esta versão, produtos e kits antigos sem taxas próprias recebem uma cópia das
@@ -104,3 +104,5 @@ Os campos **Comissão Clássica (%)** e **Comissão Premium (%)** permanecem vis
 Na tela Montar kits, selecione os componentes e as quantidades, confira a categoria própria do kit e a referência de logística da conta. Se os componentes vinculados usam uma categoria em comum, ela é sugerida; também é possível buscar uma categoria oficial. A referência não fornece o preço, peso ou embalagem do kit: apenas identifica o modo de envio e a logística da conta.
 
 O painel consulta Clássico, Premium e a referência para 10% com custo e peso somados. Medidas opcionais são da embalagem do conjunto. Sem medidas, o frete é estimado pela tabela oficial com o peso total; a embalagem volumétrica pode mudar o custo. São preservados categoria, referência, dimensões, frete, comissões, imposto e data da consulta no kit e no backup v10. Kits antigos mantêm o modo manual e suas taxas até serem editados. Alterações nos custos ou pesos dos componentes invalidam a cotação anterior e pedem atualização, sem alterar silenciosamente as tarifas guardadas.
+
+O bloco geral “Taxas dos marketplaces” foi removido da tela principal. Valores padrão legados continuam nos dados para compatibilidade com backups, exemplos, importação e kits manuais; remover a interface não altera taxas ou cotações de cadastros existentes.
