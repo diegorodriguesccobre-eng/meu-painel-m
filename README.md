@@ -30,7 +30,9 @@ A configuração anterior do Netlify continua disponível durante a migração.
 - Preço mínimo para manter 10% de margem.
 - Cartões por marketplace com preço final, lucro líquido em reais, margem efetiva neutra e descontos discriminados. O selo “Maior lucro” compara o lucro em reais dos três canais.
 - Cores pelo lucro líquido calculado dividido pelo preço de venda: vermelho abaixo de 10%, amarelo de 10% a menos de 15%, verde a partir de 15%. A margem desejada do cadastro não determina a cor.
-- Cada produto ou kit mostra o lucro médio estimado em reais por venda entre Clássico, Premium e Shopee. A classificação do resumo usa a média simples dos três percentuais de lucro. Cotações pendentes pedem recálculo.
+- Produtos vinculados usam o preço de venda registrado no anúncio e sua modalidade para apurar o lucro e a classificação, mesmo abaixo da meta. O cartão mantém a sugestão de preço para a margem desejada. Outros cenários são identificados como sugestões.
+- Para anúncios com tarifas oficiais, o lucro no preço atual usa uma consulta de tarifa e frete nesse preço. Dados antigos são completados automaticamente ao conectar; “Atualizar preços dos anúncios” renova a consulta sem alterar as taxas e cotações salvas para precificação.
+- Produtos sem preço registrado e kits mostram o lucro médio simulado por venda nos três canais, com a média simples dos percentuais para a classificação. Dados pendentes não recebem classificação segura.
 - Resumo com contagem de produtos por faixa, lucro médio estimado por venda e médias/classificações incluídas no CSV. Não representa faturamento real nem considera quantidades vendidas.
 - Busca, ordenação e cartões responsivos no computador e no celular.
 - Importação de produtos por CSV e exportação dos preços calculados.

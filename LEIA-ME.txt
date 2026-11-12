@@ -183,10 +183,16 @@ e descontos: custo do produto, outros custos, imposto, tarifas e frete.
 As cores usam lucro líquido / preço de venda x 100: vermelho abaixo de 10%,
 amarelo de 10% a menos de 15% e verde a partir de 15%. A margem desejada digitada
 não determina a cor. O selo “Maior lucro” compara os valores líquidos em reais.
-Cada produto e kit mostra o lucro médio estimado por venda nos três canais;
-a cor do resumo usa a média simples dos três percentuais. Isso não representa
-faturamento real e não considera quantidades vendidas. Se houver uma cotação
-pendente, a média fica indisponível. O CSV inclui os valores e classificações.
+Em produtos vinculados, o resumo e a cor usam o preço de venda registrado na
+modalidade do anúncio. O cartão também mantém a sugestão para sua meta de margem.
+O lucro considera custos, impostos, tarifas e frete; pode ficar abaixo da meta
+ou negativo. As tarifas oficiais são consultadas para o preço atual do anúncio.
+Use “Atualizar preços dos anúncios” para renovar os dados. A consulta não muda
+os custos, taxas ou sugestões de preço salvos no cadastro.
+Sem preço registrado, o resumo mostra o lucro médio simulado nos três canais;
+a cor usa a média dos percentuais. Kits também mantêm esse resumo de simulações.
+Os valores são estimados por venda e não consideram quantidades vendidas.
+Dados pendentes ficam sem classificação. O CSV inclui valores e classificações.
 
 PREÇO MÍNIMO PARA 10% DE MARGEM
 Cada marketplace mostra “Mínimo para 10%”, tanto na tabela quanto nos cartões.

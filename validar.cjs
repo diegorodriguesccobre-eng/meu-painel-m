@@ -8,8 +8,8 @@ new vm.Script(script); // Verifica também a sintaxe de todo o aplicativo.
 const context = vm.createContext({URL});
 vm.runInContext(script.slice(0, script.indexOf('let state=defaults()')) +
   script.slice(script.indexOf('function csvCell'), script.indexOf("$('export').onclick")) +
-  ';globalThis.api={calculate,minimumPrice,defaults,buildCSV,validState,escapeHTML,parseImportCSV,buildBackup,parseBackup,kitTotals,effectiveFee,copyFees,preserveCatalogFees,validMlLink,readProductFees,profitRateHealth,pricingHealth,pricingAverage,profitRate,profitHealth,averageProfit,saleBreakdown,highestProfitScenario,saleCardHTML};', context);
-const { calculate, minimumPrice, defaults, buildCSV, validState, escapeHTML,parseImportCSV,buildBackup,parseBackup,kitTotals,effectiveFee,copyFees,preserveCatalogFees,validMlLink,readProductFees,profitRateHealth,pricingHealth,pricingAverage,profitRate,profitHealth,averageProfit,saleBreakdown,highestProfitScenario,saleCardHTML } = context.api;
+  ';globalThis.api={calculate,minimumPrice,defaults,buildCSV,validState,escapeHTML,parseImportCSV,buildBackup,parseBackup,kitTotals,effectiveFee,copyFees,preserveCatalogFees,validMlLink,readProductFees,profitRateHealth,pricingHealth,pricingAverage,profitRate,profitHealth,averageProfit,saleBreakdown,highestProfitScenario,saleCardHTML,saleResult,currentScenario};', context);
+const { calculate, minimumPrice, defaults, buildCSV, validState, escapeHTML,parseImportCSV,buildBackup,parseBackup,kitTotals,effectiveFee,copyFees,preserveCatalogFees,validMlLink,readProductFees,profitRateHealth,pricingHealth,pricingAverage,profitRate,profitHealth,averageProfit,saleBreakdown,highestProfitScenario,saleCardHTML,saleResult,currentScenario } = context.api;
 const fees = defaults().fees;
 const products = [
   { id:'1', name:'Garrafa térmica 500 ml',category:'Casa e cozinha',cost:30,weight:.35,margin:20,extra:0 },
@@ -273,14 +273,14 @@ const complete={products:products.map((p,i)=>({...p,extra:i+2,mlShipping:18+i}))
 complete.products=complete.products.map(p=>({...p,feeSnapshot:JSON.parse(JSON.stringify(copyFees(complete.fees)))}));
 const backupText=buildBackup(complete),envelope=JSON.parse(backupText);
 assert.equal(envelope.format,'margem-backup');
-assert.equal(envelope.version,10);
+assert.equal(envelope.version,11);
 assert.ok(Number.isFinite(Date.parse(envelope.createdAt)));
 assert.deepEqual(JSON.parse(JSON.stringify(parseBackup(backupText))),complete);
 assert.equal(parseBackup('\uFEFF'+backupText).products.length,3);
 assert.equal(parseBackup(buildBackup(defaults())).products.length,0);
 assert.equal(parseBackup(buildBackup({products,fees})).products[0].mlShipping,0);
 assert.throws(()=>parseBackup('{incompleto'));
-assert.throws(()=>parseBackup(JSON.stringify({...envelope,version:11})));
+assert.throws(()=>parseBackup(JSON.stringify({...envelope,version:12})));
 assert.throws(()=>parseBackup(JSON.stringify({...envelope,format:'outro-app'})));
 assert.throws(()=>parseBackup(JSON.stringify({...envelope,data:{products:[null],fees}})));
 assert.throws(()=>parseBackup(JSON.stringify({...envelope,data:{products:[products[0],products[0]],fees}})));
@@ -749,7 +749,7 @@ assert.ok(healthCSV.includes('Classificação pelo lucro líquido'));assert.ok(h
 const staleHealth=runtime(new Map([['margem.painel.v1',JSON.stringify({products:[{...officialProduct,cost:31}],fees,kits:[]})]]));assert.equal(staleHealth.get('safe-count').textContent,0);assert.equal(staleHealth.get('pending-count').textContent,'1 para recalcular');assert.ok(staleHealth.get('rows').innerHTML.includes('class="health-pending"'));
 checks+=10;
 // Média simples dos três cenários: um canal abaixo de 10% não determina sozinho a cor do produto.
-const mixedAverageProduct={...officialProduct,margin:5,mlPricing:{...officialFixture,inputs:{...officialFixture.inputs,margin:5},quotes:{ml:{...officialFixture.quotes.ml,desired:officialQuoteFixture(50,14,6)},mlPremium:{...officialFixture.quotes.mlPremium,desired:officialQuoteFixture(90,19,6)}}}};
+const mixedAverageProduct={...officialProduct,mercadoLivre:{...mlMetadata,price:null},margin:5,mlPricing:{...officialFixture,inputs:{...officialFixture.inputs,margin:5},quotes:{ml:{...officialFixture.quotes.ml,desired:officialQuoteFixture(50,14,6)},mlPremium:{...officialFixture.quotes.mlPremium,desired:officialQuoteFixture(90,19,6)}}}};
 const mixedMargins=['ml','mlPremium','shopee'].map(k=>calculate(mixedAverageProduct,fees[k==='mlPremium'?'ml':k],k).margin),expectedAverage=mixedMargins.reduce((sum,m)=>sum+m,0)/3;
 assert.ok(Math.abs(pricingAverage(mixedAverageProduct,fees)-expectedAverage)<1e-9);
 assert.equal(Math.round(pricingAverage(mixedAverageProduct,fees)*100)/100,16);
@@ -784,10 +784,39 @@ assert.equal(highestProfitScenario({...products[0],feeSnapshot:zeroFees},fees),n
 assert.equal(highestProfitScenario({...officialProduct,cost:31},fees),null);
 assert.ok(Math.abs(averageProfit(mixedAverageProduct,fees)-['ml','mlPremium','shopee'].reduce((sum,key)=>sum+calculate(mixedAverageProduct,fees[key==='mlPremium'?'ml':key],key).profit,0)/3)<1e-9);
 const card=saleCardHTML(products[0],fees.ml,'ml',{best:'ml'});
-assert.ok(card.includes('Preço final de venda')&&card.includes('Lucro:')&&card.includes('Margem efetiva:')&&card.includes('Maior lucro'));
+assert.ok(card.includes('Preço sugerido de venda')&&card.includes('Lucro:')&&card.includes('Margem efetiva:')&&card.includes('Maior lucro'));
 assert.ok(averageExportCSV.includes('Lucro líquido médio por venda (R$)'));
 checks+=6;
 
+// Produtos existentes usam o preço do anúncio na modalidade vinculada, mesmo abaixo da meta.
+const currentSaleFixture=price=>({...officialProduct,mercadoLivre:{...mlMetadata,price,currentFees:{...referenceFixture,price,quotes:{ml:{commission:11.5,fixed:0,feeAmount:price*.115},mlPremium:{commission:16.5,fixed:0,feeAmount:price*.165}}},currentShipping:{...freightFixture,price,amount:6.85}}});
+for(const [price,level] of [[50,'low'],[52.5,'risk'],[60,'safe']]){
+ const product=currentSaleFixture(price),result=saleResult(product,fees.ml,'ml');
+ const expected=price-price*.06-price*.115-30-6.85;
+ assert.equal(result.price,price);assert.equal(result.basis,'current');
+ assert.ok(Math.abs(result.profit-expected)<1e-9);assert.equal(pricingHealth(product,fees).level,level);
+ assert.ok(Math.abs(pricingAverage(product,fees)-expected/price*100)<1e-9);
+ assert.equal(saleResult(product,fees.ml,'mlPremium').basis,'suggested');
+ assert.equal(calculate(product,fees.ml,'ml').price,calculate(officialProduct,fees.ml,'ml').price);
+ assert.ok(validState({products:[product],fees}));checks+=8;
+}
+const currentSale=currentSaleFixture(50),currentRestored=parseBackup(buildBackup({products:[currentSale],fees})).products[0];
+assert.equal(saleResult(currentRestored,fees.ml,'ml').profit,saleResult(currentSale,fees.ml,'ml').profit);
+assert.equal(currentRestored.mercadoLivre.currentFees.price,50);assert.equal(currentRestored.mercadoLivre.currentShipping.amount,6.85);
+assert.equal(saleResult(officialProduct,fees.ml,'ml'),null); // Nunca aplica a tarifa do preço sugerido em outro preço.
+assert.equal(pricingHealth(officialProduct,fees).level,'pending');
+assert.ok(!validMlLink({...currentSale.mercadoLivre,currentFees:{...currentSale.mercadoLivre.currentFees,price:99}}));
+const manualCurrent={...products[0],feeSnapshot:copyFees(fees),mercadoLivre:{...mlMetadata,price:40}};
+assert.ok(Math.abs(saleResult(manualCurrent,fees.ml,'ml').profit+4)<1e-9);
+assert.equal(pricingHealth(manualCurrent,fees).level,'low');assert.equal(currentScenario({...manualCurrent,mercadoLivre:{...mlMetadata,listingType:'gold_pro'}}),'mlPremium');
+assert.ok(saleCardHTML(currentSale,fees.ml,'ml').includes('Preço de venda atual'));
+const currentCSV=buildCSV([currentSale],fees);assert.ok(currentCSV.includes('Preço atual do anúncio vinculado'));assert.ok(currentCSV.includes('"50,00";"4,40";"8,80"'));
+const currentMerge=runtime();currentMerge.run(`state.products=[${JSON.stringify(officialProduct)}]`);
+const originalFees=currentMerge.run('JSON.stringify(state.products[0].feeSnapshot)'),originalSuggestions=currentMerge.run('JSON.stringify(state.products[0].mlPricing)');
+currentMerge.run(`state.products[0].mercadoLivre=currentLinkFromResponse(state.products[0].mercadoLivre,{item:${JSON.stringify({...mlMetadata,price:50,shippingQuote:{...freightFixture,price:50,amount:6.85}})},commissions:${JSON.stringify(currentSale.mercadoLivre.currentFees)}});render();persist();`);
+assert.equal(currentMerge.run('JSON.stringify(state.products[0].feeSnapshot)'),originalFees);assert.equal(currentMerge.run('JSON.stringify(state.products[0].mlPricing)'),originalSuggestions);
+assert.ok(currentMerge.get('rows').innerHTML.includes('Lucro no preço atual'));assert.ok(currentMerge.get('rows').innerHTML.includes('8,8%'));
+checks+=16;
 console.table(results);
 console.table(shippingResults);
 console.table(minimumResults);
