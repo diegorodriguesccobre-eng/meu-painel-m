@@ -440,7 +440,7 @@ function pricingMatches(pricing,input){return validOfficialPricing(pricing)&&pri
 function renderAutoPricing(message){
  const enabled=Boolean($('ml-auto-fees').checked),input=pricingInput(),ready=enabled&&pricingMatches(mlPricingDraft,input);
  $('ml-auto-fees').disabled=!mlLinkedDraft;
- for(const key of ['commission','premiumCommission','fixed']){const field=$('product-form').elements['product-ml-'+key];if(field)field.disabled=enabled;}
+ for(const key of ['commission','premiumCommission','fixed']){const field=$('product-form').elements['product-ml-'+key];if(field){field.disabled=enabled;field.parentElement?.classList.toggle('hidden',enabled);}}
  $('ml-refresh-pricing').disabled=!enabled||!mlLinkedDraft||!mlConnection.connected;
  $('ml-pricing-status').textContent=message??(!mlLinkedDraft?'Vincule um anúncio para consultar as tarifas da categoria.':!enabled?'Tarifas manuais: os valores deste produto serão preservados.':ready?'Cotação oficial de '+new Date(mlPricingDraft.fetchedAt).toLocaleString('pt-BR')+'. Será preservada neste produto.':'Preencha custo, peso, margem e imposto para consultar as tarifas automaticamente.');
  $('ml-pricing-preview').innerHTML=ready?Object.entries(mlPricingDraft.quotes).map(([key,value])=>`<article class="kit-price"><h3>${SCENARIOS[key]}</h3><strong class="price">${money(value.desired.price)}</strong><p>${money(value.desired.profit)} de lucro · ${number(value.desired.margin)}%</p><p class="help">Tarifa oficial total: ${money(value.desired.feeAmount)}<br>${number(value.desired.commission)}% · parcela fixa ${money(value.desired.fixed)} já incluída<br>Preço para 10%: ${money(value.minimum.price)}</p></article>`).join(''):'';
