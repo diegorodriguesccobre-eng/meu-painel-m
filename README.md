@@ -9,6 +9,14 @@ Abra `index.html` no Chrome, Edge ou outro navegador moderno. Não é necessári
 A logo fornecida da Conduz Cobre está incorporada no HTML, sem depender de outro arquivo ou de internet.
 As instruções de todas as funções estão em [LEIA-ME.txt](LEIA-ME.txt).
 
+## Hospedagem gratuita no Cloudflare
+
+O projeto inclui um adaptador para Cloudflare Workers Free com arquivos estáticos,
+integração com o Mercado Livre e limite por operação de 45 chamadas externas.
+Veja [CONFIGURAR_CLOUDFLARE.md](CONFIGURAR_CLOUDFLARE.md) para publicar pelo GitHub,
+configurar os secrets e transferir os dados do navegador por backup.
+A configuração anterior do Netlify continua disponível durante a migração.
+
 ## Recursos
 
 - Cadastro de produtos com custo, peso, categoria, margem, outros custos e frete.
