@@ -783,7 +783,8 @@ function renderMlConnection(message){
 }
 function currentLinkFromResponse(previous,response){
  const item=response.item;if(!validMlLink(item)||item.itemId!==previous.itemId||item.sellerId!==previous.sellerId)throw Error('O anúncio consultado não corresponde ao produto cadastrado.');
- const link={...copyMlLink(previous),price:item.price,listingType:item.listingType,fetchedAt:item.fetchedAt};delete link.currentFees;delete link.currentShipping;
+ const link={...copyMlLink(previous),price:item.price,listingType:item.listingType,fetchedAt:item.fetchedAt};
+ if(item.price!==previous.price||item.listingType!==previous.listingType){delete link.currentFees;delete link.currentShipping;}
  if(validCommissionReference(response.commissions)&&response.commissions.itemId===item.itemId&&response.commissions.price===item.price)link.currentFees=copyCommissionReference(response.commissions);
  if(validShippingQuote(item.shippingQuote)&&item.shippingQuote.price===item.price&&item.shippingQuote.listingType===item.listingType)link.currentShipping=copyShippingQuote(item.shippingQuote);
  return link;
@@ -791,7 +792,7 @@ function currentLinkFromResponse(previous,response){
 let currentPricesBusy=false;
 async function refreshRegisteredPrices(force=false){
  if(currentPricesBusy||!mlConnection.connected)return;
- const products=state.products.filter(p=>p.mercadoLivre&&(force||!p.mercadoLivre.currentFees));
+ const products=state.products.filter(p=>p.mercadoLivre&&(force||!p.mercadoLivre.currentFees||p.mlPricing&&!p.mercadoLivre.currentShipping));
  if(!products.length)return;
  currentPricesBusy=true;$('ml-refresh-current').disabled=true;let updated=0,failed=0;
  try{
@@ -800,6 +801,7 @@ async function refreshRegisteredPrices(force=false){
    $('ml-current-status').textContent=`Consultando preços e tarifas dos anúncios: ${updated+failed+1} de ${products.length}…`;
    try{const response=await mlRequest('item',{query:{id:product.mercadoLivre.itemId}}),current=state.products.find(p=>p.id===product.id);
     if(!current||current.mercadoLivre?.itemId!==product.mercadoLivre.itemId)continue;
+    if(!(response.item?.price>0))throw Error('Preço atual indisponível; preservando o preço registrado.');
     current.mercadoLivre=currentLinkFromResponse(current.mercadoLivre,response);updated++;
    }catch{failed++;}
   }

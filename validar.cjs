@@ -817,6 +817,12 @@ currentMerge.run(`state.products[0].mercadoLivre=currentLinkFromResponse(state.p
 assert.equal(currentMerge.run('JSON.stringify(state.products[0].feeSnapshot)'),originalFees);assert.equal(currentMerge.run('JSON.stringify(state.products[0].mlPricing)'),originalSuggestions);
 assert.ok(currentMerge.get('rows').innerHTML.includes('Lucro no preço atual'));assert.ok(currentMerge.get('rows').innerHTML.includes('8,8%'));
 checks+=16;
+currentMerge.run(`state.products[0].mercadoLivre=currentLinkFromResponse(state.products[0].mercadoLivre,{item:${JSON.stringify({...mlMetadata,price:50})},commissions:null});`);
+assert.equal(currentMerge.run('state.products[0].mercadoLivre.currentFees.price'),50);
+assert.equal(currentMerge.run('state.products[0].mercadoLivre.currentShipping.amount'),6.85);
+currentMerge.run(`state.products[0].mercadoLivre=currentLinkFromResponse(state.products[0].mercadoLivre,{item:${JSON.stringify({...mlMetadata,price:55})},commissions:null});`);
+assert.equal(currentMerge.run('saleResult(state.products[0],state.fees.ml,"ml")'),null);
+checks+=3;
 console.table(results);
 console.table(shippingResults);
 console.table(minimumResults);
