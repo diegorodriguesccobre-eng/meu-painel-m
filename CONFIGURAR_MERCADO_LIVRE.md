@@ -1,6 +1,6 @@
 # Ativar a conexão com o Mercado Livre
 
-O fluxo está implementado para o painel em **https://precificacaoprodutos.netlify.app/**.
+O fluxo está implementado para o painel em **https://precificacaoconduz.netlify.app/**.
 Ele precisa das credenciais de um aplicativo do Mercado Livre antes de poder consultar sua conta.
 Não envie essas credenciais pelo chat nem coloque valores reais no GitHub.
 
@@ -15,7 +15,7 @@ Habilite PKCE na configuração de segurança do aplicativo, se a opção estive
 Cadastre este endereço exato como **Redirect URI de OAuth**:
 
 ```text
-https://precificacaoprodutos.netlify.app/api/ml/callback
+https://precificacaoconduz.netlify.app/api/ml/callback
 ```
 
 Esse é o redirecionamento de autorização, não um webhook de notificações.
@@ -34,7 +34,7 @@ abaixo, disponíveis às **Functions**, no contexto de produção:
 | `ML_CLIENT_ID` | O App ID do aplicativo do Mercado Livre. |
 | `ML_CLIENT_SECRET` | A Secret Key do aplicativo. |
 | `ML_SESSION_SECRET` | Uma chave aleatória de 32 bytes, representada por 64 caracteres hexadecimais. |
-| `ML_REDIRECT_URI` | `https://precificacaoprodutos.netlify.app/api/ml/callback` |
+| `ML_REDIRECT_URI` | `https://precificacaoconduz.netlify.app/api/ml/callback` |
 
 Para gerar `ML_SESSION_SECRET` no seu computador com Node instalado:
 
@@ -91,7 +91,7 @@ produto; salve para confirmar a remoção. A consulta não altera anúncios no M
 
 ## Conferir a instalação
 
-Abra `https://precificacaoprodutos.netlify.app/api/ml/status`.
+Abra `https://precificacaoconduz.netlify.app/api/ml/status`.
 Sem as quatro variáveis válidas, ele retorna `configured: false`.
 Com a configuração válida, retorna `configured: true`; `connected` só fica `true`
 após autorizar a conta neste navegador. A resposta não mostra credenciais.
@@ -108,3 +108,11 @@ simuladas da API: OAuth, PKCE, origem das requisições, cookies, sessão, propr
 dos anúncios, importação, erros, taxas individuais, backup e remoção do vínculo.
 A consulta real ao seu catálogo depende de configurar as credenciais e autorizar
 a conta. Ela não é considerada validada apenas pelos testes simulados.
+
+## Tarifas oficiais
+
+A cotação automática também usa o acesso de leitura já autorizado. Não exige novas
+variáveis, permissões de escrita ou alteração nos anúncios. As chamadas usam o anúncio
+do próprio vendedor e o recurso `/sites/MLB/listing_prices`. A API calcula comissão e
+parcela fixa por preço, categoria, modalidade e logística. Imposto e frete adicional
+continuam informados no painel. Cada produto guarda a cotação usada ao salvar.

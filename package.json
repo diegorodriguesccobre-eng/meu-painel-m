@@ -4,7 +4,7 @@
   "private": true,
   "description": "Painel de precificação e kits para marketplaces, com dados locais no navegador.",
   "scripts": {
-    "test": "node validar.cjs && node --test tests/mercadolivre.test.cjs",
+    "test": "node validar.cjs && node --test tests/*.test.cjs",
     "build": "npm test && node preparar-site.cjs"
   },
   "engines": {

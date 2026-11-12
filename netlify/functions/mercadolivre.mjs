@@ -1,4 +1,5 @@
 import { randomBytes, createCipheriv, createDecipheriv, createHash, timingSafeEqual } from 'node:crypto';
+import { officialPricing } from '../lib/ml-tarifas.mjs';
 
 const API='https://api.mercadolibre.com';
 const SESSION='__Host-conduz_ml_session', FLOW='__Host-conduz_ml_oauth';
@@ -93,11 +94,21 @@ export function createHandler({env=process.env,fetchImpl=globalThis.fetch,now=Da
    if(!sameOrigin())return json({error:'INVALID_ORIGIN'},403);
    return json({connected:false},200,{'Set-Cookie':cookie(SESSION,'',0)});
   }
-  if(!['items','item'].includes(action))return json({error:'NOT_FOUND'},404);
-  if(req.method!=='GET')return json({error:'METHOD_NOT_ALLOWED'},405);
+  if(!['items','item','pricing'].includes(action))return json({error:'NOT_FOUND'},404);
+  if(req.method!==(action==='pricing'?'POST':'GET'))return json({error:'METHOD_NOT_ALLOWED'},405);
+  if(action==='pricing'&&!sameOrigin())return json({error:'INVALID_ORIGIN'},403);
   if(req.headers.get('origin')&&req.headers.get('origin')!==cfg.origin)return json({error:'INVALID_ORIGIN'},403);
   const s=session(req,cfg);if(!s)return json({error:'CONNECT_REQUIRED',message:'Conecte sua conta do Mercado Livre para consultar os anúncios.'},401);
   try{
+   if(action==='pricing'){
+    if(Number(req.headers.get('content-length'))>4096)return json({message:'Consulta muito grande.'},413);
+    const raw=await req.text();if(raw.length>4096)return json({message:'Consulta muito grande.'},413);
+    let input;try{input=JSON.parse(raw);}catch{return json({message:'Dados de cotação inválidos.'},400);}
+    const id=itemId(input?.itemId);if(!id)return json({message:'Vincule um anúncio da sua conta para consultar suas tarifas.'},400);
+    const item=await api('/items/'+id,s.accessToken);if(Number(item.seller_id)!==s.userId)return json({message:'Este anúncio não pertence à conta conectada.'},403);
+    const pricing=await officialPricing({item,input,api:path=>api(path,s.accessToken),now});
+    return json({pricing});
+   }
    const query=new URL(req.url).searchParams;
    if(action==='items'){
     const cursor=query.get('cursor')??'';if(cursor.length>4096)return json({error:'INVALID_CURSOR'},400);
@@ -116,6 +127,7 @@ export function createHandler({env=process.env,fetchImpl=globalThis.fetch,now=Da
    try{const sale=await api('/items/'+id+'/sale_price',s.accessToken);if(sale.currency_id==='BRL'&&Number.isFinite(sale.amount)&&sale.amount>=0)price=sale.amount;}catch{}
    return json({item:{...normalized,categoryName,price,sellerId:s.userId,fetchedAt:new Date(now()).toISOString()}});
   }catch(error){
+   if(error.pricing)return json({error:'PRICING_UNAVAILABLE',message:error.message},422);
    const status=error.status;
    const message=status===401?'A sessão do Mercado Livre expirou. Conecte a conta novamente.':status===403?'A conta não tem permissão para consultar este recurso. Confira as permissões do aplicativo.':status===404?'Anúncio não encontrado. Confira o ID MLB.':status===429?'O Mercado Livre limitou as consultas. Aguarde e tente novamente.':'Não foi possível consultar o Mercado Livre agora. Tente novamente.';
    return json({error:'MERCADO_LIVRE_ERROR',message},[401,403,404,429].includes(status)?status:502);

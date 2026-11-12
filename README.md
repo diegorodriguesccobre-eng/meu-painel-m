@@ -57,6 +57,25 @@ A integração só estará operacional para sua conta após essa configuração 
 
 ## Testar e preparar a publicação localmente
 
+Ao vincular um anúncio, **Calcular com tarifas oficiais do Mercado Livre** é ativado.
+Informe custo, peso, margem e imposto: o painel consulta o recurso oficial
+`/sites/MLB/listing_prices` usando a categoria e a logística do anúncio. Valida a
+tarifa no preço sugerido para Clássico, Premium e a referência de margem de 10%.
+`sale_fee_amount` já contém a parcela fixa; ela não é somada novamente.
+
+A cotação, seus parâmetros e a data ficam preservados no produto, CSV e backup v8.
+Alterar taxas gerais não modifica cotações salvas. Editar custo, peso, margem, imposto
+ou frete exige nova consulta; é possível atualizar manualmente pelo botão da cotação.
+Sem API disponível, o painel informa o erro e impede salvar uma cotação desatualizada.
+Desmarcar a opção permite usar as taxas manuais. Cadastros antigos continuam como estavam.
+
+O peso informado é enviado em gramas. Confira o peso faturável na sua operação;
+o custo final pode variar com a logística, dimensões, promoções e regras do Mercado Livre.
+Em mudanças descontínuas de tarifa, o preço para 10% é uma referência validada,
+sem garantia de mínimo global. Impostos não são obtidos por esta API. Kits continuam
+com suas próprias taxas: a categoria de um kit não pode ser inferida dos componentes.
+Fonte: [Custos por vender](https://developers.mercadolivre.com.br/pt_br/comissao-por-vender).
+
 Com Node.js 24 instalado:
 
 ```sh

@@ -5,9 +5,9 @@ const origin='https://precificacaoprodutos.netlify.app';
 const env={ML_CLIENT_ID:'123456',ML_CLIENT_SECRET:'TEST_SECRET_NOT_REAL',ML_SESSION_SECRET:'ab'.repeat(32),ML_REDIRECT_URI:origin+'/api/ml/callback'};
 const fixture={id:'MLB1234567890',title:'Produto de teste',site_id:'MLB',seller_id:123,category_id:'MLB1234',catalog_product_id:'MLB56789',listing_type_id:'gold_special',permalink:'https://produto.mercadolivre.com.br/MLB-1234567890-_JM',secure_thumbnail:'https://http2.mlstatic.com/foto.png',attributes:[{id:'PACKAGE_WEIGHT',value_struct:{number:750,unit:'g'}}],variations:[],price:999999};
 const modulePromise=import('../netlify/functions/mercadolivre.mjs');
-function request(action,{method='GET',cookie,query={},ownOrigin=origin,header=true}={}){
+function request(action,{method='GET',cookie,query={},ownOrigin=origin,header=true,body}={}){
  const headers={};if(cookie)headers.Cookie=cookie;if(method==='POST'){headers.Origin=ownOrigin;if(header)headers['X-Conduz-Action']='mercadolivre';}
- return new Request(origin+'/api/ml/'+action+'?'+new URLSearchParams(query),{method,headers});
+ return new Request(origin+'/api/ml/'+action+'?'+new URLSearchParams(query),{method,headers,...(body?{body:JSON.stringify(body)}:{})});
 }
 async function setup(options={}){
  const {createHandler}=await modulePromise;let time=Date.parse('2026-11-11T12:00:00Z');const calls=[];
@@ -20,6 +20,10 @@ async function setup(options={}){
   if(path==='/users/123/items/search')return Response.json({results:[fixture.id],scroll_id:'cursor-teste'});
   if(path==='/items/bulk')return Response.json([{id:fixture.id,status_code:200,body:fixture},{id:'MLB9876543210',status_code:403,body:{message:'no access'}}]);
   if(path==='/items/'+fixture.id)return Response.json(options.item??fixture);
+  if(path==='/sites/MLB/listing_prices'){
+   const price=Number(new URL(url).searchParams.get('price'));
+   return Response.json(['gold_special','gold_pro'].map((listing_type_id,i)=>({listing_type_id,currency_id:'BRL',listing_fee_amount:0,sale_fee_amount:Math.round(price*(14+i*5))/100+6,sale_fee_details:{percentage_fee:14+i*5,fixed_fee:6}})));
+  }
   if(path==='/categories/MLB1234')return Response.json({name:'Categoria teste'});
   if(path==='/items/'+fixture.id+'/sale_price')return options.noPrice?Response.json({message:'Denied'}, {status:403}):Response.json({amount:54.9,currency_id:'BRL'});
   throw Error('Endpoint inesperado: '+url);
@@ -106,4 +110,19 @@ test('erros de limite não vazam respostas ou tokens da API',async()=>{
  const app=await setup(),auth=await authorize(app),{createHandler}=await modulePromise;
  const failing=createHandler({env,now:()=>Date.parse('2026-11-11T12:00:00Z'),fetchImpl:async()=>Response.json({error:'TEST_ACCESS_TOKEN_NOT_REAL'},{status:429})});
  const response=await failing(request('items',{cookie:auth.cookie})),body=await response.text();assert.equal(response.status,429);assert.ok(!body.includes('TEST_ACCESS_TOKEN'));assert.ok(body.includes('limitou'));
+});
+
+test('cotação oficial exige sessão e origem, deriva categoria/logística do anúncio próprio e usa apenas GET na API',async()=>{
+ const app=await setup({item:{...fixture,shipping:{mode:'me2',logistic_type:'cross_docking'}}}),auth=await authorize(app);
+ const body={itemId:fixture.id,cost:30,extra:0,margin:20,weight:.35,tax:6,mlShipping:0,categoryId:'MLB_INJETADA'};
+ assert.equal((await app.handler(request('pricing',{method:'POST',body}))).status,401);
+ assert.equal((await app.handler(request('pricing',{method:'POST',cookie:auth.cookie,body,ownOrigin:'https://evil.example'}))).status,403);
+ const response=await app.handler(request('pricing',{method:'POST',cookie:auth.cookie,body})),data=await response.json();
+ assert.equal(response.status,200);assert.equal(data.pricing.quotes.ml.desired.price,60);assert.equal(data.pricing.categoryId,fixture.category_id);
+ assert.ok(app.calls.filter(c=>c.url.includes('listing_prices')).every(c=>new URL(c.url).searchParams.get('logistic_type')==='cross_docking'&&new URL(c.url).searchParams.get('category_id')===fixture.category_id));
+ assert.ok(app.calls.every(c=>c.init.method===undefined||c.url.endsWith('/oauth/token')));
+ assert.ok(!JSON.stringify(data).includes('TEST_ACCESS_TOKEN'));assert.equal(response.headers.get('cache-control'),'no-store');
+ const other=await setup({item:{...fixture,seller_id:999}}),otherAuth=await authorize(other);
+ assert.equal((await other.handler(request('pricing',{method:'POST',cookie:otherAuth.cookie,body}))).status,403);
+ assert.ok(!other.calls.some(c=>c.url.includes('listing_prices')));
 });
