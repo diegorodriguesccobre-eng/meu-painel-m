@@ -66,8 +66,8 @@ test('requisições de outra origem não iniciam nem desconectam a conta',async(
 });
 test('callback com state inválido ou expirado não troca o código',async()=>{
  const app=await setup(),start=await app.handler(request('connect',{method:'POST'})),data=await start.json(),auth=new URL(data.authorizationUrl),cookie=start.headers.get('set-cookie').split(';')[0];
- const wrong=await app.handler(request('callback',{cookie,query:{state:'outro',code:'fake'}}));assert.equal(wrong.headers.get('location'),origin+'/?ml=error');assert.equal(app.calls.length,0);
- app.advance(301000);const expired=await app.handler(request('callback',{cookie,query:{state:auth.searchParams.get('state'),code:'fake'}}));assert.equal(expired.headers.get('location'),origin+'/?ml=error');assert.equal(app.calls.length,0);
+ const wrong=await app.handler(request('callback',{cookie,query:{state:'outro',code:'fake'}}));assert.equal(wrong.headers.get('location'),origin+'/?ml=error&ml_reason=state');assert.equal(app.calls.length,0);
+ app.advance(301000);const expired=await app.handler(request('callback',{cookie,query:{state:auth.searchParams.get('state'),code:'fake'}}));assert.equal(expired.headers.get('location'),origin+'/?ml=error&ml_reason=state');assert.equal(app.calls.length,0);
 });
 test('catálogo usa scan e o endpoint bulk atual, retornando apenas itens da conta',async()=>{
  const app=await setup(),auth=await authorize(app),response=await app.handler(request('items',{cookie:auth.cookie,query:{cursor:'cursor:abc+/='}})),data=await response.json();
@@ -150,4 +150,12 @@ test('categorias e kit exigem sessão, origem e identificadores válidos',async(
  const response=await app.handler(request('kit-pricing',{method:'POST',body,cookie:auth.cookie}));assert.equal(response.status,200);assert.equal((await response.json()).pricing.kind,'kit');
  const categories=await app.handler(request('categories',{cookie:auth.cookie,query:{q:'kit disjuntores'}}));assert.deepEqual((await categories.json()).categories,[{id:'MLB1234',name:'Categoria teste'}]);
  assert.equal((await app.handler(request('categories',{cookie:auth.cookie,query:{q:'a'}}))).status,400);
+});
+
+test('diagnóstico OAuth informa só a etapa e o código permitido, sem expor a resposta da API',async()=>{
+ const app=await setup({fetch:async()=>Response.json({error:'invalid_client',error_description:'TEST_SECRET_NOT_REAL',access_token:'TEST_TOKEN_NOT_REAL'}, {status:400})});
+ const start=await app.handler(request('connect',{method:'POST'})),auth=new URL((await start.json()).authorizationUrl),cookie=start.headers.get('set-cookie').split(';')[0];
+ const response=await app.handler(request('callback',{cookie,query:{state:auth.searchParams.get('state'),code:'TEST_AUTHORIZATION_CODE'}})),location=response.headers.get('location');
+ assert.equal(new URL(location).searchParams.get('ml_reason'),'exchange_400_invalid_client');
+ assert.ok(!/TEST_SECRET|TEST_TOKEN|TEST_AUTHORIZATION_CODE/.test(location));
 });

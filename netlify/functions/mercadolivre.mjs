@@ -79,16 +79,25 @@ export function createHandler({env=process.env,fetchImpl=globalThis.fetch,now=Da
    const query=new URL(req.url).searchParams,flow=unseal(cookies(req)[FLOW],cfg.key,'oauth'),state=query.get('state')??'';
    const destination=new URL('/',cfg.origin);destination.searchParams.set('ml','error');
    const h=new Headers(headers);h.append('Set-Cookie',cookie(FLOW,'',0));
+   let failure='state';
    try{
-    if(!flow||state.length!==flow.nonce.length||!timingSafeEqual(Buffer.from(state),Buffer.from(flow.nonce))||query.has('error'))throw Error('INVALID_STATE');
-    const code=query.get('code');if(!code||code.length>4096)throw Error('INVALID_CODE');
+    if(!flow||state.length!==flow.nonce.length||!timingSafeEqual(Buffer.from(state),Buffer.from(flow.nonce)))throw Error('INVALID_STATE');
+    if(query.has('error')){failure='denied';throw Error('AUTHORIZATION_DENIED');}
+    failure='code';const code=query.get('code');if(!code||code.length>4096)throw Error('INVALID_CODE');
+    failure='exchange';
     const response=await fetchImpl(API+'/oauth/token',{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded',Accept:'application/json'},body:new URLSearchParams({grant_type:'authorization_code',client_id:cfg.id,client_secret:cfg.secret,redirect_uri:cfg.redirect,code,code_verifier:flow.verifier}),redirect:'error',signal:AbortSignal.timeout(12000)});
-    if(!response.ok)throw Error('TOKEN_EXCHANGE_FAILED');const token=await response.json();
+    if(!response.ok){failure='exchange_'+response.status;try{const body=await response.json();if(['invalid_client','invalid_grant','invalid_request','unauthorized_client','invalid_scope'].includes(body.error))failure+='_'+body.error;}catch{}throw Error('TOKEN_EXCHANGE_FAILED');}
+    failure='token_payload';const token=await response.json();
     if(typeof token.access_token!=='string'||!Number.isFinite(token.expires_in)||token.expires_in<60)throw Error('INVALID_TOKEN');
-    const user=await api('/users/me',token.access_token);if(!Number.isSafeInteger(user.id)||user.id<=0)throw Error('INVALID_USER');
+    failure='profile';const user=await api('/users/me',token.access_token);if(!Number.isSafeInteger(user.id)||user.id<=0)throw Error('INVALID_USER');
+    failure='session';
     const seconds=Math.floor(Math.min(token.expires_in,21600)),value=seal({type:'session',accessToken:token.access_token,userId:user.id,nickname:String(user.nickname??'Conta Mercado Livre').slice(0,80),exp:now()+seconds*1000},cfg.key);
     if(value.length>3800)throw Error('SESSION_TOO_LARGE');h.append('Set-Cookie',cookie(SESSION,value,seconds));destination.searchParams.set('ml','connected');
-   }catch{/* Nunca devolve credenciais nem detalhes da troca OAuth ao navegador. */}
+   }catch(error){
+    // Somente etapa e códigos permitidos; nunca inclui tokens, descrições da API ou credenciais.
+    if(failure==='profile'&&Number.isInteger(error.status))failure+='_'+error.status;
+    destination.searchParams.set('ml_reason',failure);
+   }
    h.set('Location',destination.href);return new Response(null,{status:303,headers:h});
   }
   if(action==='disconnect'){
