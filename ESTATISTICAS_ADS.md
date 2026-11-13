@@ -24,6 +24,8 @@ Cada campo de Ads apresenta um selo de ROAS equivalente, calculado como
 100 dividido pelo percentual informado. Ads de 6% exibe ROAS de 16,7x; com
 zero ou entrada inválida, o selo mostra um traço. Esse valor é uma referência
 da reserva de publicidade, e não uma métrica apurada da conta ou campanha.
+Ads (%) e ROAS equivalente também são apresentados nos cartões de cada
+marketplace em Meus produtos e nos kits salvos, usando os percentuais do cadastro.
 
 O preço sugerido busca preservar a margem desejada após Ads. Para produtos com
 preço atual vinculado ao Mercado Livre, esse preço é preservado e o lucro passa
