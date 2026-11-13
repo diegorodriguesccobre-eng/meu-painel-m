@@ -829,7 +829,7 @@ assert.equal(highestProfitScenario({...products[0],feeSnapshot:zeroFees},fees),n
 assert.equal(highestProfitScenario({...officialProduct,cost:31},fees),null);
 assert.ok(Math.abs(averageProfit(mixedAverageProduct,fees)-['ml','mlPremium','shopee'].reduce((sum,key)=>sum+calculate(mixedAverageProduct,fees[key==='mlPremium'?'ml':key],key).profit,0)/3)<1e-9);
 const card=saleCardHTML(products[0],fees.ml,'ml',{best:'ml'});
-assert.ok(card.includes('Preço sugerido de venda')&&card.includes('Lucro:')&&card.includes('Margem efetiva:')&&card.includes('Maior lucro'));
+assert.ok(card.includes('Preço sugerido de venda')&&card.includes('Lucro:')&&card.includes('Lucro líquido:')&&card.includes('Maior lucro'));
 assert.ok(averageExportCSV.includes('Lucro líquido médio por venda (R$)'));
 checks+=6;
 
