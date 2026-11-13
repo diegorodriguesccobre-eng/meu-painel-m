@@ -57,9 +57,10 @@ e [Functions do Netlify](https://docs.netlify.com/build/functions/overview/).
 1. Abra o painel no endereço publicado e clique em **Conectar Mercado Livre**.
 2. Confira a conta e autorize a leitura no próprio Mercado Livre.
 3. No painel, clique em **Novo produto**.
-4. Use **Escolher do meu catálogo** ou informe o ID `MLB...`/link do seu anúncio em
-   **Buscar e vincular**. No catálogo, **Carregar mais anúncios** consulta o próximo lote.
-   A busca do diálogo filtra os anúncios já carregados; o ID/link consulta diretamente.
+4. Use **Meu catálogo** ou informe o ID `MLB...`/link do seu anúncio e clique em **Vincular**.
+   O catálogo carrega todos os lotes automaticamente. Você pode pesquisar por nome ou ID
+   durante a consulta; novos resultados aparecem conforme as páginas chegam. “Catálogo
+   completo” confirma que a busca percorreu toda a lista.
 5. Confira nome, categoria e peso. Se o peso não estiver disponível na API, preencha-o.
    Anúncios com variações exigem conferir o SKU e o peso antes de salvar.
 6. Informe o **custo de compra**, sua margem, frete e outros custos. O preço anunciado
@@ -119,3 +120,5 @@ parcela fixa por preço, categoria, modalidade e logística. O frete do vendedor
 ## Kits
 
 A consulta de kits reutiliza a autorização de leitura existente. As rotas de categoria e cotação apenas leem dados do Mercado Livre. Cada kit tem categoria própria, agregados de custo/peso e medidas opcionais do conjunto; não altera nem publica um anúncio.
+
+O catálogo completo é reaproveitado em memória por até cinco minutos na mesma aba e conta, sem guardar anúncios em backups ou criar chamadas por tecla digitada. Fechar a janela pausa as próximas páginas; reabrir retoma uma consulta recente. Erros são mostrados como busca incompleta, com nova tentativa desde o início. **Atualizar catálogo** renova a lista quando necessário. A listagem usa a [paginação oficial por scan e scroll_id](https://developers.mercadolivre.com.br/pt_br/itens-e-buscas).

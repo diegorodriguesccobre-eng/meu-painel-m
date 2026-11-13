@@ -60,7 +60,7 @@ de backups antigos usa as taxas do próprio arquivo para preservar produtos e ki
 ## Conectar seu catálogo do Mercado Livre
 
 A integração opcional permite autorizar sua conta, escolher anúncios do seu catálogo
-ou consultar por ID/link e vincular os dados a um produto do painel. Importa nome,
+ou consultar por ID/link e vincular os dados a um produto do painel. A lista completa carrega automaticamente, e a busca por nome ou ID alcança também os anúncios das páginas seguintes. O resultado completo é reaproveitado por até cinco minutos na mesma aba e conta. Importa nome,
 categoria, peso disponível, modalidade, foto e preço anunciado de referência. O custo
 de compra e a margem são informados por você. Em **Taxas deste produto**, é possível
 ajustar comissões, impostos, taxas fixas e serviços sem alterar outros cadastros.

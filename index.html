@@ -239,7 +239,7 @@ fieldset{min-width:0;margin:0}legend{max-width:100%;white-space:normal}.option-q
 Garrafa térmica;30,00;0,350
 Camiseta básica;25,00;0,200</pre><label>Arquivo CSV (até 2 MB e 5.000 produtos)<input id="import-file" type="file" accept=".csv,text/csv" required></label><div class="form-grid"><label>Categoria do lote<input id="import-category" value="Importados" required maxlength="80"></label><label>Margem desejada do lote (%)<input id="import-margin" type="number" min="0" max="99.99" step="0.01" value="20" inputmode="decimal" required></label></div><p class="help">Aceita ponto e vírgula, vírgula ou tabulação. Com vírgula como separador, use ponto decimal ou números entre aspas. Frete e outros custos começam em zero. Colunas adicionais são ignoradas. Nomes repetidos criam novos produtos; o catálogo existente é mantido.</p><p id="import-status" role="status" aria-live="polite"></p><ul id="import-errors" class="error" aria-live="polite"></ul><ul id="import-preview" class="import-preview" aria-label="Prévia dos produtos"></ul><div class="dialog-actions"><button id="import-cancel" class="btn quiet" type="button">Cancelar</button><button id="import-confirm" class="btn primary" type="submit" disabled>Importar produtos</button></div></form></dialog>
 <dialog id="restore-dialog" aria-labelledby="restore-title"><form id="restore-form"><h2 id="restore-title">Restaurar backup</h2><p>Escolha o arquivo JSON baixado pelo painel. Você poderá conferir o conteúdo antes de restaurar.</p><label style="margin-top:18px">Arquivo de backup (JSON, até 20 MB)<input id="restore-file" type="file" accept=".json,application/json" required></label><p id="restore-status" role="status" aria-live="polite" style="margin-top:18px"></p><p id="restore-summary" style="white-space:pre-line"></p><p id="restore-error" class="error" role="alert"></p><p class="help">Ao confirmar, todos os produtos, kits e taxas atuais serão substituídos. Para guardar o estado atual, cancele e use “Baixar backup” primeiro.</p><div class="dialog-actions"><button class="btn quiet" id="restore-cancel" type="button">Cancelar</button><button class="btn primary" id="restore-confirm" type="submit" disabled>Substituir dados e restaurar</button></div></form></dialog>
-<dialog id="kit-delete-dialog" aria-labelledby="kit-delete-title"><h2 id="kit-delete-title">Excluir kit?</h2><p id="kit-delete-text"></p><div class="dialog-actions"><button class="btn quiet" id="kit-delete-cancel" type="button">Cancelar</button><button class="btn primary" id="kit-delete-confirm" type="button">Excluir kit</button></div></dialog><dialog id="ml-picker-dialog" aria-labelledby="ml-picker-title"><div class="section-head"><h2 id="ml-picker-title">Meu catálogo no Mercado Livre</h2><button type="button" class="row-action" id="ml-picker-close" aria-label="Fechar catálogo">✕</button></div><label>Filtrar anúncios carregados<input id="ml-picker-search" type="search" placeholder="Nome ou ID MLB"></label><p id="ml-picker-status" role="status" class="help"></p><ul id="ml-picker-items" class="ml-catalog"></ul><div class="dialog-actions"><button class="btn quiet" id="ml-load-more" type="button">Carregar mais anúncios</button></div></dialog><dialog id="delete-dialog" aria-labelledby="delete-title"><h2 id="delete-title">Excluir produto?</h2><p id="delete-text"></p><div class="dialog-actions"><button class="btn quiet" id="delete-cancel">Cancelar</button><button class="btn primary" id="delete-confirm">Excluir produto</button></div></dialog><div class="toast hidden" id="toast" role="status"></div>
+<dialog id="kit-delete-dialog" aria-labelledby="kit-delete-title"><h2 id="kit-delete-title">Excluir kit?</h2><p id="kit-delete-text"></p><div class="dialog-actions"><button class="btn quiet" id="kit-delete-cancel" type="button">Cancelar</button><button class="btn primary" id="kit-delete-confirm" type="button">Excluir kit</button></div></dialog><dialog id="ml-picker-dialog" aria-labelledby="ml-picker-title"><div class="section-head"><h2 id="ml-picker-title">Meu catálogo no Mercado Livre</h2><button type="button" class="row-action" id="ml-picker-close" aria-label="Fechar catálogo">✕</button></div><label>Buscar em todo o catálogo<input id="ml-picker-search" type="search" placeholder="Nome ou ID MLB"></label><p id="ml-picker-status" role="status" class="help"></p><ul id="ml-picker-items" class="ml-catalog"></ul><div class="dialog-actions"><button class="btn quiet" id="ml-load-more" type="button">Atualizar catálogo</button></div></dialog><dialog id="delete-dialog" aria-labelledby="delete-title"><h2 id="delete-title">Excluir produto?</h2><p id="delete-text"></p><div class="dialog-actions"><button class="btn quiet" id="delete-cancel">Cancelar</button><button class="btn primary" id="delete-confirm">Excluir produto</button></div></dialog><div class="toast hidden" id="toast" role="status"></div>
 <script>
 'use strict';
 const KEY='margem.painel.v1';
@@ -929,28 +929,64 @@ async function importMlItem(id){
  }catch(error){if(version===mlLookupVersion)$('ml-product-status').textContent=error.message;}
  finally{if(version===mlLookupVersion)$('ml-find-item').disabled=!mlConnection.connected;}
 }
+// Catálogo completo: uma consulta sequencial, reaproveitada por conta nesta aba.
+const ML_CATALOG_CACHE_MS=5*60*1000,ML_CATALOG_CURSOR_MS=4*60*1000;
+let mlCatalogComplete=false,mlCatalogUpdatedAt=0,mlCatalogStartedAt=0,mlCatalogAccount=null,mlCatalogError='',mlCatalogPending=null;
+let mlCatalogIds=new Set(),mlCatalogPages=new Set();
+function normalizeMlCatalogQuery(value){return String(value??'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLocaleLowerCase('pt-BR');}
+function resetMlCatalog(account=null){
+ mlPickerVersion++;mlCatalog=[];mlCursor=null;mlCatalogComplete=false;mlCatalogUpdatedAt=0;mlCatalogStartedAt=0;mlCatalogAccount=account;mlCatalogError='';mlCatalogPending=null;mlCatalogIds=new Set();mlCatalogPages=new Set();
+}
 function renderMlCatalog(){
- const query=$('ml-picker-search').value.trim().toLocaleLowerCase('pt-BR');
- const items=mlCatalog.filter(item=>(item.title+' '+item.itemId).toLocaleLowerCase('pt-BR').includes(query));
- $('ml-picker-items').innerHTML=items.map(item=>`<li>${item.thumbnail?`<img src="${escapeHTML(item.thumbnail)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:''}<div><strong>${escapeHTML(item.title)}</strong><span class="sub">${escapeHTML(item.itemId)} · ${item.listingType==='gold_pro'?'Premium':item.listingType==='gold_special'?'Clássico':escapeHTML(item.listingType)}</span></div><button type="button" class="btn quiet" data-ml-pick="${escapeHTML(item.itemId)}">Selecionar</button></li>`).join('')||'<li>Nenhum anúncio encontrado entre os carregados.</li>';
+ const query=normalizeMlCatalogQuery($('ml-picker-search').value.trim()),loading=Boolean(mlCatalogPending);
+ const items=mlCatalog.filter(item=>normalizeMlCatalogQuery(item.title+' '+item.itemId).includes(query));
+ const empty=mlCatalogError?'A consulta não foi concluída. Tente novamente para buscar em todo o catálogo.':!mlCatalogComplete?'Procurando no catálogo completo. Os próximos anúncios aparecerão automaticamente…':'Nenhum anúncio encontrado no catálogo da conta.';
+ $('ml-picker-items').innerHTML=items.map(item=>`<li>${item.thumbnail?`<img src="${escapeHTML(item.thumbnail)}" alt="" loading="lazy" referrerpolicy="no-referrer">`:''}<div><strong>${escapeHTML(item.title)}</strong><span class="sub">${escapeHTML(item.itemId)} · ${item.listingType==='gold_pro'?'Premium':item.listingType==='gold_special'?'Clássico':escapeHTML(item.listingType??'')}</span></div><button type="button" class="btn quiet" data-ml-pick="${escapeHTML(item.itemId)}">Selecionar</button></li>`).join('')||'<li>'+empty+'</li>';
+ const matches=query?` ${items.length} resultado(s)${mlCatalogComplete?'':' até agora'}.`:'';
+ $('ml-picker-status').textContent=mlCatalogError?`Busca incompleta: ${mlCatalog.length} anúncio(s) carregado(s).${matches} ${mlCatalogError}`:mlCatalogComplete?`Catálogo completo: ${mlCatalog.length} anúncio(s).${matches} Selecione um para importar os dados.`:`Carregando automaticamente todo o catálogo… ${mlCatalog.length} anúncio(s) carregado(s).${matches}`;
+ $('ml-picker-items').setAttribute('aria-busy',String(loading));
+ $('ml-load-more').disabled=loading;$('ml-load-more').hidden=loading||!mlCatalogComplete&&!mlCatalogError;$('ml-load-more').textContent=mlCatalogError?'Tentar novamente':'Atualizar catálogo';
 }
-async function loadMlCatalog(){
- const version=++mlPickerVersion;$('ml-load-more').disabled=true;$('ml-picker-status').textContent='Consultando anúncios da sua conta…';
- try{
-  const data=await mlRequest('items',{query:mlCursor?{cursor:mlCursor}:{}});if(version!==mlPickerVersion)return;
-  const previous=mlCatalog.length;for(const item of data.items??[]){if(/^MLB\d{5,15}$/.test(item.itemId)&&typeof item.title==='string'&&!mlCatalog.some(old=>old.itemId===item.itemId)){item.thumbnail=mlSafeUrl(item.thumbnail,'mlstatic.com');mlCatalog.push(item);}}
-  mlCursor=mlCatalog.length>previous?data.nextCursor:null;renderMlCatalog();$('ml-picker-status').textContent=`${mlCatalog.length} anúncio(s) carregado(s). Selecione um para importar os dados.`;
- }catch(error){if(version===mlPickerVersion)$('ml-picker-status').textContent=error.message;}
- finally{if(version===mlPickerVersion)$('ml-load-more').disabled=!mlCursor;}
+function loadMlCatalog(force=false){
+ if(!mlConnection.connected||!$('ml-picker-dialog').open)return;
+ const account=mlConnection.account?.id??null,stamp=mlCatalogComplete?mlCatalogUpdatedAt:mlCatalogStartedAt,ttl=mlCatalogComplete?ML_CATALOG_CACHE_MS:ML_CATALOG_CURSOR_MS;
+ if(force||account!==mlCatalogAccount||mlCatalogError||!mlCatalogPending&&(!stamp||Date.now()-stamp>=ttl))resetMlCatalog(account);
+ if(mlCatalogComplete){renderMlCatalog();return;}
+ if(mlCatalogPending)return mlCatalogPending.promise;
+ const version=mlPickerVersion,run={promise:null};mlCatalogPending=run;mlCatalogError='';if(!mlCatalogStartedAt)mlCatalogStartedAt=Date.now();
+ run.promise=(async()=>{
+  try{
+   while(version===mlPickerVersion&&mlConnection.connected&&$('ml-picker-dialog').open&&!mlCatalogComplete){
+    const data=await mlRequest('items',{query:mlCursor?{cursor:mlCursor}:{}});
+    if(version!==mlPickerVersion||account!==(mlConnection.account?.id??null))return;
+    if(!data||!Array.isArray(data.items)||!Object.prototype.hasOwnProperty.call(data,'nextCursor')||data.nextCursor!==null&&data.nextCursor!==undefined&&(typeof data.nextCursor!=='string'||!data.nextCursor||data.nextCursor.length>4096))throw Error('O Mercado Livre retornou uma página de catálogo inválida.');
+    const fingerprint=data.items.map(item=>item?.itemId).filter(id=>/^MLB\d{5,15}$/.test(id)).sort().join(',');
+    if(fingerprint&&mlCatalogPages.has(fingerprint))throw Error('A consulta do catálogo deixou de avançar. Tente novamente.');
+    if(fingerprint)mlCatalogPages.add(fingerprint);
+    for(const item of data.items){if(item&&/^MLB\d{5,15}$/.test(item.itemId)&&typeof item.title==='string'&&!mlCatalogIds.has(item.itemId)){mlCatalogIds.add(item.itemId);mlCatalog.push({...item,title:item.title.slice(0,256),thumbnail:mlSafeUrl(item.thumbnail,'mlstatic.com')});}}
+    // Guarda a página em memória mesmo se a janela fechar durante a requisição,
+    // para poder retomar o cursor sem pular os anúncios recebidos.
+    mlCursor=data.nextCursor??null;mlCatalogComplete=!mlCursor;mlCatalogUpdatedAt=Date.now();
+    if($('ml-picker-dialog').open)renderMlCatalog();
+   }
+  }catch(error){if(version===mlPickerVersion){mlCatalogComplete=false;mlCatalogError=error?.message||'Não foi possível concluir a consulta do catálogo.';}}
+  finally{if(mlCatalogPending===run){mlCatalogPending=null;if($('ml-picker-dialog').open)renderMlCatalog();}}
+ })();renderMlCatalog();return run.promise;
 }
+function openMlCatalog(){
+ if(!mlConnection.connected)return;
+ $('ml-picker-search').value='';$('ml-picker-dialog').showModal();renderMlCatalog();return loadMlCatalog();
+}
+$('ml-open-picker').onclick=openMlCatalog;
+$('ml-picker-search').oninput=renderMlCatalog;
+$('ml-load-more').onclick=()=>loadMlCatalog(true);
+$('ml-picker-close').onclick=()=>$('ml-picker-dialog').close();
+$('ml-picker-items').onclick=e=>{const button=e.target.closest('button');if(!button?.dataset.mlPick)return;$('ml-picker-dialog').close();importMlItem(button.dataset.mlPick);};
+// Fim do controlador do catálogo.
 $('ml-connect').onclick=$('ml-connect-product').onclick=connectMercadoLivre;
-$('ml-disconnect').onclick=async()=>{try{await mlRequest('disconnect',{method:'POST'});mlLookupVersion++;mlPickerVersion++;mlCatalog=[];mlConnection.connected=false;mlConnection.account=null;renderMlConnection();toast('Conta desconectada neste navegador. Seus produtos e vínculos locais foram mantidos.');}catch(error){toast(error.message);}};
+$('ml-disconnect').onclick=async()=>{try{await mlRequest('disconnect',{method:'POST'});mlLookupVersion++;resetMlCatalog();mlConnection.connected=false;mlConnection.account=null;renderMlConnection();toast('Conta desconectada neste navegador. Seus produtos e vínculos locais foram mantidos.');}catch(error){toast(error.message);}};
 $('ml-find-item').onclick=()=>importMlItem($('ml-item-query').value.trim());
 $('ml-unlink').onclick=()=>{mlLookupVersion++;mlLinkedDraft=null;mlPricingDraft=null;mlPricingVersion++;mlShippingVersion++;$('ml-auto-fees').checked=false;renderAutomaticShipping();renderAutoPricing();$('ml-item-query').value='';renderMlLink();$('ml-product-status').textContent='Vínculo removido do formulário. Salve o produto para confirmar.';};
-$('ml-open-picker').onclick=()=>{if(!mlConnection.connected)return;mlCatalog=[];mlCursor=null;$('ml-picker-search').value='';renderMlCatalog();$('ml-picker-dialog').showModal();loadMlCatalog();};
-$('ml-picker-search').oninput=renderMlCatalog;$('ml-load-more').onclick=loadMlCatalog;
-$('ml-picker-close').onclick=()=>{mlPickerVersion++;$('ml-picker-dialog').close();};$('ml-picker-dialog').oncancel=()=>{mlPickerVersion++;};
-$('ml-picker-items').onclick=e=>{const button=e.target.closest('button');if(!button?.dataset.mlPick)return;mlPickerVersion++;$('ml-picker-dialog').close();importMlItem(button.dataset.mlPick);};
 async function initializeMercadoLivre(){
  if(!['https:','http:'].includes(globalThis.location?.protocol)){renderMlConnection('Para conectar o Mercado Livre, abra o painel no endereço publicado. O cadastro manual funciona neste arquivo.');return;}
  const query=new URL(location.href).searchParams,callback=query.get('ml');
