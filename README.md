@@ -39,10 +39,11 @@ A configuração anterior do Netlify continua disponível durante a migração.
 - Montagem de kits com produtos e quantidades, usando os custos atuais do catálogo.
 - Backup completo em JSON, com validação e confirmação antes da restauração.
 
-As taxas iniciais são ilustrativas. Ajuste-as às condições dos seus anúncios.
-Devolução Fácil começa em R$ 0,49 por venda e eventos oficiais em 2,50 pontos percentuais,
-conforme o modelo solicitado; ambos são editáveis e aplicados quando as caixas dos
-serviços integrados estão marcadas em **Taxas deste produto**, dentro do cadastro.
+As taxas manuais iniciais do Mercado Livre são ilustrativas; a consulta oficial usa os dados do anúncio.
+Na Shopee, os campos existentes preenchem automaticamente a tabela CNPJ por faixa de preço,
+Devolução Fácil de R$ 0,49 por pedido e Campanhas de Destaque de 5 pontos percentuais.
+As caixas continuam sob controle do usuário e o imposto mantém o percentual cadastrado da empresa.
+Veja [as fontes oficiais, condições e preservação dos registros](POLITICA_SHOPEE.md).
 A tela principal não possui mais um formulário geral de taxas. Cada produto mantém
 suas configurações individuais. A tabela, os cartões,
 o preço mínimo para 10%, o CSV de produtos e o backup respeitam as taxas guardadas.

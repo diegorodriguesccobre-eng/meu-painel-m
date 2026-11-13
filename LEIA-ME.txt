@@ -80,35 +80,28 @@ Livre. A tabela passa a ter preços separados para ML Clássico, ML Premium e Sh
 O imposto e a taxa fixa do Mercado Livre valem para ambas as modalidades. O limite
 de frete acima de R$ 100 é avaliado separadamente em cada preço e no mínimo de 10%.
 
-Na Shopee, informe a comissão e a taxa fixa base. Os campos de adicionais começam
-em R$ 0,49 para Devolução Fácil e 2,50 pontos percentuais para eventos oficiais,
-conforme a regra solicitada. Eles podem ser editados em “Taxas dos marketplaces”.
-Na área de taxas da Shopee, há duas caixas em “Serviços integrados à Shopee”:
-- Devolução Fácil integrada: se marcar, acrescenta R$ 0,49 à taxa fixa por venda.
-- Participação em Eventos Oficiais: se marcar, acrescenta 2,50 pontos à comissão.
-Depois clique em “Salvar taxas”. A configuração vale para os próximos produtos
-e kits. Os cadastros existentes mantêm as opções e taxas originais.
-Marque apenas os serviços integrados à sua operação. Caixas desmarcadas não geram
-adicionais nos novos cadastros. Desmarcar mantém o valor configurado para quando
-você ativar novamente e não modifica os produtos anteriores.
-Exemplo: comissão base de 20% passa para 22,50%; não é 2,50% de 20%.
-Os dois adicionais podem ser ativados juntos e não alteram os preços do Mercado Livre.
+Na Shopee, os campos existentes preenchem a política oficial para CNPJ, conferida
+em 13/11/2026: comissão e parcela fixa variam conforme o preço sugerido.
+Até R$ 79,99: 20% + R$ 4,50 (abaixo de R$ 9, a parcela fixa é metade do preço).
+De R$ 80 a R$ 99,99: 14% + R$ 16; de R$ 100 a R$ 199,99: 14% + R$ 20;
+a partir de R$ 200: 14% + R$ 26. A taxa de transação já está incluída.
 
-As tabelas e os cartões mostram os serviços ativos, a comissão efetiva, a taxa fixa efetiva
-e o imposto usados. O CSV separa as três modalidades e inclui as escolhas da Shopee.
-O preço mínimo para 10% considera os adicionais preservados no produto ou kit.
-A Devolução Fácil é cobrada uma vez por venda do kit, não por produto dentro dele.
+As duas caixas de programas permanecem como você escolheu:
+- Devolução Fácil: R$ 0,49 por pedido confirmado, quando houver cobrança ativa.
+- Eventos Oficiais / Campanhas de Destaque: adicional padrão de 5 pontos percentuais.
+A taxa de campanha vale para as vendas da loja durante a participação. Não é
+restrita aos produtos nomeados. Confira condições especiais e períodos gratuitos.
+A simulação considera um item ou um kit anunciado por pedido, sem multiplicar a
+Devolução Fácil pelos componentes de um kit. O imposto preserva a alíquota cadastrada
+da empresa; não é uma tarifa da Shopee e não pode ser inferido apenas do CNPJ.
 
-Cadastros antigos mantêm a comissão anterior como Clássica e como Premium até você
-editar e salvar os valores. As duas caixas da Shopee começam desmarcadas quando
-não há configuração de integração salva. As antigas marcações individuais dos
-produtos/kits foram substituídas pelas caixas globais e não ativam serviços.
-Confira as integrações na área de taxas e salve. O backup guarda as caixas e as taxas.
-
-Teste com custo R$ 30, margem 20%, comissão Shopee 20%, imposto 6%, taxa fixa R$ 4:
-Sem adicionais: R$ 62,97; só Devolução Fácil: R$ 63,88; só evento: R$ 66,02;
-os dois adicionais: R$ 66,98. Comissões ilustrativas ML de 14% Clássico e 19% Premium,
-taxa fixa R$ 6 e imposto 6% resultam em R$ 60,00 Clássico e R$ 65,46 Premium.
+Os campos de valores da Shopee ficam somente para leitura. Preencha custo, margem
+e imposto: comissão e parcela fixa acompanham a faixa do preço. O painel procura
+o menor centavo que preserva a meta após arredondar a comissão.
+Os cadastros antigos conservam as taxas salvas. Ao editar, a política atual fica
+preparada no formulário; somente salvar atualiza aquele registro.
+O CSV e o backup guardam a origem e a versão das regras. O backup v12 aceita os
+arquivos anteriores. As fontes e condições estão em POLITICA_SHOPEE.md.
 
 MONTAR KITS
 Clique na aba “Montar kits”, no topo do painel. É uma tela separada dentro do mesmo
@@ -201,23 +194,23 @@ os custos e as taxas informados. A margem desejada do cadastro é mantida.
 O limite de frete do Mercado Livre é reavaliado para o preço mínimo: o frete
 do preço principal pode não ser necessário no mínimo. O mínimo também sai no CSV.
 Se comissão + imposto forem 90% ou mais, o mínimo de 10% é inviável.
-Com as taxas ilustrativas e frete zero, os mínimos ML / Shopee são:
-Garrafa térmica: R$ 51,43 / R$ 53,13.
-Camiseta básica: R$ 44,29 / R$ 45,32.
-Fone Bluetooth: R$ 94,29 / R$ 100,00.
+Com frete zero, ML manual ilustrativo e tabela Shopee CNPJ atual, os mínimos são:
+Garrafa térmica: R$ 51,43 / R$ 53,91.
+Camiseta básica: R$ 44,29 / R$ 46,10.
+Fone Bluetooth: R$ 94,29 / R$ 114,29.
 
 EXEMPLOS VERIFICADOS (frete/embalagem = R$ 0)
 Mercado Livre: comissão 14%, taxa fixa R$ 6, imposto 6%.
-Shopee: comissão 20%, taxa fixa R$ 4, imposto 6%.
+Shopee: tabela CNPJ por faixa de preço, imposto cadastrado de 6%, sem programas.
 
 Produto                   Custo      Margem   Mercado Livre   Shopee
-Garrafa térmica 500 ml     R$ 30,00   20%      R$ 60,00        R$ 62,97
-Camiseta básica           R$ 25,00   25%      R$ 56,37        R$ 59,19
-Fone Bluetooth            R$ 60,00   12%      R$ 97,06        R$ 103,23
+Garrafa térmica 500 ml     R$ 30,00   20%      R$ 60,00        R$ 63,90
+Camiseta básica           R$ 25,00   25%      R$ 56,37        R$ 60,21
+Fone Bluetooth            R$ 60,00   12%      R$ 97,06        R$ 117,65
 
-O fone fica em vermelho por ter margem de 12%.
-Os resultados detalhados ficam em resultados-testes.json.
-Para repetir os testes de cálculo com Node instalado: node validar.cjs.
+O fone fica em amarelo por ter lucro sobre a venda entre 10% e menos de 15%.
+Os testes incluem taxas legadas e a política atual da Shopee.
+Para repetir todos os testes com Node instalado: npm test.
 Node não é necessário para usar o painel.
 
 VINCULAR ANÚNCIOS DO MERCADO LIVRE
