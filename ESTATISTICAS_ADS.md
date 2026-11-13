@@ -1,9 +1,50 @@
 # Publicidade e estatísticas futuras do painel
 
 Pesquisa e decisões registradas em 13/11/2026 para retomar em outra sessão.
-As estatísticas de campanhas ficam para uma implementação futura. A prioridade
-atual é o campo manual Ads (%) em produtos e kits, para estimar preço e lucro
-após publicidade sem alterar as automações de comissões, frete e serviços.
+O painel já consulta Product Ads para os anúncios vinculados aos produtos.
+Relatórios completos de campanhas e estatísticas históricas continuam como etapa
+futura. As automações de comissões, frete e serviços são mantidas.
+
+## Consulta real de Product Ads
+
+Com a conta conectada, o painel consulta automaticamente os últimos 30 dias
+encerrados no fuso de São Paulo, ao abrir a página e ao salvar um produto
+vinculado. Uma consulta válida é reutilizada por dez minutos; o botão
+“Atualizar Ads · 30 dias” força uma atualização. O período fica no cartão da
+modalidade do anúncio vinculado. Os cartões de modalidades hipotéticas continuam
+com ROAS equivalente, para não duplicar o investimento como se fossem campanhas
+distintas. A Shopee não possui conexão com a conta nesta etapa.
+
+O ACOS real é investimento / receita atribuída × 100. Por decisão do usuário,
+atualiza Ads Mercado Livre (%) e recalcula as cotações oficiais existentes, sem
+alterar o preço atual do anúncio. O percentual é arredondado para cima em duas
+casas, para não reservar menos que o custo observado. O ROAS real é receita
+atribuída / investimento, calculado sobre os totais, sem média de percentuais.
+Receita atribuída inclui vendas diretas e indiretas; não é o lucro do produto.
+O total investido do período é apenas informativo: o lucro por venda desconta
+Ads uma única vez, pelo percentual aplicado.
+
+Sem receita, o ACOS não é definido: preservamos o Ads anterior e mostramos um
+aviso. ACOS a partir de 100% também é preservado apenas como métrica, pois o
+cadastro aceita Ads abaixo de 100%. Sem investimento, ROAS mostra um traço.
+Ausência de anúncio publicitário, erros, falta de permissão e páginas incompletas
+não zeram o Ads. Falhas de recotação deixam as sugestões desatualizadas explícitas.
+O snapshot inclui período, anúncio e vendedor, permanece no navegador e no backup
+v15. Backups anteriores continuam aceitos. Respostas de outra conta ou de um
+formulário em edição não sobrescrevem o cadastro.
+
+Kits montados usam um anúncio apenas como referência de logística. Isso não
+identifica uma campanha própria do kit: seu Ads continua cadastrado manualmente,
+sem herdar gastos dos componentes nem do anúncio de referência. Um kit cadastrado
+como produto e vinculado ao próprio anúncio pode consultar Product Ads normalmente.
+
+A API é somente leitura: anunciantes v1, busca de Ad Groups por `filters[item_ids]`
+e métricas dos anúncios de cada grupo v2. Cada item é verificado como pertencente
+à conta antes da consulta; totais de grupos compartilhados não são atribuídos ao
+produto. O backend limita lotes e paginação dentro do orçamento Free do Worker.
+Não foram adicionados secrets, planos pagos nem operações de edição de campanhas.
+O acesso depende da liberação de Product Ads pelo Mercado Livre para a conta e o
+aplicativo. Fonte: [Product Ads para Catálogo e User Products][api].
 
 ## Campo Ads no cadastro
 
@@ -17,8 +58,8 @@ marketplace incide uma vez sobre a venda do kit, sem somar Ads dos componentes.
 Alterar somente Ads Shopee não invalida nem dispara uma nova consulta do
 Mercado Livre. A API de precificação do ML continua recebendo o parâmetro
 `ads`, preenchido exclusivamente com Ads Mercado Livre. O CSV exporta os dois
-percentuais, e o backup v14 preserva os campos separados e aceita versões
-anteriores. A consulta de estatísticas continua reservada para uma etapa futura.
+percentuais, e o backup v15 preserva os campos separados e aceita versões
+anteriores.
 
 Cada campo de Ads apresenta um selo de ROAS equivalente, calculado como
 100 dividido pelo percentual informado. Ads de 6% exibe ROAS de 16,7x; com
@@ -33,8 +74,9 @@ a descontar a reserva de publicidade. Os status usam o lucro calculado sobre
 o preço: abaixo de 10% é baixo; de 10% a menos de 15%, em risco; a partir de 15%,
 seguro. O preço de referência para 10% também considera Ads.
 
-Este campo não consulta gastos reais nem configura campanhas. A pesquisa de
-ACOS, CPC e ROAS abaixo é a base para o próximo trabalho de estatísticas.
+Na Shopee e nos kits montados, o campo continua manual. A integração Product Ads
+consulta gastos, mas não configura campanhas. A pesquisa de ACOS, CPC e ROAS
+abaixo é a base para os próximos relatórios de estatísticas.
 
 ## Definições oficiais
 

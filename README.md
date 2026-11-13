@@ -22,7 +22,7 @@ A configuração anterior do Netlify continua disponível durante a migração.
 ## Recursos
 
 - Cadastro de produtos com custo, peso, categoria, margem, outros custos e frete.
-- Ads por marketplace em produtos e kits: Ads Mercado Livre (%) vale para Clássico e Premium; Ads Shopee (%) vale somente para a Shopee. Cada percentual entra uma vez no preço, no lucro e no mínimo para 10%. Anúncios vinculados mantêm o preço atual. Kits usam seus próprios percentuais, sem herdar Ads dos componentes. O Ads único de cadastros anteriores é preservado nos dois campos, sem mudar resultados ou cotações. Alterar somente Ads Shopee não dispara consultas do ML. CSV e backup v14 preservam os valores separados, com leitura de backups antigos.
+- Ads por marketplace em produtos e kits: Ads Mercado Livre (%) vale para Clássico e Premium; Ads Shopee (%) vale somente para a Shopee. Cada percentual entra uma vez no preço, no lucro e no mínimo para 10%. Anúncios vinculados mantêm o preço atual. Kits usam seus próprios percentuais, sem herdar Ads dos componentes. O Ads único de cadastros anteriores é preservado nos dois campos, sem mudar resultados ou cotações. Alterar somente Ads Shopee não dispara consultas do ML. CSV e backup v15 preservam os valores separados, com leitura de backups antigos.
 - Comparação de preços no Mercado Livre Clássico, Mercado Livre Premium e Shopee.
 - Campos de Ads com selo ROAS equivalente, sem emojis, em produtos e kits. O selo acompanha o percentual digitado (100 ÷ Ads), com uma casa decimal quando necessário; 6% mostra 16,7x. Com zero ou entrada inválida, mostra um traço. É uma referência estimada, sem consultar o desempenho real das campanhas.
 - Cartões de marketplace com preço, lucro, Ads (%) e ROAS equivalente sempre visíveis, inclusive nos kits salvos. A composição do preço e as tarifas ficam recolhidas em “Ver custos e taxas”. Em Meus produtos, busca e ordenação ficam agrupadas, os dados de custo/peso/meta são compactos, Editar/Excluir ficam no cabeçalho do item e o resumo de lucro aparece no rodapé. A organização preserva preços atuais, sugestões, mínimos para 10%, status e dados salvos.
@@ -96,7 +96,7 @@ conforme o regime e a operação. Não são criados campos nem adotadas alíquot
 Referências: [custos por vender](https://developers.mercadolivre.com.br/pt_br/comissao-por-vender)
 e [regras tributárias](https://developers.mercadolivre.com.br/pt_br/envio-regras-tributarias).
 
-A cotação, seus parâmetros e a data ficam preservados no produto, CSV e backup v14.
+A cotação, seus parâmetros e a data ficam preservados no produto, CSV e backup v15.
 Alterar taxas gerais não modifica cotações salvas. Editar custo, peso, margem, imposto
 ou frete exige nova consulta; é possível atualizar manualmente pelo botão da cotação.
 Sem API disponível, o painel informa o erro e impede salvar uma cotação desatualizada.
@@ -136,7 +136,7 @@ Os campos **Comissão Clássica (%)** e **Comissão Premium (%)** permanecem vis
 
 Na tela Montar kits, selecione os componentes e as quantidades, confira a categoria própria do kit e a referência de logística da conta. Se os componentes vinculados usam uma categoria em comum, ela é sugerida; também é possível buscar uma categoria oficial. A referência não fornece o preço, peso ou embalagem do kit: apenas identifica o modo de envio e a logística da conta.
 
-O painel consulta Clássico, Premium e a referência para 10% com custo e peso somados. Medidas opcionais são da embalagem do conjunto. Sem medidas, o frete é estimado pela tabela oficial com o peso total; a embalagem volumétrica pode mudar o custo. São preservados categoria, referência, dimensões, frete, comissões, imposto e data da consulta no kit e no backup v14. Kits antigos mantêm o modo manual e suas taxas até serem editados. Alterações nos custos ou pesos dos componentes invalidam a cotação anterior e pedem atualização, sem alterar silenciosamente as tarifas guardadas.
+O painel consulta Clássico, Premium e a referência para 10% com custo e peso somados. Medidas opcionais são da embalagem do conjunto. Sem medidas, o frete é estimado pela tabela oficial com o peso total; a embalagem volumétrica pode mudar o custo. São preservados categoria, referência, dimensões, frete, comissões, imposto e data da consulta no kit e no backup v15. Kits antigos mantêm o modo manual e suas taxas até serem editados. Alterações nos custos ou pesos dos componentes invalidam a cotação anterior e pedem atualização, sem alterar silenciosamente as tarifas guardadas.
 
 O bloco geral “Taxas dos marketplaces” foi removido da tela principal. Valores padrão legados continuam nos dados para compatibilidade com backups, exemplos, importação e kits manuais; remover a interface não altera taxas ou cotações de cadastros existentes.
 
@@ -146,5 +146,21 @@ O favicon usa somente o raio da Conduz Cobre, em SVG com alternativa PNG de 32 p
 
 As definições oficiais de ACOS, CPC e ROAS, os exemplos e as decisões para uma
 futura etapa de estatísticas estão em [ESTATISTICAS_ADS.md](ESTATISTICAS_ADS.md).
-O campo Ads atual é uma estimativa manual; a consulta de gastos de campanhas
-fica para uma implementação futura.
+Para os produtos vinculados à conta conectada, o painel consulta o investimento
+e a receita atribuída de Product Ads nos últimos 30 dias encerrados, calcula o
+ROAS real e atualiza Ads Mercado Livre (%) pelo ACOS observado. As cotações
+oficiais são recalculadas, preservando frete, comissões e o preço atual do anúncio.
+O total investido não é descontado outra vez do lucro por venda.
+
+O cartão da modalidade vinculada mostra investimento, período e ROAS real.
+O botão “Atualizar Ads · 30 dias” força uma nova consulta; consultas automáticas
+válidas são reutilizadas por dez minutos. Sem receita, permissão ou dados
+completos, o painel avisa e preserva o percentual anterior. ACOS a partir de 100%
+não é aplicado ao campo, que aceita de 0 a 99,99%. O acesso depende da liberação
+de Product Ads pelo Mercado Livre para a conta e o aplicativo.
+
+Shopee e kits montados continuam com Ads manual: uma referência logística de kit
+não identifica seu anúncio publicitário. Um kit cadastrado como produto pode ser
+vinculado ao próprio anúncio normalmente. O backup v15 preserva as métricas, o
+período e os percentuais, mantendo compatibilidade com versões anteriores.
+Fonte: [API oficial Product Ads](https://developers.mercadolivre.com.br/pt_br/product-ads-para-catalogo-e-user-products-leitura).

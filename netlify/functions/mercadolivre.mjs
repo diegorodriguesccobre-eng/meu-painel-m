@@ -2,6 +2,7 @@ import { randomBytes, createCipheriv, createDecipheriv, createHash, timingSafeEq
 import { officialPricing, commissionReference } from '../lib/ml-tarifas.mjs';
 import { shippingQuote } from '../lib/ml-frete.mjs';
 import { kitPricing } from '../lib/ml-kits.mjs';
+import { productAds } from '../lib/ml-ads.mjs';
 
 const API='https://api.mercadolibre.com';
 const SESSION='__Host-conduz_ml_session', FLOW='__Host-conduz_ml_oauth';
@@ -52,8 +53,8 @@ export function createHandler({env=process.env,fetchImpl=globalThis.fetch,now=Da
  function unseal(value,key,type){try{const b=Buffer.from(value??'','base64url');if(b.length<29)return null;const decipher=createDecipheriv('aes-256-gcm',key,b.subarray(0,12));decipher.setAuthTag(b.subarray(12,28));const data=JSON.parse(Buffer.concat([decipher.update(b.subarray(28)),decipher.final()]).toString());return data.type===type&&data.exp>now()?data:null;}catch{return null;}}
  const cookie=(name,value,seconds)=>`${name}=${value}; Path=/; Max-Age=${seconds}; Secure; HttpOnly; SameSite=Lax`;
  function cookies(req){return Object.fromEntries((req.headers.get('cookie')??'').split(';').map(s=>s.trim().split('=')));}
- async function api(path,token){
-  const response=await fetchImpl(API+path,{headers:{Authorization:'Bearer '+token,Accept:'application/json'},redirect:'manual',signal:AbortSignal.timeout(12000)});
+ async function api(path,token,version){
+  const response=await fetchImpl(API+path,{headers:{Authorization:'Bearer '+token,Accept:'application/json',...(version?{'Api-Version':String(version)}:{})},redirect:'manual',signal:AbortSignal.timeout(12000)});
   if(!response.ok){const e=new Error('API_ERROR');e.status=response.status;try{const body=await response.json();if(typeof body.error==='string'&&/^[a-zA-Z0-9_.-]{1,80}$/.test(body.error))e.apiCode=body.error;}catch{}throw e;}
   return response.json();
  }
@@ -106,16 +107,17 @@ export function createHandler({env=process.env,fetchImpl=globalThis.fetch,now=Da
    if(!sameOrigin())return json({error:'INVALID_ORIGIN'},403);
    return json({connected:false},200,{'Set-Cookie':cookie(SESSION,'',0)});
   }
-  if(!['items','item','pricing','shipping','categories','kit-pricing'].includes(action))return json({error:'NOT_FOUND'},404);
-  if(req.method!==(['pricing','kit-pricing'].includes(action)?'POST':'GET'))return json({error:'METHOD_NOT_ALLOWED'},405);
-  if(['pricing','kit-pricing'].includes(action)&&!sameOrigin())return json({error:'INVALID_ORIGIN'},403);
+  if(!['items','item','pricing','shipping','categories','kit-pricing','ads'].includes(action))return json({error:'NOT_FOUND'},404);
+  if(req.method!==(['pricing','kit-pricing','ads'].includes(action)?'POST':'GET'))return json({error:'METHOD_NOT_ALLOWED'},405);
+  if(['pricing','kit-pricing','ads'].includes(action)&&!sameOrigin())return json({error:'INVALID_ORIGIN'},403);
   if(req.headers.get('origin')&&req.headers.get('origin')!==cfg.origin)return json({error:'INVALID_ORIGIN'},403);
   const s=session(req,cfg);if(!s)return json({error:'CONNECT_REQUIRED',message:'Conecte sua conta do Mercado Livre para consultar os anúncios.'},401);
   try{
-   if(action==='pricing'||action==='kit-pricing'){
+   if(action==='pricing'||action==='kit-pricing'||action==='ads'){
     if(Number(req.headers.get('content-length'))>4096)return json({message:'Consulta muito grande.'},413);
     const raw=await req.text();if(raw.length>4096)return json({message:'Consulta muito grande.'},413);
     let input;try{input=JSON.parse(raw);}catch{return json({message:'Dados de cotação inválidos.'},400);}
+    if(action==='ads')return json({advertising:await productAds({input,sellerId:s.userId,api:(path,version)=>api(path,s.accessToken,version),now})});
     if(action==='kit-pricing')return json({pricing:await kitPricing({input,sellerId:s.userId,api:path=>api(path,s.accessToken),now})});
     const id=itemId(input?.itemId);if(!id)return json({message:'Vincule um anúncio da sua conta para consultar suas tarifas.'},400);
     const item=await api('/items/'+id,s.accessToken);if(Number(item.seller_id)!==s.userId)return json({message:'Este anúncio não pertence à conta conectada.'},403);
@@ -151,6 +153,7 @@ export function createHandler({env=process.env,fetchImpl=globalThis.fetch,now=Da
    try{commissions=await commissionReference({item,price,billableWeight:shipping?.billableWeight,api:path=>api(path,s.accessToken),now});}catch{}
    return json({item:{...normalized,categoryName,price,sellerId:s.userId,fetchedAt:new Date(now()).toISOString(),...(shipping?{shippingQuote:shipping}:{})},shippingMessage,commissions});
   }catch(error){
+   if(error.ads)return json({error:'ADS_UNAVAILABLE',message:error.message},error.status??422);
    if(error.pricing)return json({error:'PRICING_UNAVAILABLE',message:error.message},422);
    const status=error.status;
    const message=status===401?'A sessão do Mercado Livre expirou. Conecte a conta novamente.':status===403?'A conta não tem permissão para consultar este recurso. Confira as permissões do aplicativo.':status===404?'Anúncio não encontrado. Confira o ID MLB.':status===429?'O Mercado Livre limitou as consultas. Aguarde e tente novamente.':'Não foi possível consultar o Mercado Livre agora. Tente novamente.';

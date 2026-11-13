@@ -56,7 +56,7 @@ test('kits preservam dois percentuais próprios e ignoram os Ads dos componentes
   assert.equal(result.adsRate,scenario==='shopee'?9:5);assert.deepEqual(clone(result),clone(api.calculate(changed,fee,scenario)));
  }
  const backup=api.buildBackup({products:[component],kits:[kit],fees}),restored=api.parseBackup(backup);
- assert.equal(JSON.parse(backup).version,14);
+ assert.equal(JSON.parse(backup).version,15);
  assert.equal(restored.products[0].adsMl,40);assert.equal(restored.products[0].adsShopee,50);
  assert.equal(restored.kits[0].adsMl,5);assert.equal(restored.kits[0].adsShopee,9);
  const lines=api.buildCSV([{...product,adsMl:5,adsShopee:9}],fees).split('\r\n'),header=lines[0].split(';'),row=lines[1].split(';');
