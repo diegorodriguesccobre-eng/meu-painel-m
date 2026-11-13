@@ -77,12 +77,12 @@ test('kit aplica seu próprio Ads uma vez e ignora Ads dos componentes',()=>{
  assert.equal(saved.products[0].ads,40);assert.equal(saved.kits[0].ads,6);
 });
 
-test('backup v13 e CSV guardam Ads, backups antigos continuam em zero',()=>{
+test('backup v14 e CSV guardam Ads, backups antigos continuam em zero',()=>{
  const p={...product,ads:6};
  const data={products:[p],kits:[],fees},backup=api.buildBackup(data);
- assert.equal(JSON.parse(backup).version,13);assert.equal(api.parseBackup(backup).products[0].ads,6);
+ assert.equal(JSON.parse(backup).version,14);assert.equal(api.parseBackup(backup).products[0].ads,6);
  const csv=api.buildCSV([p],fees),lines=csv.split('\r\n'),headers=lines[0].split(';'),values=lines[1].split(';');
- assert.equal(headers.length,values.length);assert.equal(values[headers.indexOf('"Ads (%)"')],'"6,00"');
+ assert.equal(headers.length,values.length);assert.equal(values[headers.indexOf('"Ads Mercado Livre (%)"')],'"6,00"');
  assert.ok(headers.includes('"Mercado Livre Clássico - Ads (R$)"'));
  const old=api.parseBackup(JSON.stringify({format:'margem-backup',version:12,data:{products:[product],kits:[],fees}}));
  assert.equal(api.calculate(old.products[0],fees.ml,'ml').price,200);

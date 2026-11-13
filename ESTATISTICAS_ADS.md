@@ -7,10 +7,18 @@ após publicidade sem alterar as automações de comissões, frete e serviços.
 
 ## Campo Ads no cadastro
 
-Ads é uma reserva percentual sobre o preço de venda, aplicada aos três canais
-comparados. Cada produto e kit guarda seu próprio percentual; registros antigos
-sem o campo equivalem a 0%. O percentual do kit incide uma vez sobre sua venda,
-sem somar os percentuais de Ads dos produtos componentes.
+Ads é uma reserva percentual sobre o preço de venda. Cada produto e kit guarda
+dois percentuais independentes: Ads Mercado Livre (%) vale para Clássico e
+Premium; Ads Shopee (%) vale somente para a Shopee. O Ads único de cadastros
+anteriores é mantido como valor inicial dos dois campos, preservando preços,
+lucros e cotações. Registros sem Ads equivalem a 0%. O percentual de cada
+marketplace incide uma vez sobre a venda do kit, sem somar Ads dos componentes.
+
+Alterar somente Ads Shopee não invalida nem dispara uma nova consulta do
+Mercado Livre. A API de precificação do ML continua recebendo o parâmetro
+`ads`, preenchido exclusivamente com Ads Mercado Livre. O CSV exporta os dois
+percentuais, e o backup v14 preserva os campos separados e aceita versões
+anteriores. A consulta de estatísticas continua reservada para uma etapa futura.
 
 O preço sugerido busca preservar a margem desejada após Ads. Para produtos com
 preço atual vinculado ao Mercado Livre, esse preço é preservado e o lucro passa

@@ -1,14 +1,17 @@
 PAINEL MARGEM — COMO ABRIR
 
 ADS NOS PRODUTOS E KITS
-No cadastro, preencha Ads (%) com a parcela do preço de venda que deseja
-reservar para publicidade. O percentual é aplicado nos três canais. O preço
-sugerido busca manter a margem após essa despesa; o lucro e as cores também
-descontam Ads. Em produtos vinculados, o preço atual do anúncio é mantido.
-Cada kit usa seu próprio percentual uma vez, sem somar Ads dos componentes.
-Os registros antigos continuam com 0%. O CSV e o backup v13 incluem Ads e
-o painel continua aceitando backups das versões anteriores.
-Ao mudar Ads no modo automático, aguarde uma nova consulta de taxas e frete.
+No cadastro, preencha Ads Mercado Livre (%) para Clássico e Premium e Ads
+Shopee (%) para a Shopee. Cada percentual reserva uma parte do preço para
+publicidade apenas no respectivo marketplace. O preço sugerido busca manter
+a margem após essa despesa; o lucro e as cores também descontam Ads.
+Em produtos vinculados, o preço atual do anúncio é mantido. Cada kit usa seus
+próprios percentuais uma vez, sem somar Ads dos componentes.
+O Ads único dos cadastros anteriores aparece nos dois campos, preservando os
+resultados. Registros sem Ads continuam com 0%. O CSV e o backup v14 guardam
+os valores separados; backups anteriores continuam aceitos.
+Ao mudar Ads Mercado Livre no modo automático, aguarde nova consulta de taxas
+e frete. Alterar somente Ads Shopee não exige uma nova consulta do ML.
 O campo é uma previsão de despesa; não consulta gastos nem altera campanhas.
 O material para estatísticas futuras está no arquivo ESTATISTICAS_ADS.md.
 
@@ -59,9 +62,9 @@ Se a gravação no navegador falhar, os dados atuais são mantidos.
 Você pode transferir o .json para outro computador ou celular e restaurar no painel
 desse aparelho. Não é preciso login, servidor ou internet. Limite por backup: 20 MB.
 Backups antigos, anteriores à tela de kits, continuam aceitos: eles restauram uma
-lista vazia de kits. Os novos backups usam a versão 13 do formato, incluindo
+lista vazia de kits. Os novos backups usam a versão 14 do formato, incluindo
 Ads, os vínculos com anúncios e as taxas preservadas por produto e kit.
-As versões de 1 a 12 continuam aceitas.
+As versões de 1 a 13 continuam aceitas.
 
 TAXAS PRESERVADAS POR PRODUTO
 Cada produto guarda uma cópia das comissões Clássica e Premium, taxas fixas,
