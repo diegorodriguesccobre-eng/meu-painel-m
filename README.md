@@ -22,6 +22,7 @@ A configuração anterior do Netlify continua disponível durante a migração.
 ## Recursos
 
 - Cadastro de produtos com custo, peso, categoria, margem, outros custos e frete.
+- Ads (%) por produto e kit: reserva percentual sobre o preço de venda nos três canais, incluída uma vez no preço sugerido, no lucro e no mínimo para 10%. Produtos vinculados mantêm o preço atual do anúncio, com lucro e cores após Ads. Kits usam seu próprio percentual, sem somar Ads dos componentes. Registros antigos equivalem a 0%; o CSV e o backup v13 preservam o campo. Alterar Ads invalida a cotação oficial e solicita nova consulta, mantendo as automações de taxas e frete.
 - Comparação de preços no Mercado Livre Clássico, Mercado Livre Premium e Shopee.
 - Comissões, taxas fixas, impostos e adicionais configuráveis.
 - Cada produto e kit preserva as taxas e os serviços vigentes quando foi cadastrado.
@@ -92,7 +93,7 @@ conforme o regime e a operação. Não são criados campos nem adotadas alíquot
 Referências: [custos por vender](https://developers.mercadolivre.com.br/pt_br/comissao-por-vender)
 e [regras tributárias](https://developers.mercadolivre.com.br/pt_br/envio-regras-tributarias).
 
-A cotação, seus parâmetros e a data ficam preservados no produto, CSV e backup v10.
+A cotação, seus parâmetros e a data ficam preservados no produto, CSV e backup v13.
 Alterar taxas gerais não modifica cotações salvas. Editar custo, peso, margem, imposto
 ou frete exige nova consulta; é possível atualizar manualmente pelo botão da cotação.
 Sem API disponível, o painel informa o erro e impede salvar uma cotação desatualizada.
@@ -132,8 +133,15 @@ Os campos **Comissão Clássica (%)** e **Comissão Premium (%)** permanecem vis
 
 Na tela Montar kits, selecione os componentes e as quantidades, confira a categoria própria do kit e a referência de logística da conta. Se os componentes vinculados usam uma categoria em comum, ela é sugerida; também é possível buscar uma categoria oficial. A referência não fornece o preço, peso ou embalagem do kit: apenas identifica o modo de envio e a logística da conta.
 
-O painel consulta Clássico, Premium e a referência para 10% com custo e peso somados. Medidas opcionais são da embalagem do conjunto. Sem medidas, o frete é estimado pela tabela oficial com o peso total; a embalagem volumétrica pode mudar o custo. São preservados categoria, referência, dimensões, frete, comissões, imposto e data da consulta no kit e no backup v10. Kits antigos mantêm o modo manual e suas taxas até serem editados. Alterações nos custos ou pesos dos componentes invalidam a cotação anterior e pedem atualização, sem alterar silenciosamente as tarifas guardadas.
+O painel consulta Clássico, Premium e a referência para 10% com custo e peso somados. Medidas opcionais são da embalagem do conjunto. Sem medidas, o frete é estimado pela tabela oficial com o peso total; a embalagem volumétrica pode mudar o custo. São preservados categoria, referência, dimensões, frete, comissões, imposto e data da consulta no kit e no backup v13. Kits antigos mantêm o modo manual e suas taxas até serem editados. Alterações nos custos ou pesos dos componentes invalidam a cotação anterior e pedem atualização, sem alterar silenciosamente as tarifas guardadas.
 
 O bloco geral “Taxas dos marketplaces” foi removido da tela principal. Valores padrão legados continuam nos dados para compatibilidade com backups, exemplos, importação e kits manuais; remover a interface não altera taxas ou cotações de cadastros existentes.
 
 O favicon usa somente o raio da Conduz Cobre, em SVG com alternativa PNG de 32 px e fundo transparente.
+
+## Pesquisa guardada para estatísticas
+
+As definições oficiais de ACOS, CPC e ROAS, os exemplos e as decisões para uma
+futura etapa de estatísticas estão em [ESTATISTICAS_ADS.md](ESTATISTICAS_ADS.md).
+O campo Ads atual é uma estimativa manual; a consulta de gastos de campanhas
+fica para uma implementação futura.

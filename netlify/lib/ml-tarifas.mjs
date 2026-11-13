@@ -21,8 +21,8 @@ export async function commissionReference({item,price,api,billableWeight,now=Dat
 }
 
 export async function officialPricing({item,input,api,now=Date.now}){
- const {cost,extra,margin,tax,mlShipping,weight}=input;
- if(![cost,extra,margin,tax,mlShipping,weight].every(Number.isFinite)||cost<=0||cost>1e9||extra<0||extra>1e9||mlShipping<0||mlShipping>1e9||weight<0||weight>1e6||margin<0||margin>=100||tax<0||tax>=100)fail('Confira custo, peso, margem, imposto e frete antes de consultar.');
+ const {cost,extra,margin,tax,mlShipping,weight}=input,ads=input.ads===undefined?0:input.ads;
+ if(![cost,extra,margin,tax,mlShipping,weight,ads].every(Number.isFinite)||cost<=0||cost>1e9||extra<0||extra>1e9||mlShipping<0||mlShipping>1e9||weight<0||weight>1e6||margin<0||margin>=100||tax<0||tax>=100||ads<0||ads>=100)fail('Confira custo, peso, margem, Ads, imposto e frete antes de consultar.');
  if(!/^MLB\d+$/.test(item.category_id??''))fail('O anúncio não informou uma categoria brasileira válida.');
  const shippingMode=item.shipping?.mode,logisticType=item.shipping?.logistic_type;
  if(!/^[a-z0-9_]{2,40}$/.test(shippingMode??'')||!/^[a-z0-9_]{2,40}$/.test(logisticType??''))fail('O anúncio não informou modo de envio e logística. Use as taxas manuais até conferir esses dados no Mercado Livre.');
@@ -49,18 +49,18 @@ export async function officialPricing({item,input,api,now=Date.now}){
   return {commission:rate,fixed,saleFeeAmount:sale,listingFeeAmount:listing,feeAmount:sale+listing};
  }
  async function solve(scenario,target,shipping,useAutomatic=false,forceFree=false){
-  if(tax+target>=100)fail('O imposto e a margem desejada devem somar menos de 100%.');
-  let price=up((cost+extra+shipping)/(1-(tax+target)/100)),best=null;
+  if(tax+target+ads>=100)fail('O imposto, Ads e a margem desejada devem somar menos de 100%.');
+  let price=up((cost+extra+shipping)/(1-(tax+target+ads)/100)),best=null;
   const seen=new Set();
   for(let round=0;round<12;round++){
    if(!Number.isFinite(price)||price<=0||price>1e9)fail('Não foi possível sugerir um preço válido com esta margem.');
    const shipment=useAutomatic?await freight(price,scenario,forceFree):null,shippingCost=shipment?.amount??shipping;
-   const fee=await quote(price,scenario,shipment?.billableWeight),profit=price*(1-tax/100)-cost-extra-shippingCost-fee.feeAmount;
+   const fee=await quote(price,scenario,shipment?.billableWeight),profit=price*(1-(tax+ads)/100)-cost-extra-shippingCost-fee.feeAmount;
    const result={price,profit,margin:profit/price*100,shippingApplied:shippingCost,...fee,...(shipment?{shippingQuote:shipment}:{})};
    const qualifies=result.margin>=target-1e-8;
    if(qualifies&&(!best||price<best.price))best=result;
-   const denominator=1-(fee.commission+tax+target)/100;
-   if(denominator<=0)fail('A tarifa oficial, o imposto e a margem deixam este cenário inviável. Reduza a margem para consultar.');
+   const denominator=1-(fee.commission+tax+target+ads)/100;
+   if(denominator<=0)fail('A tarifa oficial, o imposto, Ads e a margem deixam este cenário inviável. Reduza a margem para consultar.');
    // A parcela residual usa o total oficial, inclusive arredondamentos e descontos.
    const residual=fee.feeAmount-price*fee.commission/100;
    let next=up((cost+extra+shippingCost+residual)/denominator);
@@ -69,7 +69,7 @@ export async function officialPricing({item,input,api,now=Date.now}){
     if(previous<=0)return result;
     const priorShipment=useAutomatic?await freight(previous,scenario,forceFree):null;
     const prior=await quote(previous,scenario,priorShipment?.billableWeight);
-    const priorProfit=previous*(1-tax/100)-cost-extra-(priorShipment?.amount??shipping)-prior.feeAmount;
+    const priorProfit=previous*(1-(tax+ads)/100)-cost-extra-(priorShipment?.amount??shipping)-prior.feeAmount;
     if(priorProfit/previous*100<target-1e-8)return result;
     next=previous;
    }
@@ -88,5 +88,5 @@ export async function officialPricing({item,input,api,now=Date.now}){
  }
  const entries=await Promise.all(Object.keys(MODES).map(async scenario=>[scenario,{desired:await forMargin(scenario,margin),minimum:await forMargin(scenario,10)}]));
  const quotes=Object.fromEntries(entries),selected=quotes[item.listing_type_id==='gold_pro'?'mlPremium':'ml'].desired;
- return {source:'mercadolivre-listing-prices',fetchedAt:new Date(now()).toISOString(),itemId:item.id,categoryId:item.category_id,shippingMode,logisticType,inputs:{cost,extra,margin,tax,mlShipping:automatic?selected.shippingApplied:mlShipping,weight,...(automatic?{autoShipping:true}:{})},...(automatic?{shippingQuote:selected.shippingQuote}:{}),quotes};
+ return {source:'mercadolivre-listing-prices',fetchedAt:new Date(now()).toISOString(),itemId:item.id,categoryId:item.category_id,shippingMode,logisticType,inputs:{cost,extra,margin,tax,ads,mlShipping:automatic?selected.shippingApplied:mlShipping,weight,...(automatic?{autoShipping:true}:{})},...(automatic?{shippingQuote:selected.shippingQuote}:{}),quotes};
 }

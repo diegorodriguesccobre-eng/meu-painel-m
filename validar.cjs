@@ -273,14 +273,14 @@ const complete={products:products.map((p,i)=>({...p,extra:i+2,mlShipping:18+i}))
 complete.products=complete.products.map(p=>({...p,feeSnapshot:JSON.parse(JSON.stringify(copyFees(complete.fees)))}));
 const backupText=buildBackup(complete),envelope=JSON.parse(backupText);
 assert.equal(envelope.format,'margem-backup');
-assert.equal(envelope.version,12);
+assert.equal(envelope.version,13);
 assert.ok(Number.isFinite(Date.parse(envelope.createdAt)));
 assert.deepEqual(JSON.parse(JSON.stringify(parseBackup(backupText))),complete);
 assert.equal(parseBackup('\uFEFF'+backupText).products.length,3);
 assert.equal(parseBackup(buildBackup(defaults())).products.length,0);
 assert.equal(parseBackup(buildBackup({products,fees})).products[0].mlShipping,0);
 assert.throws(()=>parseBackup('{incompleto'));
-assert.throws(()=>parseBackup(JSON.stringify({...envelope,version:13})));
+assert.throws(()=>parseBackup(JSON.stringify({...envelope,version:14})));
 assert.throws(()=>parseBackup(JSON.stringify({...envelope,format:'outro-app'})));
 assert.throws(()=>parseBackup(JSON.stringify({...envelope,data:{products:[null],fees}})));
 assert.throws(()=>parseBackup(JSON.stringify({...envelope,data:{products:[products[0],products[0]],fees}})));
