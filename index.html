@@ -204,7 +204,7 @@ fieldset{min-width:0;margin:0}legend{max-width:100%;white-space:normal}.option-q
 <details class="product-notes"><summary>Sobre a cotação e a margem de 10%</summary><p class="help">O peso é enviado à API em gramas. Confira o peso faturável e as dimensões do pacote; o custo definitivo do frete depende da venda. Em mudanças de faixa, o preço para 10% é uma referência validada pela API. O imposto e os custos extras são informados por você.</p></details>
 </section>
 <details class="product-fees" id="product-fees"><summary>Taxas deste produto</summary>
-<p class="help">No modo automático, a consulta preenche Clássico e Premium; o imposto continua editável. No modo manual, ajuste as taxas abaixo. <a href="https://vendedores.mercadolivre.com.br/landing/custos-de-venda/tarifas-de-venda" target="_blank" rel="noopener noreferrer">Conferir tarifas ↗</a></p>
+<p class="help">A consulta preenche as comissões e a taxa fixa do Mercado Livre. A taxa fixa exibida corresponde à modalidade do anúncio vinculado e já está incluída na tarifa total. O imposto da empresa mantém o percentual cadastrado: a consulta de tarifas não informa essa alíquota. No modo manual, ajuste os valores abaixo. <a href="https://vendedores.mercadolivre.com.br/landing/custos-de-venda/tarifas-de-venda" target="_blank" rel="noopener noreferrer">Conferir tarifas ↗</a></p>
 <div id="product-rate-fields"></div></details></div>
 <details class="product-notes"><summary>Como as taxas ficam salvas</summary><p class="help">As taxas e os serviços ativos são guardados neste produto. Com tarifas manuais, editar custo, peso ou margem mantém as taxas originais. Com tarifas oficiais, mudar os dados consulta novamente antes de salvar. Para alterar somente este produto, use “Taxas deste produto”.</p></details>
 <p id="product-error" class="error" role="alert"></p><div class="dialog-actions"><button class="btn quiet" type="button" id="cancel">Cancelar</button><button class="btn primary" type="submit">Salvar produto</button></div>
@@ -713,19 +713,19 @@ function renderAutoPricing(message){
  const enabled=Boolean($('ml-auto-fees').checked),input=pricingInput(),ready=enabled&&pricingMatches(mlPricingDraft,input);
  const reference=enabled&&!(input.cost>0)&&validCommissionReference(mlCommissionReference)&&mlCommissionReference.itemId===mlLinkedDraft?.itemId;
  $('ml-auto-fees').disabled=!mlLinkedDraft;
- for(const [key,scenario] of [['commission','ml'],['premiumCommission','mlPremium']]){
+ for(const [key,scenario] of [['commission','ml'],['premiumCommission','mlPremium'],['fixed',mlLinkedDraft?.listingType==='gold_pro'?'mlPremium':'ml']]){
   const field=$('product-form').elements['product-ml-'+key];if(!field)continue;
   if(enabled&&!field.readOnly){mlManualRatesDraft??={};mlManualRatesDraft[key]=field.value;}
   if(!enabled&&field.readOnly&&mlManualRatesDraft?.[key]!==undefined)field.value=mlManualRatesDraft[key];
   field.disabled=false;field.readOnly=enabled;field.required=!enabled;field.parentElement?.classList.toggle('hidden',false);
   const q=ready?mlPricingDraft.quotes[scenario].desired:reference?mlCommissionReference.quotes[scenario]:null;
-  if(enabled)field.value=q?String(q.commission):'';
+  if(enabled)field.value=q?String(key==='fixed'?q.fixed:q.commission):'';
   field.placeholder=enabled&&!q?'Aguardando consulta':'';
+  if(key==='fixed')continue;
   const note=$('product-ml-'+key+'-info');note.classList.toggle('hidden',!enabled);
   const source=ready?mlPricingDraft:mlCommissionReference;
-  note.textContent=q?`Categoria: ${mlLinkedDraft.categoryName??source.categoryId}. Tarifa total de ${money(q.feeAmount)} no preço de ${money(ready?q.price:source.price)}. ${reference?'Referência do anúncio; informe custo e margem para recalcular.':'Consulta em '+new Date(source.fetchedAt).toLocaleString('pt-BR')+'.'}`:'Aguardando consulta válida para a categoria e o preço deste produto.';
+  note.textContent=q?`Categoria: ${mlLinkedDraft.categoryName??source.categoryId}. Tarifa total de ${money(q.feeAmount)} no preço de ${money(ready?q.price:source.price)}; taxa fixa de ${money(q.fixed)} já incluída. ${reference?'Referência do anúncio; informe custo e margem para recalcular.':'Consulta em '+new Date(source.fetchedAt).toLocaleString('pt-BR')+'.'}`:'Aguardando consulta válida para a categoria e o preço deste produto.';
  }
- const fixed=$('product-form').elements['product-ml-fixed'];if(fixed){fixed.disabled=enabled;fixed.parentElement?.classList.toggle('hidden',enabled);}
  $('ml-refresh-pricing').disabled=!enabled||!mlLinkedDraft||!mlConnection.connected;
  $('ml-pricing-status').textContent=message??(!mlLinkedDraft?'Vincule um anúncio para consultar as tarifas da categoria.':!enabled?'Tarifas manuais: os valores deste produto serão preservados.':ready?'Cotação oficial de '+new Date(mlPricingDraft.fetchedAt).toLocaleString('pt-BR')+'. Será preservada neste produto.':'Preencha custo, peso, margem e imposto para consultar as tarifas automaticamente.');
  const previewProduct=ready?{...pricingInput(),mercadoLivre:mlLinkedDraft,feeSnapshot:readProductFees($('product-form'),state.fees),mlPricing:mlPricingDraft}:null;
@@ -756,7 +756,7 @@ $('ml-auto-fees').onchange=()=>{if($('ml-auto-fees').checked)$('product-fees').o
 $('ml-refresh-pricing').onclick=()=>requestOfficialPricing(true);
 $('product-form').oninput=e=>{if(['cost','extra','margin','weight','mlShipping','product-ml-tax'].includes(e.target.name))scheduleOfficialPricing();};
 function renderProductRates(fees){
- mlManualRatesDraft={commission:String(fees.ml.commission),premiumCommission:String(fees.ml.premiumCommission??fees.ml.commission)};
+ mlManualRatesDraft={commission:String(fees.ml.commission),premiumCommission:String(fees.ml.premiumCommission??fees.ml.commission),fixed:String(fees.ml.fixed)};
  $('product-rate-fields').innerHTML=Object.entries(MARKETS).map(([market,name])=>`<section class="market"><strong>${name}</strong><div class="fields">${feeFields(market).map(([field,label])=>{
   const official=market==='ml'&&['commission','premiumCommission'].includes(field),id='product-ml-'+field+'-info';
   const input=`<label>${label}<input name="product-${market}-${field}" type="number" min="0" max="${['fixed','easyReturnFee'].includes(field)?'1000000000':'99.99'}" step="0.01" required inputmode="decimal" value="${feeValue(fees[market],field)}" ${official?`aria-describedby="${id}"`:''}></label>`;

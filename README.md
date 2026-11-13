@@ -78,6 +78,17 @@ Informe custo, peso, margem e imposto: o painel consulta o recurso oficial
 `/sites/MLB/listing_prices` usando a categoria e a logística do anúncio. Valida a
 tarifa no preço sugerido para Clássico, Premium e a referência de margem de 10%.
 `sale_fee_amount` já contém a parcela fixa; ela não é somada novamente.
+O campo existente de taxa fixa é preenchido e fica somente para leitura após a
+consulta, inclusive quando a API retorna zero. Exibe o valor da modalidade do
+anúncio vinculado; os detalhes de Clássico e Premium mantêm suas próprias parcelas
+fixas. Ao voltar ao modo manual, o valor manual anterior é restaurado.
+
+O imposto da empresa continua usando o percentual cadastrado. O recurso de tarifas
+não retorna uma alíquota tributária da empresa, e não deve ser tratado como fonte
+desse percentual. A documentação fiscal do ML trata os impostos em regras próprias,
+conforme o regime e a operação. Não são criados campos nem adotadas alíquotas presumidas.
+Referências: [custos por vender](https://developers.mercadolivre.com.br/pt_br/comissao-por-vender)
+e [regras tributárias](https://developers.mercadolivre.com.br/pt_br/envio-regras-tributarias).
 
 A cotação, seus parâmetros e a data ficam preservados no produto, CSV e backup v10.
 Alterar taxas gerais não modifica cotações salvas. Editar custo, peso, margem, imposto
