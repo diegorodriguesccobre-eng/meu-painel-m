@@ -710,26 +710,27 @@ fieldForm.elements.cost.value='';fieldApp.run(`mlCommissionReference=${JSON.stri
 assert.equal(fieldForm.elements['product-ml-commission'].value,'11.5');assert.equal(fieldForm.elements['product-ml-premiumCommission'].value,'16.5');
 assert.ok(fieldApp.get('product-ml-commission-info').textContent.includes('Referência do anúncio'));
 checks+=15;
-// A taxa fixa existente acompanha a consulta e a modalidade, inclusive zero, preservando o imposto.
-assert.equal(fieldForm.elements['product-ml-fixed'].value,'0');
-assert.equal(fieldForm.elements['product-ml-fixed'].readOnly,true);
-assert.equal(fieldForm.elements['product-ml-fixed'].disabled,false);
+// Sem campo manual: a parcela fixa permanece interna ao total oficial e o imposto é preservado.
+delete fieldForm.elements['product-ml-fixed'];
+assert.ok(!fieldApp.get('product-rate-fields').innerHTML.includes('name="product-ml-fixed"'));
+assert.equal(fieldForm.dataset.mlFixed,'0');
+assert.equal(readProductFees(fieldForm,fees).ml.fixed,0);
 const referenceWithDifferentFixed={...referenceFixture,quotes:{ml:{...referenceFixture.quotes.ml,fixed:0},mlPremium:{...referenceFixture.quotes.mlPremium,fixed:2.5}}};
 fieldApp.run(`mlLinkedDraft.listingType='gold_pro';mlCommissionReference=${JSON.stringify(referenceWithDifferentFixed)};renderAutoPricing()`);
-assert.equal(fieldForm.elements['product-ml-fixed'].value,'2.5');
+assert.equal(fieldForm.dataset.mlFixed,'2.5');
 assert.ok(fieldApp.get('product-ml-premiumCommission-info').textContent.includes('taxa fixa de R$'));
 assert.equal(fieldForm.elements['product-ml-tax'].value,'6');
 assert.equal(fieldApp.run('state.fees.ml.fixed'),6);
 fieldApp.get('ml-auto-fees').checked=false;fieldApp.run('renderAutoPricing()');
-assert.equal(fieldForm.elements['product-ml-fixed'].value,'6');
-assert.equal(fieldForm.elements['product-ml-fixed'].readOnly,false);
+assert.equal(fieldForm.dataset.mlFixed,'6');
+assert.equal(readProductFees(fieldForm,fees).ml.fixed,6);
 assert.equal(fieldForm.elements['product-ml-tax'].value,'6');
 fieldForm.elements.cost.value='31';fieldApp.get('ml-auto-fees').checked=true;fieldApp.run('renderAutoPricing()');
-assert.equal(fieldForm.elements['product-ml-fixed'].value,'');
+assert.equal(fieldForm.dataset.mlFixed,'0');
 assert.equal(fieldForm.elements['product-ml-tax'].value,'6');
 const immutablePricing=JSON.stringify(displayedPricing);
 fieldForm.elements.cost.value='30';fieldApp.run(`mlLinkedDraft.listingType='gold_special';mlPricingDraft=${immutablePricing};renderAutoPricing()`);
-assert.equal(fieldForm.elements['product-ml-fixed'].value,String(displayedPricing.quotes.ml.desired.fixed));
+assert.equal(fieldForm.dataset.mlFixed,String(displayedPricing.quotes.ml.desired.fixed));
 assert.equal(fieldForm.elements['product-ml-tax'].value,'6');
 assert.equal(fieldApp.run('JSON.stringify(mlPricingDraft)'),immutablePricing);
 checks+=15;

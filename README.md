@@ -24,7 +24,7 @@ A configuração anterior do Netlify continua disponível durante a migração.
 - Cadastro de produtos com custo, peso, categoria, margem, outros custos e frete.
 - Ads por marketplace em produtos e kits: Ads Mercado Livre (%) vale para Clássico e Premium; Ads Shopee (%) vale somente para a Shopee. Cada percentual entra uma vez no preço, no lucro e no mínimo para 10%. Anúncios vinculados mantêm o preço atual. Kits usam seus próprios percentuais, sem herdar Ads dos componentes. O Ads único de cadastros anteriores é preservado nos dois campos, sem mudar resultados ou cotações. Alterar somente Ads Shopee não dispara consultas do ML. CSV e backup v14 preservam os valores separados, com leitura de backups antigos.
 - Comparação de preços no Mercado Livre Clássico, Mercado Livre Premium e Shopee.
-- Comissões, taxas fixas, impostos e adicionais configuráveis.
+- Comissões, impostos e adicionais configuráveis; taxa fixa manual da Shopee. O cadastro de produtos não pede taxa fixa do ML. Novos produtos manuais usam zero para esse adicional; cadastros anteriores preservam suas taxas. A consulta oficial continua usando o total retornado pela API, sem somar a parcela fixa novamente.
 - Cada produto e kit preserva as taxas e os serviços vigentes quando foi cadastrado.
 - Duas caixas na área de taxas da Shopee para ativar Devolução Fácil e eventos oficiais.
 - Frete específico do Mercado Livre quando o preço sem esse frete ultrapassa R$ 100.
@@ -81,10 +81,11 @@ Informe custo, peso, margem e imposto: o painel consulta o recurso oficial
 `/sites/MLB/listing_prices` usando a categoria e a logística do anúncio. Valida a
 tarifa no preço sugerido para Clássico, Premium e a referência de margem de 10%.
 `sale_fee_amount` já contém a parcela fixa; ela não é somada novamente.
-O campo existente de taxa fixa é preenchido e fica somente para leitura após a
-consulta, inclusive quando a API retorna zero. Exibe o valor da modalidade do
-anúncio vinculado; os detalhes de Clássico e Premium mantêm suas próprias parcelas
-fixas. Ao voltar ao modo manual, o valor manual anterior é restaurado.
+O campo manual de taxa fixa do Mercado Livre foi removido do cadastro de produtos.
+Novos produtos manuais usam zero para esse adicional. Cadastros anteriores mantêm
+as taxas preservadas. Na consulta automática, a parcela fixa retornada pode ser
+zero ou positiva conforme as condições; permanece incluída uma única vez no total
+oficial. Os detalhes de Clássico e Premium conservam suas próprias tarifas.
 
 O imposto da empresa continua usando o percentual cadastrado. O recurso de tarifas
 não retorna uma alíquota tributária da empresa, e não deve ser tratado como fonte

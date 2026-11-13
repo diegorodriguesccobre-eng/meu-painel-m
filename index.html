@@ -236,7 +236,7 @@ fieldset{min-width:0;margin:0}legend{max-width:100%;white-space:normal}.option-q
 <section class="product-fees" id="product-fees" aria-label="Taxas deste produto"><div id="product-rate-fields"></div></section></div>
 <div class="product-form-footer"><p id="product-error" class="error" role="alert"></p><div class="dialog-actions"><button class="btn quiet" type="button" id="cancel">Cancelar</button><button class="btn primary" type="submit">Salvar produto</button></div></div>
 </form>
-<div id="product-help" popover><h3>Sobre o cadastro e as taxas</h3><p>Ads Mercado Livre (%) e Ads Shopee (%) reservam parte do preço de venda para publicidade de forma independente. O percentual do Mercado Livre vale para Clássico e Premium. O preço sugerido busca manter a margem após Ads. Em um anúncio vinculado, o preço atual é preservado e o lucro desconta essa reserva. O valor é uma estimativa, não uma consulta ao gasto real da campanha.</p><p>Vincular um anúncio é opcional. Com um vínculo, o painel consulta categoria, logística e frete do Mercado Livre. No cadastro manual, o frete informado entra no preço acima de R$ 100.</p><p>As consultas preenchem comissões e taxa fixa, já incluída na tarifa total do Mercado Livre. O imposto mantém a alíquota cadastrada da empresa. Confira peso faturável e medidas do pacote; o peso é enviado em gramas. O frete é estimado e o custo definitivo depende da venda.</p><p>A Shopee usa a política CNPJ por faixa de preço, conferida em 13/11/2026. Devolução Fácil custa R$ 0,49 por pedido; Campanhas de Destaque somam 5 pontos percentuais quando marcadas. A simulação considera um item ou um kit por pedido. O imposto da empresa continua sob seu controle.</p><p>Somente salvar altera o cadastro. Produtos guardam as taxas e as opções escolhidas. Com tarifas oficiais, alterações em custo, peso, margem, Ads do Mercado Livre, imposto ou frete exigem nova consulta. Os preços para 10% são referências validadas para cada faixa.</p><p><a href="https://vendedores.mercadolivre.com.br/landing/custos-de-venda/tarifas-de-venda" target="_blank" rel="noopener noreferrer">Tarifas Mercado Livre ↗</a> · <a href="https://seller.shopee.com.br/edu/article/26839" target="_blank" rel="noopener noreferrer">Política Shopee ↗</a></p><button type="button" class="btn" popovertarget="product-help" popovertargetaction="hide">Fechar ajuda</button></div></dialog>
+<div id="product-help" popover><h3>Sobre o cadastro e as taxas</h3><p>Ads Mercado Livre (%) e Ads Shopee (%) reservam parte do preço de venda para publicidade de forma independente. O percentual do Mercado Livre vale para Clássico e Premium. O preço sugerido busca manter a margem após Ads. Em um anúncio vinculado, o preço atual é preservado e o lucro desconta essa reserva. O valor é uma estimativa, não uma consulta ao gasto real da campanha.</p><p>Vincular um anúncio é opcional. Com um vínculo, o painel consulta categoria, logística e frete do Mercado Livre. No cadastro manual, o frete informado entra no preço acima de R$ 100.</p><p>As consultas preenchem comissões e usam a tarifa total retornada pelo Mercado Livre, sem somar uma taxa fixa manual. O imposto mantém a alíquota cadastrada da empresa. Confira peso faturável e medidas do pacote; o peso é enviado em gramas. O frete é estimado e o custo definitivo depende da venda.</p><p>A Shopee usa a política CNPJ por faixa de preço, conferida em 13/11/2026. Devolução Fácil custa R$ 0,49 por pedido; Campanhas de Destaque somam 5 pontos percentuais quando marcadas. A simulação considera um item ou um kit por pedido. O imposto da empresa continua sob seu controle.</p><p>Somente salvar altera o cadastro. Produtos guardam as taxas e as opções escolhidas. Com tarifas oficiais, alterações em custo, peso, margem, Ads do Mercado Livre, imposto ou frete exigem nova consulta. Os preços para 10% são referências validadas para cada faixa.</p><p><a href="https://vendedores.mercadolivre.com.br/landing/custos-de-venda/tarifas-de-venda" target="_blank" rel="noopener noreferrer">Tarifas Mercado Livre ↗</a> · <a href="https://seller.shopee.com.br/edu/article/26839" target="_blank" rel="noopener noreferrer">Política Shopee ↗</a></p><button type="button" class="btn" popovertarget="product-help" popovertargetaction="hide">Fechar ajuda</button></div></dialog>
 <dialog id="import-dialog" aria-labelledby="import-title"><form id="import-form"><h2 id="import-title">Importar produtos por CSV</h2><p>Escolha um arquivo com as colunas nome, custo e peso. Peso em kg; valores sem R$ e sem separador de milhares.</p><pre>nome;custo;peso
 Garrafa térmica;30,00;0,350
 Camiseta básica;25,00;0,200</pre><label>Arquivo CSV (até 2 MB e 5.000 produtos)<input id="import-file" type="file" accept=".csv,text/csv" required></label><div class="form-grid"><label>Categoria do lote<input id="import-category" value="Importados" required maxlength="80"></label><label>Margem desejada do lote (%)<input id="import-margin" type="number" min="0" max="99.99" step="0.01" value="20" inputmode="decimal" required></label></div><p class="help">Aceita ponto e vírgula, vírgula ou tabulação. Com vírgula como separador, use ponto decimal ou números entre aspas. Frete e outros custos começam em zero. Colunas adicionais são ignoradas. Nomes repetidos criam novos produtos; o catálogo existente é mantido.</p><p id="import-status" role="status" aria-live="polite"></p><ul id="import-errors" class="error" aria-live="polite"></ul><ul id="import-preview" class="import-preview" aria-label="Prévia dos produtos"></ul><div class="dialog-actions"><button id="import-cancel" class="btn quiet" type="button">Cancelar</button><button id="import-confirm" class="btn primary" type="submit" disabled>Importar produtos</button></div></form></dialog>
@@ -323,9 +323,16 @@ function officialQuote(product,scenario){
  const type=product.margin===p.inputs.margin?'desired':product.margin===10?'minimum':null;
  return type?p.quotes[scenario==='mlPremium'?'mlPremium':'ml'][type]:null;
 }
+function productInitialFees(product,fallback){
+ const fees=copyFees(product?.feeSnapshot??fallback);
+ // Novos cadastros manuais não recebem o antigo adicional fixo ilustrativo.
+ if(!product)fees.ml.fixed=0;
+ return fees;
+}
 function readProductFees(form,fallback){
  const present=Boolean(form.elements['product-ml-commission']);if(!present)return copyFees(fallback);
  const fees={};for(const market of Object.keys(MARKETS))fees[market]=Object.fromEntries(feeFields(market).map(([field])=>[field,Number(form.elements['product-'+market+'-'+field]?.value??NaN)]));
+ if(!form.elements['product-ml-fixed'])fees.ml.fixed=Number(form.dataset?.mlFixed??fallback.ml.fixed);
  fees.shopee.easyReturnEnabled=Boolean(form.elements['product-shopee-easyReturnEnabled']?.checked);fees.shopee.officialEventEnabled=Boolean(form.elements['product-shopee-officialEventEnabled']?.checked);
  if(form.dataset?.shopeePolicy===SHOPEE_POLICY_ID){fees.shopee.policyId=SHOPEE_POLICY_ID;fees.shopee.easyReturnFee=SHOPEE_POLICY.easyReturnFee;fees.shopee.officialEventRate=SHOPEE_POLICY.eventRate;}
  return validFees(fees)?copyFees(fees):null;
@@ -805,15 +812,17 @@ function renderAutoPricing(message){
  const enabled=Boolean($('ml-auto-fees').checked),input=pricingInput(),ready=enabled&&pricingMatches(mlPricingDraft,input);
  const reference=enabled&&!(input.cost>0)&&validCommissionReference(mlCommissionReference)&&mlCommissionReference.itemId===mlLinkedDraft?.itemId;
  $('ml-auto-fees').disabled=!mlLinkedDraft;
- for(const [key,scenario] of [['commission','ml'],['premiumCommission','mlPremium'],['fixed',mlLinkedDraft?.listingType==='gold_pro'?'mlPremium':'ml']]){
+ const selected=mlLinkedDraft?.listingType==='gold_pro'?'mlPremium':'ml';
+ const selectedQuote=ready?mlPricingDraft.quotes[selected].desired:reference?mlCommissionReference.quotes[selected]:null;
+ $('product-form').dataset.mlFixed=String(enabled?(selectedQuote?.fixed??0):Number($('product-form').dataset.mlManualFixed??0));
+ for(const [key,scenario] of [['commission','ml'],['premiumCommission','mlPremium']]){
   const field=$('product-form').elements['product-ml-'+key];if(!field)continue;
   if(enabled&&!field.readOnly){mlManualRatesDraft??={};mlManualRatesDraft[key]=field.value;}
   if(!enabled&&field.readOnly&&mlManualRatesDraft?.[key]!==undefined)field.value=mlManualRatesDraft[key];
   field.disabled=false;field.readOnly=enabled;field.required=!enabled;field.parentElement?.classList.toggle('hidden',false);
   const q=ready?mlPricingDraft.quotes[scenario].desired:reference?mlCommissionReference.quotes[scenario]:null;
-  if(enabled)field.value=q?String(key==='fixed'?q.fixed:q.commission):'';
+  if(enabled)field.value=q?String(q.commission):'';
   field.placeholder=enabled&&!q?'Aguardando consulta':'';
-  if(key==='fixed'){field.title=q?'Parcela fixa da modalidade vinculada: '+money(q.fixed)+', já incluída na tarifa total.':'Aguardando consulta da modalidade vinculada.';continue;}
   const note=$('product-ml-'+key+'-info');note.classList.toggle('hidden',!enabled);
   const source=ready?mlPricingDraft:mlCommissionReference;
   note.textContent=q?`Categoria: ${mlLinkedDraft.categoryName??source.categoryId}. Tarifa total de ${money(q.feeAmount)} no preço de ${money(ready?q.price:source.price)}; taxa fixa de ${money(q.fixed)} já incluída. ${reference?'Referência do anúncio; informe custo e margem para recalcular.':'Consulta em '+new Date(source.fetchedAt).toLocaleString('pt-BR')+'.'}`:'Aguardando consulta válida para a categoria e o preço deste produto.';field.title=note.textContent;
@@ -857,8 +866,9 @@ function renderShopeePricing(){
  $('product-shopee-policy-status').textContent=`Tabela oficial para CNPJ conferida em 13/11/2026. ${result?'Taxas calculadas no preço sugerido de '+money(result.price)+'.':'Informe custo, margem e imposto para calcular a faixa.'} Devolução Fácil: R$ 0,49 por pedido; Campanhas de Destaque: +5 p.p., aplicados somente conforme suas marcações. Marque os programas quando a cobrança estiver ativa; a campanha incide nas vendas da loja durante a participação. O imposto mantém o percentual cadastrado da empresa. Simulação de 1 item ou 1 kit por pedido.`;compactStatusTitles();
 }
 function renderProductRates(fees){
- mlManualRatesDraft={commission:String(fees.ml.commission),premiumCommission:String(fees.ml.premiumCommission??fees.ml.commission),fixed:String(fees.ml.fixed)};
- $('product-rate-fields').innerHTML=Object.entries(MARKETS).map(([market,name])=>`<section class="market" data-product-pane="${market}"><strong>${name}</strong><div class="fields">${feeFields(market).map(([field,label])=>{
+ mlManualRatesDraft={commission:String(fees.ml.commission),premiumCommission:String(fees.ml.premiumCommission??fees.ml.commission)};
+ $('product-form').dataset.mlManualFixed=String(fees.ml.fixed);$('product-form').dataset.mlFixed=String(fees.ml.fixed);
+ $('product-rate-fields').innerHTML=Object.entries(MARKETS).map(([market,name])=>`<section class="market" data-product-pane="${market}"><strong>${name}</strong><div class="fields">${feeFields(market).filter(([field])=>market!=='ml'||field!=='fixed').map(([field,label])=>{
   const official=market==='ml'&&['commission','premiumCommission'].includes(field),id='product-ml-'+field+'-info';
   const input=`<label>${label}<input name="product-${market}-${field}" type="number" min="0" max="${['fixed','easyReturnFee'].includes(field)?'1000000000':'99.99'}" step="0.01" required inputmode="decimal" value="${feeValue(fees[market],field)}" ${official?`aria-describedby="${id}"`:''}></label>`;
   return official?`<div>${input}<p id="${id}" class="help hidden" role="status"></p></div>`:input;
@@ -873,7 +883,7 @@ function prepareProductIntegration(product){
  mlCommissionReference=null;
  mlLookupVersion++;mlLinkedDraft=product?.mercadoLivre?copyMlLink(product.mercadoLivre):null;$('ml-item-query').value=mlLinkedDraft?.itemId??'';
  $('ml-product-status').textContent=mlConnection.connected?'Escolha um anúncio da conta conectada ou informe o ID MLB.':'Conecte a conta para consultar seus anúncios. O cadastro manual continua disponível.';
- renderProductRates(copyFees(product?.feeSnapshot??state.fees));renderMlLink();mlPricingVersion++;clearTimeout(mlPricingTimer);mlPricingDraft=product?.mlPricing?copyOfficialPricing(product.mlPricing):null;$('ml-auto-fees').checked=Boolean(mlPricingDraft);mlShippingVersion++;mlShippingPending=null;renderAutomaticShipping();renderAutoPricing();if(mlLinkedDraft&&!mlLinkedDraft.shippingQuote)loadAutomaticShipping();compactStatusTitles();
+ renderProductRates(productInitialFees(product,state.fees));renderMlLink();mlPricingVersion++;clearTimeout(mlPricingTimer);mlPricingDraft=product?.mlPricing?copyOfficialPricing(product.mlPricing):null;$('ml-auto-fees').checked=Boolean(mlPricingDraft);mlShippingVersion++;mlShippingPending=null;renderAutomaticShipping();renderAutoPricing();if(mlLinkedDraft&&!mlLinkedDraft.shippingQuote)loadAutomaticShipping();compactStatusTitles();
 }
 function renderMlConnection(message){
  $('ml-connection-status').textContent=message??(mlConnection.connected?`Conta conectada: ${mlConnection.account.nickname}. Escolha o anúncio no cadastro de produto.`:mlConnection.configured?'Conta desconectada. Conecte para consultar seu catálogo.':'Conexão aguardando configuração. O restante do painel funciona normalmente.');
