@@ -42,20 +42,20 @@ test('cenários usam CPC e receitas agregadas; azul é monotônico pelo lucro, n
  assert.equal(api.adsProjection(p.mlAds,-1,30),null);assert.equal(api.adsProjection(p.mlAds,10,0),null);
  assert.ok(api.adsBlueStrength(1000)>api.adsBlueStrength(100));assert.ok(api.adsBlueStrength(100)>api.adsBlueStrength(0));assert.equal(api.adsBlueStrength(-500),api.adsBlueStrength(null));
 });
-test('backup v16 preserva conciliação e separação de receitas; aceita v15 sem completar dados ausentes',()=>{
+test('backup v17 preserva conciliação e separação de receitas; aceita v15 sem completar dados ausentes',()=>{
  const p=product(),r=record(p),data={products:[p],kits:[],fees:api.defaults().fees,adsReconciliations:[r]};
- assert.ok(api.validState(data));const text=api.buildBackup(data),restored=api.parseBackup(text);assert.equal(JSON.parse(text).version,16);assert.deepEqual(clone(restored),clone(data));
+ assert.ok(api.validState(data));const text=api.buildBackup(data),restored=api.parseBackup(text);assert.equal(JSON.parse(text).version,17);assert.deepEqual(clone(restored),clone(data));
  const old=clone(data);delete old.adsReconciliations;delete old.products[0].mlAds.metricsVersion;delete old.products[0].mlAds.breakdownComplete;for(const k of ['directRevenue','indirectRevenue','directUnits','indirectUnits','directSales','indirectSales'])delete old.products[0].mlAds[k];
  const legacy=api.parseBackup(JSON.stringify({format:'margem-backup',version:15,data:old}));assert.equal(legacy.products[0].mlAds.directRevenue,undefined);assert.equal(api.estimateProductAds(legacy.products[0],legacy.fees),null);
  const invalid={...data,adsReconciliations:[record(p,{goods:-1})]};assert.equal(api.validState(invalid),false);
  assert.equal(api.validState({...data,adsReconciliations:[r,r]}),false);
  assert.equal(api.validState({...data,products:[product(undefined,{directRevenue:100})]}),false);
 });
-test('resumo do anunciante vem de metrics_summary sem somar páginas ou contas delegadas',async()=>{
+test('resumo do anunciante soma campanhas de todas as páginas e não soma contas delegadas',async()=>{
  const {accountAds}=await import('../netlify/lib/ml-ads.mjs');let requests=0;
  const metrics={cost:100,total_amount:1000,clicks:200,direct_amount:800,indirect_amount:200,direct_units_quantity:8,indirect_units_quantity:2,direct_items_quantity:7,indirect_items_quantity:2};
- const api=async(url,version)=>{requests++;if(url.startsWith('/advertising/advertisers')){assert.equal(version,1);return {advertisers:[{advertiser_id:88,site_id:'MLB',advertiser_name:'Conta teste'}]};}assert.equal(version,2);assert.match(url,/campaigns\/search/);assert.match(url,/metrics_summary=true/);return {paging:{total:15,offset:0,limit:1},results:[{metrics:{cost:999999}}],metrics_summary:metrics};};
- const response=await accountAds({sellerId:123,input:{},api,now:()=>now});assert.equal(requests,2);assert.equal(response.summary.cost,100);assert.equal(response.summary.directRevenue,800);assert.equal(response.summary.campaignCount,15);assert.ok(ctx.api.validAdsAccount(response.summary));
+ const api=async(url,version)=>{requests++;if(url.startsWith('/advertising/advertisers')){assert.equal(version,1);return {advertisers:[{advertiser_id:88,site_id:'MLB',advertiser_name:'Conta teste'}]};}assert.equal(version,2);assert.match(url,/campaigns\/search/);assert.ok(!url.includes('metrics_summary'));const offset=Number(new URL(url,'https://api.mercadolibre.com').searchParams.get('offset'));return {paging:{total:2,offset,limit:1},results:[{id:offset+1,advertiser_id:88,metrics}],metrics_summary:{...metrics,cost:999999}};};
+ const response=await accountAds({sellerId:123,input:{},api,now:()=>now});assert.equal(requests,3);assert.equal(response.summary.cost,200);assert.equal(response.summary.directRevenue,1600);assert.equal(response.summary.campaignCount,2);assert.equal(response.summary.aggregation,'all-campaign-pages');assert.ok(ctx.api.validAdsAccount(response.summary));
  const multiple=await accountAds({sellerId:123,input:{},api:async()=>({advertisers:[{advertiser_id:88,site_id:'MLB'},{advertiser_id:99,site_id:'MLB'}]})});assert.equal(multiple.selectionRequired,true);assert.equal(multiple.summary,undefined);
  await assert.rejects(accountAds({sellerId:123,input:{advertiserId:666},api}),e=>e.ads&&e.status===403);
 });

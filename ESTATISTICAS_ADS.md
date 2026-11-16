@@ -7,8 +7,58 @@ As automações de comissões, frete, serviços e atualização de Ads pelo ACOS
 
 ## Gestão de Ads (16/11/2026)
 
-- O resumo do anunciante usa `metrics_summary` de campanhas v2, sem somar resumos
-  de páginas. Havendo vários anunciantes acessíveis, o usuário escolhe um deles;
+### Comparativo por períodos e referências de método
+
+A referência visual enviada pelo usuário orienta a visão em tabela, com data-base,
+períodos semanais/quinzenais/mensais, métrica, busca por nome/MLB/SELLER_SKU, conta,
+colunas consecutivas e total. Semanas com base em 15/11/2026 mostram 19–25/10,
+26/10–01/11, 02–08/11 e 09–15/11: total de 28 dias. Mensal usa três períodos de
+30 dias, respeitando os 90 dias retrospectivos documentados pelo Mercado Livre.
+
+O comparativo não altera os percentuais de Ads usados na precificação: esse fluxo
+continua com os últimos 30 dias encerrados. Metadados de propriedade/anunciante/grupo
+são reutilizados em cada lote de duas publicações; o limite é 38 chamadas externas
+por operação, dentro do orçamento Free do Worker. Sem consulta completa, preserva
+os dados anteriores e identifica a consulta parcial, sem preencher falhas com zero.
+
+TACOS = investimento / (receita atribuída a Ads + receita orgânica retornada pela
+API para o mesmo anúncio e período) × 100. A receita orgânica vem de
+`organic_units_amount`; sem esse dado, o indicador fica indisponível. Essa base
+não é repasse líquido do Mercado Pago e pode incluir receita indireta atribuída.
+ACOS/ROAS/TACOS dos totais são recalculados pelas somas, nunca pela média das razões.
+O exemplo oficial de métricas sumarizadas também apresenta TACOS compatível com
+investimento / (total_amount + organic_units_amount).
+
+Por padrão, o azul continua seguindo o lucro estimado, como solicitado originalmente.
+Há escolha de lucro conciliado ou intensidade da métrica selecionada. Nesse último
+modo, maior investimento dá maior intensidade, sem significar mais lucro. As setas
+comparam o valor observado da métrica com o período anterior; não são recomendações.
+As escalas e regras de tendência são próprias e transparentes.
+
+Foram consideradas fontes públicas dos fornecedores, sem alegar reprodução de
+algoritmos proprietários:
+
+- [Letzee — ACOS, ROAS e TACOS](https://letzee.ai/fim-do-acos-no-mercado-livre-entenda-a-mudanca-para-roas-tabela-de-conversao-acos-x-roas/):
+  fórmulas de custo/retorno e avaliação da margem após despesas. Não há regra pública
+  identificada para os limiares/intensidade do BLUE.
+- [AdMan — Glossário](https://ajuda.ad-man.io/hc/centro-de-ajuda/articles/1761142786-glossario-de-metricas)
+  e [Rentabilidade](https://ajuda.ad-man.io/hc/centro-de-ajuda/articles/1787157957-rentabilidade-na-adman):
+  separar eficiência Ads, receita orgânica e margem após despesas/ajustes. O artigo
+  antigo ACOS/TACOS menciona 30 dias como janela; o painel conserva 14 dias de
+  atribuição conforme a documentação atual do ML, distinguindo janela de análise.
+- [Mercado Turbo — Funcionalidades](https://www.mercadoturbo.com.br/funcionalidades/):
+  referência de gestão/lucratividade e conciliação. Não foram localizadas fórmulas
+  públicas suficientes para afirmar igualdade com seu cálculo interno.
+
+O backup v17 preserva o comparativo, receitas orgânicas, SKUs e conciliações por
+período. O total apurado pode usar conciliação própria do intervalo ou somar todos
+os períodos conciliados com o mesmo escopo; uma parte faltante não vira lucro zero.
+CSV exporta os resultados filtrados. Snapshots anteriores continuam aceitos.
+
+- O total do anunciante percorre todas as páginas de `campaigns/search` v2 e soma
+  `results[].metrics`, deduplicando `results[].id`. Não usa `metrics_summary` como
+  total global: a validação real mostrou resumo limitado à página. Havendo vários
+  anunciantes acessíveis, o usuário escolhe um deles;
   contas delegadas não são somadas automaticamente. Este total inclui produtos
   fora do catálogo. O resumo dos cadastrados tem escopo próprio, sem duplicar
   anúncios vinculados a mais de um cadastro e sem misturar contas ou períodos.
@@ -43,8 +93,8 @@ As automações de comissões, frete, serviços e atualização de Ads pelo ACOS
 - A intensidade do azul cresce com o lucro em reais na base selecionada: estimativa
   das diretas ou lucro conciliado. Receita e ROAS não determinam a cor. Prejuízo
   tem azul discreto; falta de dados tem fundo neutro.
-- O backup v16 guarda métricas detalhadas, resumo do anunciante e conciliações.
-  Backups v1–v15 continuam aceitos. Snapshots antigos não ganham receitas ou unidades
+- O backup v17 guarda métricas detalhadas, resumo do anunciante e conciliações.
+  Backups v1–v16 continuam aceitos. Snapshots antigos não ganham receitas ou unidades
   inventadas: uma nova consulta é necessária. A hospedagem continua no plano Free.
 
 ## Consulta real de Product Ads
@@ -100,7 +150,7 @@ marketplace incide uma vez sobre a venda do kit, sem somar Ads dos componentes.
 Alterar somente Ads Shopee não invalida nem dispara uma nova consulta do
 Mercado Livre. A API de precificação do ML continua recebendo o parâmetro
 `ads`, preenchido exclusivamente com Ads Mercado Livre. O CSV exporta os dois
-percentuais, e o backup v16 preserva os campos separados e aceita versões
+percentuais, e o backup v17 preserva os campos separados e aceita versões
 anteriores.
 
 Cada campo de Ads apresenta um selo de ROAS equivalente, calculado como

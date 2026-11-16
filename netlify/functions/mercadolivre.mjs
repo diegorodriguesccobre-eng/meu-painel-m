@@ -2,7 +2,8 @@ import { randomBytes, createCipheriv, createDecipheriv, createHash, timingSafeEq
 import { officialPricing, commissionReference } from '../lib/ml-tarifas.mjs';
 import { shippingQuote } from '../lib/ml-frete.mjs';
 import { kitPricing } from '../lib/ml-kits.mjs';
-import { productAds, accountAds } from '../lib/ml-ads.mjs';
+import { productAds, accountAds, sellerSkus } from '../lib/ml-ads.mjs';
+import { productAdsHistory } from '../lib/ml-ads-history.mjs';
 
 const API='https://api.mercadolibre.com';
 const SESSION='__Host-conduz_ml_session', FLOW='__Host-conduz_ml_oauth';
@@ -36,7 +37,7 @@ export function normalizeItem(item){
  return {itemId:id,title:item.title.slice(0,256),categoryId:/^MLB\d+$/.test(item.category_id)?item.category_id:null,
   listingType:String(item.listing_type_id??'').slice(0,50),catalogProductId:/^MLB\d+$/.test(item.catalog_product_id)?item.catalog_product_id:null,
   permalink:safeUrl(item.permalink,'mercadolivre.com.br')??`https://produto.mercadolivre.com.br/MLB-${id.slice(3)}-_JM`,
-  thumbnail:safeUrl(item.secure_thumbnail??item.pictures?.[0]?.secure_url??'','mlstatic.com'),weight,
+  thumbnail:safeUrl(item.secure_thumbnail??item.pictures?.[0]?.secure_url??'','mlstatic.com'),weight,...(sellerSkus(item).length?{skus:sellerSkus(item)}:{}),
   variationCount:Array.isArray(item.variations)?item.variations.length:0};
 }
 export function createHandler({env=process.env,fetchImpl=globalThis.fetch,now=Date.now}={}){
@@ -107,18 +108,19 @@ export function createHandler({env=process.env,fetchImpl=globalThis.fetch,now=Da
    if(!sameOrigin())return json({error:'INVALID_ORIGIN'},403);
    return json({connected:false},200,{'Set-Cookie':cookie(SESSION,'',0)});
   }
-  if(!['items','item','pricing','shipping','categories','kit-pricing','ads','ads-account'].includes(action))return json({error:'NOT_FOUND'},404);
-  if(req.method!==(['pricing','kit-pricing','ads','ads-account'].includes(action)?'POST':'GET'))return json({error:'METHOD_NOT_ALLOWED'},405);
-  if(['pricing','kit-pricing','ads','ads-account'].includes(action)&&!sameOrigin())return json({error:'INVALID_ORIGIN'},403);
+  if(!['items','item','pricing','shipping','categories','kit-pricing','ads','ads-account','ads-history'].includes(action))return json({error:'NOT_FOUND'},404);
+  if(req.method!==(['pricing','kit-pricing','ads','ads-account','ads-history'].includes(action)?'POST':'GET'))return json({error:'METHOD_NOT_ALLOWED'},405);
+  if(['pricing','kit-pricing','ads','ads-account','ads-history'].includes(action)&&!sameOrigin())return json({error:'INVALID_ORIGIN'},403);
   if(req.headers.get('origin')&&req.headers.get('origin')!==cfg.origin)return json({error:'INVALID_ORIGIN'},403);
   const s=session(req,cfg);if(!s)return json({error:'CONNECT_REQUIRED',message:'Conecte sua conta do Mercado Livre para consultar os anúncios.'},401);
   try{
-   if(action==='pricing'||action==='kit-pricing'||action==='ads'||action==='ads-account'){
+   if(action==='pricing'||action==='kit-pricing'||action==='ads'||action==='ads-account'||action==='ads-history'){
     if(Number(req.headers.get('content-length'))>4096)return json({message:'Consulta muito grande.'},413);
     const raw=await req.text();if(raw.length>4096)return json({message:'Consulta muito grande.'},413);
     let input;try{input=JSON.parse(raw);}catch{return json({message:'Dados de cotação inválidos.'},400);}
     if(action==='ads')return json({advertising:await productAds({input,sellerId:s.userId,api:(path,version)=>api(path,s.accessToken,version),now})});
     if(action==='ads-account')return json(await accountAds({input:input??{},sellerId:s.userId,api:(path,version)=>api(path,s.accessToken,version),now}));
+    if(action==='ads-history')return json({history:await productAdsHistory({input,sellerId:s.userId,api:(path,version)=>api(path,s.accessToken,version),now})});
     if(action==='kit-pricing')return json({pricing:await kitPricing({input,sellerId:s.userId,api:path=>api(path,s.accessToken),now})});
     const id=itemId(input?.itemId);if(!id)return json({message:'Vincule um anúncio da sua conta para consultar suas tarifas.'},400);
     const item=await api('/items/'+id,s.accessToken);if(Number(item.seller_id)!==s.userId)return json({message:'Este anúncio não pertence à conta conectada.'},403);
