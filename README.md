@@ -158,8 +158,11 @@ da métrica escolhida. Setas indicam variação entre períodos, sem interpretar
 de gasto como melhora de lucro. A API limita a consulta aos últimos 90 dias.
 
 ACOS = investimento / receita Ads × 100; ROAS = receita Ads / investimento;
-TACOS = investimento / (receita Ads + receita orgânica retornada pela API no mesmo
-escopo/período) × 100. Sem base orgânica, não se presume TACOS. As fórmulas públicas
+TACOS = investimento / faturamento confirmado do próprio anúncio × 100. A base
+consulta pedidos pagos pela data da venda em São Paulo, soma somente as linhas do
+item e exclui canceladas. Sem acesso de Vendas em Leitura ou com reembolso parcial
+sem rateio por item, não se presume o TACOS. Receita atribuída de outros produtos
+e o valor total de pacotes não substituem esse faturamento. As fórmulas públicas
 de Letzee e AdMan e o enfoque de conciliação do Mercado Turbo foram considerados;
 não se afirma reprodução de algoritmos proprietários. Fontes e diferenças estão
 na metodologia. Os filtros do comparativo não alteram o Ads de 30 dias da precificação.

@@ -21,13 +21,30 @@ são reutilizados em cada lote de duas publicações; o limite é 38 chamadas ex
 por operação, dentro do orçamento Free do Worker. Sem consulta completa, preserva
 os dados anteriores e identifica a consulta parcial, sem preencher falhas com zero.
 
-TACOS = investimento / (receita atribuída a Ads + receita orgânica retornada pela
-API para o mesmo anúncio e período) × 100. A receita orgânica vem de
-`organic_units_amount`; sem esse dado, o indicador fica indisponível. Essa base
-não é repasse líquido do Mercado Pago e pode incluir receita indireta atribuída.
-ACOS/ROAS/TACOS dos totais são recalculados pelas somas, nunca pela média das razões.
-O exemplo oficial de métricas sumarizadas também apresenta TACOS compatível com
-investimento / (total_amount + organic_units_amount).
+TACOS por anúncio = investimento / faturamento confirmado do próprio item × 100.
+O denominador vem de `/orders/search`, com vendedor autenticado, filtro do item,
+data de criação da venda entre 00:00:00 e 23:59:59 em São Paulo e paginação completa.
+Somamos `order_items.quantity × unit_price` apenas das linhas do anúncio solicitado.
+Canceladas e cancelamentos pendentes são excluídos. Valores ficam antes de taxas,
+impostos e frete. Não se soma o pedido/pacote inteiro, nem `gross_price` (que pode
+representar o preço anterior aos descontos). Reembolso parcial exige conferência
+do rateio por item; nesses casos o TACOS fica indisponível.
+
+Correção de metodologia em 16/11/2026: a versão anterior somava `total_amount`
+atribuído de Ads com `organic_units_amount`. Essa razão pode corresponder a uma
+visão de atribuição, mas mistura receitas indiretas de outros produtos com o orgânico
+do item. Não comprova seu faturamento efetivo e não deve ser apresentada como TACOS
+apurado do anúncio. A receita orgânica continua disponível apenas como informação.
+ACOS e ROAS mantêm suas bases de atribuição oficiais, sem alteração na precificação.
+Os totais recalculam razões pelas somas; nunca pela média dos percentuais semanais.
+
+A leitura de pedidos requer a permissão funcional Vendas em Leitura, autorizada
+pelo usuário. Sem acesso, paginação completa ou fonte compatível, o painel informa
+“sem dados suficientes”, preservando as consultas de Ads e as demais automações.
+Somente totais financeiros do item saem do backend; dados pessoais dos compradores
+não são enviados ao navegador nem guardados no backup. A leitura não permite criar,
+alterar ou cancelar pedidos. Fontes: [Orders](https://developers.mercadolivre.com.br/pt_br/gerenciamento-de-vendas)
+e [definição de TACOS do Mercado Livre](https://www.mercadolivre.com.br/ajuda/43068).
 
 Por padrão, o azul continua seguindo o lucro estimado, como solicitado originalmente.
 Há escolha de lucro conciliado ou intensidade da métrica selecionada. Nesse último
@@ -81,8 +98,8 @@ CSV exporta os resultados filtrados. Snapshots anteriores continuam aceitos.
   e confirma a conferência. Fórmula: receita conciliada − despesas conciliadas −
   Ads consultado. O percentual previsto de Ads não é descontado novamente.
   Sem conciliação válida, a apuração permanece “Sem dados suficientes”.
-- A conciliação é manual, não uma apuração automática de pedidos. As permissões
-  de vendas não foram ampliadas. A fonte, o período e a data de conferência são
+- A conciliação de lucro é manual. A consulta de faturamento para TACOS não apura
+  custos efetivos nem substitui essa conciliação. A fonte, o período e a data de conferência são
   guardados. Mudanças na evidência financeira de Ads exigem revisar a conciliação;
   mudanças nos custos atuais não reescrevem despesas históricas já conferidas.
 - Projeções de 7, 30 ou 90 dias usam investimento diário editável, CPC e ROAS por

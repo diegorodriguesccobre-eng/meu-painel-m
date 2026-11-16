@@ -8,6 +8,11 @@ function setup(options={}){
   calls.push(path);const u=new URL(path,'https://api.mercadolibre.com');
   if(u.pathname==='/items/bulk')return [{code:200,body:{id,seller_id:options.foreign?999:123,attributes:[{id:'SELLER_SKU',value_name:'CONECTOR-KIT10'}],variations:[{attributes:[{id:'SELLER_SKU',value_name:'CONECTOR-KIT10-A'}]}]}}];
   if(u.pathname==='/advertising/advertisers')return {advertisers:[{advertiser_id:77,site_id:'MLB'}]};
+  if(u.pathname==='/orders/search'){
+   if(options.sales===false)throw Object.assign(Error('SEM_ACESSO'),{status:403});
+   const day=u.searchParams.get('order.date_created.from').slice(0,10);
+   return page([{id:Number(day.replaceAll('-','')),seller:{id:123},status:'paid',currency_id:'BRL',date_created:day+'T12:00:00-03:00',order_items:[{item:{id},unit_price:100,quantity:5}]}]);
+  }
   assert.equal(version,2);if(u.pathname.endsWith('/ad_groups/search'))return page([{id:80,advertiser_id:77}]);
   assert.match(path,/ad_groups\/80\/ads/);const index=['2026-10-19','2026-10-26','2026-11-02','2026-11-09'].indexOf(u.searchParams.get('date_from'));assert.ok(index>=0);
   if(options.fail===index)throw Error('Falha de teste');
@@ -28,16 +33,17 @@ test('quatro semanas fechadas reproduzem as datas da referência e respeitam lim
  assert.equal(historyRanges({baseDate:'2026-11-15',bucketDays:30},now).length,3);
 });
 test('cache de metadados consulta somente GET, verifica propriedade e recalcula razões do total',async()=>{
- const f=setup(),h=await f.run();assert.equal(f.calls.length,7);assert.equal(f.calls.filter(path=>path.startsWith('/items/bulk')).length,1);
+ const f=setup(),h=await f.run();assert.equal(f.calls.length,11);assert.equal(f.calls.filter(path=>path.startsWith('/items/bulk')).length,1);
  assert.equal(h.items[0].total.cost,100);assert.equal(h.items[0].total.revenue,1200);assert.equal(h.items[0].total.roas,12);assert.notEqual(h.items[0].total.roas,(4+40+15+15)/4);
  assert.equal(h.items[0].total.organicRevenue,400);assert.deepEqual(h.items[0].total.skus,['CONECTOR-KIT10','CONECTOR-KIT10-A']);assert.ok(core.validAdsHistory(h));
  await assert.rejects(setup({foreign:true}).run(),e=>e.ads&&e.status===403);await assert.rejects(setup({fail:2}).run(),/Falha/);
 });
-test('TACOS usa a mesma base/período com orgânico explícito; ausência não vira zero',async()=>{
+test('TACOS usa faturamento pago do próprio item; receita atribuída e orgânico não substituem pedidos',async()=>{
  const h=await setup().run(),p=product(),total=h.items[0].total;
- assert.equal(core.adsHistoryMetric(total,p,core.defaults().fees,[],'tacos'),6.25);
+ assert.equal(core.adsHistoryMetric(total,p,core.defaults().fees,[],'tacos'),5);assert.equal(total.sales.revenue,2000);
  assert.ok(Math.abs(core.adsHistoryMetric(total,p,core.defaults().fees,[],'acos')-100/1200*100)<1e-9);
- const missing=await setup({organic:false}).run();assert.equal(core.adsHistoryMetric(missing.items[0].total,p,core.defaults().fees,[],'tacos'),null);
+ const missing=await setup({organic:false}).run();assert.equal(core.adsHistoryMetric(missing.items[0].total,p,core.defaults().fees,[],'tacos'),5);
+ const denied=await setup({sales:false}).run();assert.equal(core.adsHistoryMetric(denied.items[0].total,p,core.defaults().fees,[],'tacos'),null);assert.equal(denied.items[0].total.salesIssue,'permission');assert.equal(denied.items[0].total.roas,12);
  assert.equal(core.adsHistoryMetric(total,p,core.defaults().fees,[],'actual'),null);
 });
 test('backup v17 guarda comparativo/SKU e aceita conciliação semanal sem alterar Ads de precificação',async()=>{
@@ -46,7 +52,12 @@ test('backup v17 guarda comparativo/SKU e aceita conciliação semanal sem alter
  const text=core.buildBackup(data),restored=core.parseBackup(text);assert.equal(JSON.parse(text).version,17);assert.equal(restored.products[0].adsMl,5);
  assert.equal(core.adsReconciled({...p,mlAds:a},[r]).profit,10);assert.equal(core.adsHistoryMetric(a,p,data.fees,[r],'actual'),10);
  assert.equal(restored.adsHistory.items[0].total.organicRevenue,400);
+ assert.equal(restored.adsHistory.items[0].total.sales.revenue,2000);
  const corrupt=JSON.parse(JSON.stringify(data));corrupt.adsHistory.items[0].total.cost=1;assert.equal(core.validState(corrupt),false);
+});
+test('backup anterior não recebe TACOS estimado como se fosse faturamento; totais de vendas adulterados são rejeitados',async()=>{
+ const h=await setup().run(),p=product();for(const a of [...h.items[0].periods,h.items[0].total])delete a.sales;assert.ok(core.validAdsHistory(h));assert.equal(core.adsHistoryMetric(h.items[0].total,p,core.defaults().fees,[],'tacos'),null);
+ const bad=await setup().run();bad.items[0].total.sales.revenue=1;assert.equal(core.validAdsHistory(bad),false);
 });
 test('CSV exporta células visíveis, datas, razões e lucro com proteção de fórmula e sem inventar apuração',async()=>{
  const h=await setup().run(),p=product();p.name='=HYPERLINK("teste")';const csv=core.adsHistoryCsv([{product:p,history:h.items[0]}],h.ranges,'cost',core.defaults().fees,[]),lines=csv.split('\r\n');
