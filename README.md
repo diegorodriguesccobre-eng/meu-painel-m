@@ -142,7 +142,33 @@ O bloco geral “Taxas dos marketplaces” foi removido da tela principal. Valor
 
 O favicon usa somente o raio da Conduz Cobre, em SVG com alternativa PNG de 32 px e fundo transparente.
 
-## Pesquisa guardada para estatísticas
+## Gestão de Ads
+
+A aba **Gestão de Ads** separa gastos e atribuição consultados pela API, projeções
+e lucro apurado por conciliação manual. Mostra resumo do anunciante, gasto diário
+médio, CPC, ROAS, receitas/vendas/unidades diretas e indiretas, e cartões dos
+produtos cadastrados. O total do anunciante pode incluir produtos fora do catálogo;
+os dois escopos são identificados. Havendo vários anunciantes, escolha um deles.
+
+Edite investimento diário e horizonte para projetar receita, cliques e unidades
+com o desempenho histórico. Projeções não alteram campanhas. “Sem dados suficientes”
+é apresentado quando faltar histórico, custos ou conciliação. O azul dos cartões
+fica mais intenso conforme aumenta o lucro em reais na base escolhida, sem usar
+receita ou ROAS como substitutos do lucro.
+
+O lucro estimado das diretas usa os custos e as tarifas de referência do cadastro,
+com todo Ads do anúncio descontado uma vez. O lucro apurado exige **Conciliar lucro
+apurado**: informe receitas e despesas efetivas do mesmo período, vendas incluídas,
+fonte e critério de distribuição. Conciliação manual não significa importação de
+pedidos. Receita indireta pode envolver outros produtos, cujos custos precisam ser
+conferidos. Mudanças na evidência financeira de Ads pedem revisão da conciliação.
+
+O backup v16 preserva os dados da gestão e aceita versões anteriores. A consulta
+de comissões/frete por preço, Ads separado por marketplace e cadastros antigos
+continuam funcionando. Não há nova permissão funcional, serviço pago ou gravação
+de campanhas. A metodologia e as fontes estão em [ESTATISTICAS_ADS.md](ESTATISTICAS_ADS.md).
+
+## Pesquisa e integração de publicidade
 
 As definições oficiais de ACOS, CPC e ROAS, os exemplos e as decisões para uma
 futura etapa de estatísticas estão em [ESTATISTICAS_ADS.md](ESTATISTICAS_ADS.md).

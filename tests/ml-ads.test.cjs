@@ -34,7 +34,7 @@ test('período usa 30 dias encerrados no fuso de São Paulo, inclusive na virada
 test('consulta atual v2 apura ACOS e ROAS do item, sem usar totais de grupos compartilhados',async()=>{
  const f=fixture(),data=await f.run();assert.equal(f.calls.length,4);
  assert.equal(data.currency,'BRL');assert.equal(data.sellerId,123);assert.equal(data.items.length,1);
- assert.deepEqual(data.items[0],{itemId:item,cost:60,revenue:1000,clicks:120,acos:6,roas:1000/60,appliedRate:6,status:'ready'});
+ assert.deepEqual(data.items[0],{itemId:item,cost:60,revenue:1000,clicks:120,acos:6,roas:1000/60,appliedRate:6,status:'ready',metricsVersion:2,breakdownComplete:false,directRevenue:null,indirectRevenue:null,directUnits:null,indirectUnits:null,directSales:null,indirectSales:null});
  assert.ok(f.calls.every(c=>!c.path.includes('/ads/search')));
 });
 test('anúncios de outra conta são rejeitados antes de consultar publicidade',async()=>{
@@ -87,10 +87,10 @@ const context=vm.createContext({URL,Intl,Date});
 vm.runInContext(script.slice(0,script.indexOf('let state=defaults()'))+script.slice(script.indexOf('function applyProductAds('),script.indexOf('async function refreshRegisteredAds('))+';globalThis.api={applyProductAds,validProductAds,buildBackup,parseBackup,defaults,cardAdsHTML,calculate,saleResult,officialQuote};',context);
 const app=context.api;
 const product=()=>({id:'p',name:'Teste',category:'Teste',cost:100,weight:.3,extra:0,margin:20,mlShipping:20,adsMl:2,adsShopee:12,mercadoLivre:{itemId:item,sellerId:123,title:'Teste',listingType:'gold_special',permalink:'https://produto.mercadolivre.com.br/MLB-1234567890-_JM',categoryId:'MLB1234',categoryName:'Teste',catalogProductId:null,price:300,weight:.3,thumbnail:null,variationCount:0,fetchedAt:new Date(now()).toISOString()}});
-test('ACOS atualiza só Ads ML, reserva é aplicada uma vez e backup v15 preserva métricas',async()=>{
+test('ACOS atualiza só Ads ML, reserva é aplicada uma vez e backup v16 preserva métricas',async()=>{
  const data=await fixture().run(),p=product();app.applyProductAds(p,data,data.items[0]);assert.equal(p.adsMl,6);assert.equal(p.adsShopee,12);
  const fees=app.defaults().fees,c=app.calculate(p,fees.ml,'ml');assert.ok(Math.abs(c.adsAmount-c.price*.06)<1e-9);
- const backup=app.buildBackup({products:[p],kits:[],fees});assert.equal(JSON.parse(backup).version,15);
+ const backup=app.buildBackup({products:[p],kits:[],fees});assert.equal(JSON.parse(backup).version,16);
  const restored=app.parseBackup(backup).products[0];assert.equal(restored.mlAds.cost,60);assert.equal(restored.adsShopee,12);assert.ok(app.validProductAds(restored));
  const card=app.cardAdsHTML(p,'ml');assert.match(card,/ROAS real/);assert.match(card,/Investido/);assert.match(card,/14\/10\/2026 a 12\/11\/2026/);
  assert.doesNotMatch(app.cardAdsHTML(p,'mlPremium'),/ROAS real|Investido/);assert.doesNotMatch(app.cardAdsHTML(p,'shopee'),/ROAS real|Investido/);

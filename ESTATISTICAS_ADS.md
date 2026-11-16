@@ -1,9 +1,51 @@
-# Publicidade e estatísticas futuras do painel
+# Gestão de Ads e metodologia do painel
 
 Pesquisa e decisões registradas em 13/11/2026 para retomar em outra sessão.
-O painel já consulta Product Ads para os anúncios vinculados aos produtos.
-Relatórios completos de campanhas e estatísticas históricas continuam como etapa
-futura. As automações de comissões, frete e serviços são mantidas.
+O painel possui uma tela separada **Gestão de Ads**, com resumo do anunciante,
+publicidade por produto cadastrado, projeções e conciliação manual de lucro.
+As automações de comissões, frete, serviços e atualização de Ads pelo ACOS são mantidas.
+
+## Gestão de Ads (16/11/2026)
+
+- O resumo do anunciante usa `metrics_summary` de campanhas v2, sem somar resumos
+  de páginas. Havendo vários anunciantes acessíveis, o usuário escolhe um deles;
+  contas delegadas não são somadas automaticamente. Este total inclui produtos
+  fora do catálogo. O resumo dos cadastrados tem escopo próprio, sem duplicar
+  anúncios vinculados a mais de um cadastro e sem misturar contas ou períodos.
+- Por anúncio, são guardados receita, vendas e unidades diretas e indiretas,
+  separadamente. Vendas indiretas podem corresponder a outros produtos; os custos
+  do produto anunciado não são aplicados a elas. Resultados recentes são
+  identificados como atualizáveis pela janela de atribuição de 14 dias.
+- Métricas consultadas, previsão e lucro apurado ficam em blocos distintos.
+  Sem atividade, métricas incompletas ou dados antigos sem separação das receitas,
+  a estimativa mostra “Sem dados suficientes”. Gasto zero só é apresentado quando
+  retornado por uma consulta válida; não é adotado como hipótese de publicidade grátis.
+- A estimativa do lucro usa receita direta, unidades diretas e custos atuais do
+  cadastro. CPV, adicionais e frete de referência são multiplicados pelas unidades.
+  Imposto e tarifa efetiva de referência são proporcionais à receita direta.
+  Todo o gasto do anúncio é descontado uma vez, das diretas. É uma aproximação:
+  preços históricos, pedidos com várias unidades e custos efetivos podem divergir.
+- Para lucro apurado, o usuário concilia os totais efetivos: receita após ajustes,
+  custo dos produtos vendidos, tarifas, impostos, frete e outras despesas. Informa
+  se incluiu diretas ou diretas e indiretas, fonte e critério de distribuição,
+  e confirma a conferência. Fórmula: receita conciliada − despesas conciliadas −
+  Ads consultado. O percentual previsto de Ads não é descontado novamente.
+  Sem conciliação válida, a apuração permanece “Sem dados suficientes”.
+- A conciliação é manual, não uma apuração automática de pedidos. As permissões
+  de vendas não foram ampliadas. A fonte, o período e a data de conferência são
+  guardados. Mudanças na evidência financeira de Ads exigem revisar a conciliação;
+  mudanças nos custos atuais não reescrevem despesas históricas já conferidas.
+- Projeções de 7, 30 ou 90 dias usam investimento diário editável, CPC e ROAS por
+  soma dos valores, e unidades por clique explicitamente calculadas. Não se usa
+  vendas/cliques como se fosse o CVR oficial. Para os cadastrados, mantém-se a
+  distribuição histórica do investimento. Não há promessa de retorno, nem edição
+  de orçamento/campanhas no Mercado Livre. Sem histórico, retorno não é projetado.
+- A intensidade do azul cresce com o lucro em reais na base selecionada: estimativa
+  das diretas ou lucro conciliado. Receita e ROAS não determinam a cor. Prejuízo
+  tem azul discreto; falta de dados tem fundo neutro.
+- O backup v16 guarda métricas detalhadas, resumo do anunciante e conciliações.
+  Backups v1–v15 continuam aceitos. Snapshots antigos não ganham receitas ou unidades
+  inventadas: uma nova consulta é necessária. A hospedagem continua no plano Free.
 
 ## Consulta real de Product Ads
 
@@ -30,7 +72,7 @@ cadastro aceita Ads abaixo de 100%. Sem investimento, ROAS mostra um traço.
 Ausência de anúncio publicitário, erros, falta de permissão e páginas incompletas
 não zeram o Ads. Falhas de recotação deixam as sugestões desatualizadas explícitas.
 O snapshot inclui período, anúncio e vendedor, permanece no navegador e no backup
-v15. Backups anteriores continuam aceitos. Respostas de outra conta ou de um
+v16. Backups anteriores continuam aceitos. Respostas de outra conta ou de um
 formulário em edição não sobrescrevem o cadastro.
 
 Kits montados usam um anúncio apenas como referência de logística. Isso não
@@ -58,7 +100,7 @@ marketplace incide uma vez sobre a venda do kit, sem somar Ads dos componentes.
 Alterar somente Ads Shopee não invalida nem dispara uma nova consulta do
 Mercado Livre. A API de precificação do ML continua recebendo o parâmetro
 `ads`, preenchido exclusivamente com Ads Mercado Livre. O CSV exporta os dois
-percentuais, e o backup v15 preserva os campos separados e aceita versões
+percentuais, e o backup v16 preserva os campos separados e aceita versões
 anteriores.
 
 Cada campo de Ads apresenta um selo de ROAS equivalente, calculado como

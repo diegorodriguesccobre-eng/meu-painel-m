@@ -3,6 +3,38 @@
 const fail=(message,status=422)=>Object.assign(new Error(message),{ads:true,status});
 const positiveId=value=>Number.isSafeInteger(value)&&value>0;
 const finite=value=>typeof value==='number'&&Number.isFinite(value)&&value>=0;
+export const ADS_METRICS='cost,total_amount,clicks,direct_amount,indirect_amount,direct_units_quantity,indirect_units_quantity,direct_items_quantity,indirect_items_quantity';
+const detailFields={directRevenue:'direct_amount',indirectRevenue:'indirect_amount',directUnits:'direct_units_quantity',indirectUnits:'indirect_units_quantity',directSales:'direct_items_quantity',indirectSales:'indirect_items_quantity'};
+export function adsMetrics(metrics){
+ if(!metrics||![metrics.cost,metrics.total_amount,metrics.clicks].every(finite)||!Number.isSafeInteger(metrics.clicks))throw fail('O Mercado Livre retornou métricas incompletas de publicidade.');
+ const details=Object.fromEntries(Object.entries(detailFields).map(([key,field])=>[key,metrics[field]]));
+ const complete=Object.entries(details).every(([key,value])=>finite(value)&&(key.endsWith('Revenue')||Number.isSafeInteger(value)));
+ if(complete&&Math.abs(details.directRevenue+details.indirectRevenue-metrics.total_amount)>.02)throw fail('As receitas diretas e indiretas não correspondem ao total retornado.');
+ return {cost:metrics.cost,revenue:metrics.total_amount,clicks:metrics.clicks,breakdownComplete:complete,...Object.fromEntries(Object.keys(detailFields).map(key=>[key,complete?details[key]:null]))};
+}
+async function advertisersFor(api){
+ let access;
+ try{access=await api('/advertising/advertisers?product_id=PADS',1);}catch(error){
+  if(error.status===404)throw fail('Product Ads não está disponível para esta conta. Confira Mercado Livre > Meu perfil > Publicidade.',404);
+  if(error.status===403)throw fail('O Mercado Livre não liberou a consulta de Product Ads para esta conexão. Confira as permissões de publicidade do aplicativo.',403);
+  throw error;
+ }
+ if(!Array.isArray(access?.advertisers))throw fail('O Mercado Livre retornou uma lista de anunciantes inválida.');
+ const advertisers=[...new Map(access.advertisers.filter(a=>a.site_id==='MLB'&&positiveId(a.advertiser_id)).map(a=>[a.advertiser_id,{id:a.advertiser_id,name:String(a.advertiser_name??a.account_name??'Anunciante').slice(0,120)}])).values()];
+ if(!advertisers.length)throw fail('Nenhum anunciante Product Ads do Brasil está disponível para esta conta.');
+ return advertisers;
+}
+export async function accountAds({input={},sellerId,api,now=Date.now}){
+ const advertisers=await advertisersFor(api);
+ const id=input.advertiserId===undefined?(advertisers.length===1?advertisers[0].id:null):input.advertiserId;
+ if(id===null)return {advertisers,selectionRequired:true};
+ if(!positiveId(id)||!advertisers.some(a=>a.id===id))throw fail('Escolha um anunciante autorizado para esta conta.',403);
+ const period=adsPeriod(now),query=new URLSearchParams({limit:'1',offset:'0',date_from:period.dateFrom,date_to:period.dateTo,metrics:ADS_METRICS,metrics_summary:'true'});
+ const data=await api(`/advertising/MLB/advertisers/${id}/product_ads/campaigns/search?${query}`,2);
+ if(!data?.paging||!Number.isSafeInteger(data.paging.total)||data.paging.total<0||!Array.isArray(data.results))throw fail('O resumo de campanhas retornado está incompleto.');
+ const metrics=adsMetrics(data.metrics_summary); // Resumo de TODAS as campanhas; nunca soma resumos de páginas.
+ return {advertisers,selectionRequired:false,summary:{source:'mercado-livre-product-ads-account-v2',metricsVersion:2,sellerId,advertiserId:id,advertiserName:advertisers.find(a=>a.id===id).name,currency:'BRL',...period,fetchedAt:new Date(now()).toISOString(),campaignCount:data.paging.total,...metrics}};
+}
 export function adsPeriod(now=Date.now){
  const day=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Sao_Paulo',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(now()));
  const end=new Date(day+'T12:00:00Z');end.setUTCDate(end.getUTCDate()-1);
@@ -19,15 +51,7 @@ export async function productAds({input,sellerId,api,now=Date.now}){
  };
  const owned=await read('/items/bulk?'+new URLSearchParams({ids:ids.join(',')}));
  if(!Array.isArray(owned)||ids.some(id=>!owned.some(row=>(row.code??row.status_code)===200&&row.body?.id===id&&Number(row.body.seller_id)===sellerId)))throw fail('Um anúncio não pertence à conta conectada ou não pôde ser verificado.',403);
- let access;
- try{access=await read('/advertising/advertisers?product_id=PADS',1);}catch(error){
-  if(error.status===404)throw fail('Product Ads não está disponível para esta conta. Confira Mercado Livre > Meu perfil > Publicidade.',404);
-  if(error.status===403)throw fail('O Mercado Livre não liberou a consulta de Product Ads para esta conexão. Confira as permissões de publicidade do aplicativo.',403);
-  throw error;
- }
- if(!Array.isArray(access?.advertisers))throw fail('O Mercado Livre retornou uma lista de anunciantes inválida.');
- const advertisers=[...new Set(access.advertisers.filter(a=>a.site_id==='MLB'&&positiveId(a.advertiser_id)).map(a=>a.advertiser_id))];
- if(!advertisers.length)throw fail('Nenhum anunciante Product Ads do Brasil está disponível para esta conta.');
+ const advertisers=(await advertisersFor(read)).map(a=>a.id);
  if(advertisers.length>5)throw fail('Há muitos anunciantes vinculados à conta para uma consulta automática segura.');
  // Só aceitamos páginas completas e consistentes. Nunca transformamos falhas em gasto zero.
  async function pages(path,consume){
@@ -50,14 +74,14 @@ export async function productAds({input,sellerId,api,now=Date.now}){
    groups.set(row.id,advertiser);
   });
  }
- const totals=new Map(ids.map(id=>[id,{cost:0,revenue:0,clicks:0,rows:0}])),seen=new Set();
+ const totals=new Map(ids.map(id=>[id,{cost:0,revenue:0,clicks:0,rows:0,breakdownComplete:true,...Object.fromEntries(Object.keys(detailFields).map(k=>[k,0]))}])),seen=new Set();
  for(const group of groups.keys()){
-  await pages(`/advertising/MLB/product_ads/ad_groups/${group}/ads?`+new URLSearchParams({date_from:period.dateFrom,date_to:period.dateTo,metrics:'cost,total_amount,clicks,roas,acos'}),row=>{
+  await pages(`/advertising/MLB/product_ads/ad_groups/${group}/ads?`+new URLSearchParams({date_from:period.dateFrom,date_to:period.dateTo,metrics:ADS_METRICS}),row=>{
    if(!wanted.has(row.item_id))return; // Grupo compartilhado: nunca atribuir o total do grupo ao produto.
    if(row.ad_group_id!==group||!positiveId(row.campaign_id))throw fail('As métricas não correspondem ao grupo consultado.');
    const key=[row.item_id,group,row.campaign_id].join(':');if(seen.has(key))throw fail('Product Ads retornou métricas duplicadas.');seen.add(key);
-   const m=row.metrics;if(!m||![m.cost,m.total_amount,m.clicks].every(finite)||!Number.isSafeInteger(m.clicks))throw fail('O Mercado Livre retornou métricas incompletas de publicidade.');
-   const t=totals.get(row.item_id);t.cost+=m.cost;t.revenue+=m.total_amount;t.clicks+=m.clicks;t.rows++;
+   const m=adsMetrics(row.metrics),t=totals.get(row.item_id);t.cost+=m.cost;t.revenue+=m.revenue;t.clicks+=m.clicks;t.rows++;t.breakdownComplete&&=m.breakdownComplete;
+   if(m.breakdownComplete)for(const key of Object.keys(detailFields))t[key]+=m[key];
    if(![t.cost,t.revenue,t.clicks].every(Number.isFinite))throw fail('As métricas excederam os limites de cálculo.');
   });
  }
@@ -65,6 +89,7 @@ export async function productAds({input,sellerId,api,now=Date.now}){
   const t=totals.get(itemId),acos=t.revenue>0?t.cost/t.revenue*100:null,roas=t.cost>0?t.revenue/t.cost:null;
   // Arredonda para cima para não reservar menos que o custo observado.
   const rate=acos===null?null:Math.max(0,Math.ceil((acos-1e-10)*100)/100);
-  return {itemId,cost:t.cost,revenue:t.revenue,clicks:t.clicks,acos,roas,appliedRate:t.rows&&rate!==null&&rate>=0&&rate<100?rate:null,status:!t.rows?'no-ad':acos===null?'no-revenue':rate>=100?'high-acos':'ready'};
+  const breakdownComplete=Boolean(t.rows&&t.breakdownComplete);
+  return {itemId,cost:t.cost,revenue:t.revenue,clicks:t.clicks,acos,roas,appliedRate:t.rows&&rate!==null&&rate>=0&&rate<100?rate:null,status:!t.rows?'no-ad':acos===null?'no-revenue':rate>=100?'high-acos':'ready',metricsVersion:2,breakdownComplete,...Object.fromEntries(Object.keys(detailFields).map(key=>[key,breakdownComplete?t[key]:null]))};
  })};
 }
