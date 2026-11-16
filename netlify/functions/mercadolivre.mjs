@@ -4,6 +4,7 @@ import { shippingQuote } from '../lib/ml-frete.mjs';
 import { kitPricing } from '../lib/ml-kits.mjs';
 import { productAds, accountAds, sellerSkus } from '../lib/ml-ads.mjs';
 import { productAdsHistory } from '../lib/ml-ads-history.mjs';
+import { itemSales } from '../lib/ml-sales.mjs';
 
 const API='https://api.mercadolibre.com';
 const SESSION='__Host-conduz_ml_session', FLOW='__Host-conduz_ml_oauth';
@@ -108,7 +109,7 @@ export function createHandler({env=process.env,fetchImpl=globalThis.fetch,now=Da
    if(!sameOrigin())return json({error:'INVALID_ORIGIN'},403);
    return json({connected:false},200,{'Set-Cookie':cookie(SESSION,'',0)});
   }
-  if(!['items','item','pricing','shipping','categories','kit-pricing','ads','ads-account','ads-history'].includes(action))return json({error:'NOT_FOUND'},404);
+  if(!['items','item','pricing','shipping','categories','kit-pricing','ads','ads-account','ads-history','sales'].includes(action))return json({error:'NOT_FOUND'},404);
   if(req.method!==(['pricing','kit-pricing','ads','ads-account','ads-history'].includes(action)?'POST':'GET'))return json({error:'METHOD_NOT_ALLOWED'},405);
   if(['pricing','kit-pricing','ads','ads-account','ads-history'].includes(action)&&!sameOrigin())return json({error:'INVALID_ORIGIN'},403);
   if(req.headers.get('origin')&&req.headers.get('origin')!==cfg.origin)return json({error:'INVALID_ORIGIN'},403);
@@ -128,6 +129,12 @@ export function createHandler({env=process.env,fetchImpl=globalThis.fetch,now=Da
     return json({pricing});
    }
    const query=new URL(req.url).searchParams;
+   if(action==='sales'){
+    const id=itemId(query.get('id')),range={dateFrom:query.get('from'),dateTo:query.get('to')};
+    if(!id)return json({message:'Informe um anúncio da conta conectada.'},400);
+    const item=await api('/items/'+id,s.accessToken);if(Number(item.seller_id)!==s.userId)return json({message:'Este anúncio não pertence à conta conectada.'},403);
+    return json({sales:await itemSales({itemId:id,sellerId:s.userId,range,api:path=>api(path,s.accessToken)})});
+   }
    if(action==='categories'){
     const q=(query.get('q')??'').trim();if(q.length<3||q.length>120)return json({message:'Digite de 3 a 120 caracteres para buscar a categoria do kit.'},400);
     const rows=await api('/sites/MLB/domain_discovery/search?'+new URLSearchParams({q,limit:'8'}),s.accessToken);
