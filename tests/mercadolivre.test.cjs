@@ -166,3 +166,26 @@ test('redirecionamento inesperado no token é rejeitado sem seguir outro destino
  const response=await app.handler(request('callback',{cookie,query:{state:auth.searchParams.get('state'),code:'TEST_ONLY'}}));
  assert.equal(new URL(response.headers.get('location')).searchParams.get('ml_reason'),'exchange_302');assert.equal(app.calls.length,1);assert.equal(app.calls[0].url,'https://api.mercadolibre.com/oauth/token');
 });
+
+test('TACOS consulta páginas autenticadas da própria conta, sem expor pedidos ou alterar anúncios',async()=>{
+ const row={id:1,seller:{id:123},currency_id:'BRL',date_created:'2026-10-20T12:00:00-03:00',status:'paid',shipping:{id:55},order_items:[{item:{id:fixture.id},unit_price:100,quantity:1}],payments:[{id:10,status:'approved',currency_id:'BRL'}],buyer:{nickname:'PRIVATE_BUYER'}};
+ const app=await setup({fetch:async url=>{
+  const u=new URL(url);if(u.pathname==='/oauth/token')return Response.json({access_token:'TEST_ACCESS_TOKEN_NOT_REAL',expires_in:21600});
+  if(u.pathname==='/users/me')return Response.json({id:123,nickname:'TESTE'});
+  if(u.pathname==='/items/'+fixture.id)return Response.json(fixture);
+  if(u.pathname==='/orders/search')return Response.json({paging:{offset:0,total:1,limit:10},results:[row]});
+  if(u.pathname==='/orders/1')return Response.json(row);
+  if(u.pathname==='/orders/1/discounts')return Response.json({details:[]});
+  if(u.pathname==='/shipments/55')return Response.json({id:55,status:'not_delivered'});
+  throw Error('Recurso inesperado');
+ }}),auth=await authorize(app),query={id:fixture.id,from:'2026-10-19',to:'2026-10-25',offset:'0'};
+ assert.equal((await app.handler(request('sales',{query}))).status,401);
+ const response=await app.handler(request('sales',{cookie:auth.cookie,query})),body=await response.json();
+ assert.equal(response.status,200);assert.equal(body.sales.source,'mercado-livre-orders-v2');assert.equal(body.sales.revenue,100);assert.equal(body.sales.notDeliveredPaidRevenue,100);assert.equal(body.page.nextOffset,null);
+ assert.ok(!JSON.stringify(body).includes('PRIVATE_BUYER'));assert.ok(!JSON.stringify(body).includes('TEST_ACCESS_TOKEN'));assert.ok(!JSON.stringify(body).includes('payments'));assert.equal(response.headers.get('cache-control'),'no-store');
+ assert.equal((await app.handler(request('sales',{cookie:auth.cookie,query:{...query,offset:'invalid'}}))).status,422);
+ assert.equal((await app.handler(request('sales',{cookie:auth.cookie,query:{...query,total:'99'}}))).status,422);
+ assert.ok(app.calls.every(c=>!c.init.method||c.url.endsWith('/oauth/token')));
+ const foreign=await setup({item:{...fixture,seller_id:999}}),otherAuth=await authorize(foreign);
+ assert.equal((await foreign.handler(request('sales',{cookie:otherAuth.cookie,query}))).status,403);assert.ok(!foreign.calls.some(c=>c.url.includes('/orders')));
+});

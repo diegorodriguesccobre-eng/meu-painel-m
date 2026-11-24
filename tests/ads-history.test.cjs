@@ -11,8 +11,10 @@ function setup(options={}){
   if(u.pathname==='/orders/search'){
    if(options.sales===false)throw Object.assign(Error('SEM_ACESSO'),{status:403});
    const day=u.searchParams.get('order.date_created.from').slice(0,10);
-   return page([{id:Number(day.replaceAll('-','')),seller:{id:123},status:'paid',currency_id:'BRL',date_created:day+'T12:00:00-03:00',order_items:[{item:{id},unit_price:100,quantity:5}]}]);
+   return {paging:{offset:0,total:1,limit:10},results:[{id:Number(day.replaceAll('-','')),seller:{id:123},status:'paid',currency_id:'BRL',date_created:day+'T12:00:00-03:00',order_items:[{item:{id},unit_price:100,quantity:5}]}]};
   }
+  if(/^\/orders\/\d+\/discounts$/.test(u.pathname))return {details:[]};
+  if(/^\/orders\/\d+$/.test(u.pathname)){const key=u.pathname.split('/').pop(),day=key.slice(0,4)+'-'+key.slice(4,6)+'-'+key.slice(6,8);return {id:Number(key),seller:{id:123},status:'paid',currency_id:'BRL',date_created:day+'T12:00:00-03:00',payments:[{id:9000,status:'approved',currency_id:'BRL'}],order_items:[{item:{id},unit_price:100,quantity:5}]};}
   assert.equal(version,2);if(u.pathname.endsWith('/ad_groups/search'))return page([{id:80,advertiser_id:77}]);
   assert.match(path,/ad_groups\/80\/ads/);const index=['2026-10-19','2026-10-26','2026-11-02','2026-11-09'].indexOf(u.searchParams.get('date_from'));assert.ok(index>=0);
   if(options.fail===index)throw Error('Falha de teste');
@@ -20,7 +22,7 @@ function setup(options={}){
   const cost=[50,10,20,20][index],direct=[150,300,300,250][index],indirect=[50,100,0,50][index];
   return page([{item_id:id,campaign_id:10,ad_group_id:80,metrics:{cost,total_amount:direct+indirect,clicks:50,direct_amount:direct,indirect_amount:indirect,direct_units_quantity:5,indirect_units_quantity:1,direct_items_quantity:5,indirect_items_quantity:1,...(options.organic===false?{}:{organic_units_amount:100,organic_units_quantity:2})}}]);
  };
- return {calls,run:async()=>{const {productAdsHistory}=await import('../netlify/lib/ml-ads-history.mjs');return productAdsHistory({input:{itemIds:[id],baseDate:'2026-11-15',bucketDays:7},sellerId:123,api,now});}};
+ return {calls,run:async()=>{const {productAdsHistory}=await import('../netlify/lib/ml-ads-history.mjs');return productAdsHistory({input:{itemIds:[id],baseDate:'2026-11-15',bucketDays:7,...(options.includeSales===false?{includeSales:false}:{})},sellerId:123,api,now});}};
 }
 function product(){return {id:'p',name:'Conector',category:'Teste',cost:10,extra:0,weight:.1,mlShipping:0,margin:20,adsMl:5,feeSnapshot:core.defaults().fees,mercadoLivre:{itemId:id,sellerId:123,title:'Conector',categoryId:'MLB1234',categoryName:'Teste',catalogProductId:null,listingType:'gold_special',permalink:'https://produto.mercadolivre.com.br/MLB-1234567890-_JM',price:100,weight:.1,thumbnail:null,variationCount:0,fetchedAt:new Date(now()).toISOString()}};}
 test('quatro semanas fechadas reproduzem as datas da referência e respeitam limite de 90 dias',async()=>{
@@ -33,7 +35,7 @@ test('quatro semanas fechadas reproduzem as datas da referência e respeitam lim
  assert.equal(historyRanges({baseDate:'2026-11-15',bucketDays:30},now).length,3);
 });
 test('cache de metadados consulta somente GET, verifica propriedade e recalcula razões do total',async()=>{
- const f=setup(),h=await f.run();assert.equal(f.calls.length,11);assert.equal(f.calls.filter(path=>path.startsWith('/items/bulk')).length,1);
+ const f=setup(),h=await f.run();assert.equal(f.calls.length,19);assert.equal(f.calls.filter(path=>path.startsWith('/items/bulk')).length,1);
  assert.equal(h.items[0].total.cost,100);assert.equal(h.items[0].total.revenue,1200);assert.equal(h.items[0].total.roas,12);assert.notEqual(h.items[0].total.roas,(4+40+15+15)/4);
  assert.equal(h.items[0].total.organicRevenue,400);assert.deepEqual(h.items[0].total.skus,['CONECTOR-KIT10','CONECTOR-KIT10-A']);assert.ok(core.validAdsHistory(h));
  await assert.rejects(setup({foreign:true}).run(),e=>e.ads&&e.status===403);await assert.rejects(setup({fail:2}).run(),/Falha/);
@@ -45,6 +47,11 @@ test('TACOS usa faturamento pago do próprio item; receita atribuída e orgânic
  const missing=await setup({organic:false}).run();assert.equal(core.adsHistoryMetric(missing.items[0].total,p,core.defaults().fees,[],'tacos'),5);
  const denied=await setup({sales:false}).run();assert.equal(core.adsHistoryMetric(denied.items[0].total,p,core.defaults().fees,[],'tacos'),null);assert.equal(denied.items[0].total.salesIssue,'permission');assert.equal(denied.items[0].total.roas,12);
  assert.equal(core.adsHistoryMetric(total,p,core.defaults().fees,[],'actual'),null);
+});
+test('consulta em lotes adia vendas sem alterar investimento, ACOS, ROAS ou receita de Ads',async()=>{
+ const complete=await setup().run(),f=setup({includeSales:false}),batched=await f.run();assert.equal(f.calls.length,7);assert.ok(!f.calls.some(path=>path.startsWith('/orders')));
+ for(const [index,a] of [...complete.items[0].periods,complete.items[0].total].entries()){const b=[...batched.items[0].periods,batched.items[0].total][index];for(const k of ['cost','revenue','acos','roas','appliedRate','directRevenue','indirectRevenue'])assert.equal(a[k],b[k]);assert.equal(b.sales,undefined);assert.equal(b.salesIssue,'not-queried');}
+ assert.ok(core.validAdsHistory(batched));
 });
 test('backup v17 guarda comparativo/SKU e aceita conciliação semanal sem alterar Ads de precificação',async()=>{
  const h=await setup().run(),p=product(),a=h.items[0].periods[0],r={source:'manual-reconciliation',sellerId:123,itemId:id,dateFrom:a.dateFrom,dateTo:a.dateTo,scope:'direct',basis:core.adsEvidenceKey(a),savedAt:new Date(now()).toISOString(),notes:'Relatório semanal; todo gasto alocado às vendas diretas.',revenue:150,goods:50,fees:20,tax:9,shipping:10,other:1};

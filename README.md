@@ -160,8 +160,14 @@ de gasto como melhora de lucro. A API limita a consulta aos últimos 90 dias.
 ACOS = investimento / receita Ads × 100; ROAS = receita Ads / investimento;
 TACOS = investimento / faturamento confirmado do próprio anúncio × 100. A base
 consulta pedidos pagos pela data da venda em São Paulo, soma somente as linhas do
-item e exclui canceladas. Sem acesso de Vendas em Leitura ou com reembolso parcial
-sem rateio por item, não se presume o TACOS. Receita atribuída de outros produtos
+item após descontos e reembolsos confirmados, excluindo canceladas. Os cupons são
+conferidos em `/orders/{id}/discounts` sem descontar novamente valores já incluídos
+no preço. O desconto de outro produto do pacote não é rateado para este anúncio.
+Pedidos não entregues com pagamento confirmado permanecem no faturamento; o
+estado logístico não comprova reembolso. Parciais só são deduzidos quando o valor
+do próprio produto é inequívoco, sem frete, parcelamento ou outros itens. Sem
+essa confirmação, ou sem acesso de Vendas em Leitura, não se presume o TACOS.
+Receita atribuída de outros produtos
 e o valor total de pacotes não substituem esse faturamento. As fórmulas públicas
 de Letzee e AdMan e o enfoque de conciliação do Mercado Turbo foram considerados;
 não se afirma reprodução de algoritmos proprietários. Fontes e diferenças estão

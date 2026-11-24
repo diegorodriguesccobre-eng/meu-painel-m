@@ -255,3 +255,45 @@ sintéticas; as regras da referência não substituem a documentação dos marke
 [orcamento]: https://vendedores.mercadolivre.com.br/aprender/nota/orcamento-em-publicidade-o-que-voce-precisa-saber-para-comecar
 [metricas]: https://vendedores.mercadolivre.com.br/aprender/nota/o-que-as-metricas-no-administrador-significam?guideKeyId=GE18
 [api]: https://developers.mercadolivre.com.br/pt_br/autenticacao-e-autorizacao/product-ads-para-catalogo-e-user-products-leitura
+
+## TACOS: descontos e situação financeira dos pedidos — 24/11/2026
+
+A consulta usa dados oficiais de `/orders/search`, `/orders/{id}`,
+`/orders/{id}/discounts` e, quando há envio, `/shipments/{id}`. Não acessa
+pagamentos por outro domínio nem modifica pedidos, anúncios ou campanhas.
+
+- O preço unitário do pedido já pode incorporar descontos. `gross_price` é o
+  valor total antes dos descontos, sem multiplicá-lo novamente pela quantidade.
+  Os detalhes oficiais de cupons são conciliados com o desconto já incorporado.
+  Sem informação suficiente para evitar dupla dedução, o TACOS fica pendente.
+- Descontos são associados ao ID do item pelo recurso oficial. Não se aplica
+  desconto fixo de 5%, nem o rateio estimado usado na investigação das planilhas.
+  Cashback e bônus financeiros não são abatidos do preço do produto para TACOS.
+- Canceladas e cancelamentos pendentes de restituição não entram na receita.
+  Um reembolso integral confirmado nos pagamentos exclui a receita do produto,
+  sem subtrair o repasse líquido depois de tarifas. Retorno físico não comprova
+  restituição financeira.
+- Reembolso parcial é deduzido automaticamente somente quando todos os itens
+  são do mesmo anúncio, o pagamento corresponde exatamente ao valor dos produtos,
+  o valor bruto reembolsado está informado e não há frete ou parcelamento.
+  Reembolso sem alocação inequívoca ao produto deixa o TACOS sem dados suficientes.
+- Não entregue com pagamento aprovado continua na receita, inclusive com envio
+  cancelado/devolvido sem reembolso confirmado. Pagamentos ausentes, inconsistentes
+  ou mistos sem alocação ficam pendentes. A falha de consulta logística é informada,
+  sem inventar estorno nem confundir essa falha com falta de dados financeiros.
+
+O navegador completa páginas de até dez pedidos em requisições independentes,
+conferindo total, sequência e duplicações antes de aceitar a soma final. Cada
+requisição fica abaixo do orçamento de subrequisições do Worker gratuito. Consultas
+interrompidas não geram totais parciais apresentados como completos.
+
+A fonte de vendas passa para `mercado-livre-orders-v2`. Backups v17 continuam
+legíveis; as bases anteriores precisam de atualização para receber TACOS pela
+nova regra. CSV e detalhes da célula preservam descontos, reembolsos e pendências.
+A consulta e a aplicação do ACOS de 30 dias, ROAS, precificação, frete e comissões
+não mudam. Nenhum relatório financeiro privado da investigação entra no GitHub.
+
+Referências oficiais:
+- https://developers.mercadolivre.com.br/pt_br/gerenciamento-de-vendas
+- https://developers.mercadolivre.com.br/pt_br/convivencia-me1-me2/gerenciamento-de-vendas
+- https://developers.mercadolivre.com.br/pt_br/gerenciamento-de-envios

@@ -4,7 +4,7 @@ import { shippingQuote } from '../lib/ml-frete.mjs';
 import { kitPricing } from '../lib/ml-kits.mjs';
 import { productAds, accountAds, sellerSkus } from '../lib/ml-ads.mjs';
 import { productAdsHistory } from '../lib/ml-ads-history.mjs';
-import { itemSales } from '../lib/ml-sales.mjs';
+import { itemSalesPage } from '../lib/ml-sales.mjs';
 
 const API='https://api.mercadolibre.com';
 const SESSION='__Host-conduz_ml_session', FLOW='__Host-conduz_ml_oauth';
@@ -133,7 +133,8 @@ export function createHandler({env=process.env,fetchImpl=globalThis.fetch,now=Da
     const id=itemId(query.get('id')),range={dateFrom:query.get('from'),dateTo:query.get('to')};
     if(!id)return json({message:'Informe um anúncio da conta conectada.'},400);
     const item=await api('/items/'+id,s.accessToken);if(Number(item.seller_id)!==s.userId)return json({message:'Este anúncio não pertence à conta conectada.'},403);
-    return json({sales:await itemSales({itemId:id,sellerId:s.userId,range,api:path=>api(path,s.accessToken)})});
+    const offset=query.has('offset')?Number(query.get('offset')):0,expectedTotal=query.has('total')?Number(query.get('total')):null;
+    return json(await itemSalesPage({itemId:id,sellerId:s.userId,range,offset,expectedTotal,api:path=>api(path,s.accessToken)}));
    }
    if(action==='categories'){
     const q=(query.get('q')??'').trim();if(q.length<3||q.length>120)return json({message:'Digite de 3 a 120 caracteres para buscar a categoria do kit.'},400);
