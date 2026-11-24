@@ -48,7 +48,7 @@
  if (typeof document === 'undefined' || !document.getElementById('cloud-catalog')) return;
 
  const ui = id => document.getElementById(id);
- let seller = null, meta = null, phase = 'off', busy = false, timer, review = null, reviewSnapshot = null, epoch = 0, activeSync = null, localProblem = false;
+ let seller = null, meta = null, phase = 'off', busy = false, timer, review = null, reviewSnapshot = null, epoch = 0, activeSync = null, localProblem = false, retryConnection = null;
  const cacheKey = () => 'conduz.catalog.sync.v1.' + seller;
  const snapshot = () => {
   const data = backupData(state);
@@ -58,9 +58,9 @@
  function saveMeta() { try { localStorage.setItem(cacheKey(), JSON.stringify(meta)); } catch { /* A versão confirmada permanece na nuvem. */ } }
  function status(message, pending = false) {
   ui('cloud-catalog-status').textContent = message + (localProblem ? ' A cópia local não pôde ser gravada; confira o armazenamento do navegador.' : '');
-  ui('cloud-sync').disabled = !seller || ['off', 'review'].includes(phase) || busy;
+  ui('cloud-sync').disabled = (!seller && phase !== 'retry') || ['off', 'review'].includes(phase) || busy;
   ui('cloud-review').classList.toggle('hidden', phase !== 'review');
-  if (seller && phase !== 'off') ui('save-status').textContent = pending ? '● Alterações aguardando sincronização' : '● Catálogo compartilhado';
+  if ((seller || retryConnection) && phase !== 'off') ui('save-status').textContent = pending ? '● Alterações aguardando sincronização' : '● Catálogo compartilhado';
  }
  function localWrite() {
   try { localStorage.setItem(KEY, JSON.stringify(state)); localProblem = false; return true; }
@@ -122,6 +122,7 @@
   clearTimeout(timer); timer = setTimeout(() => sync(), 800);
  }
  async function sync() {
+  if (phase === 'retry' && retryConnection) return connect(retryConnection);
   if (busy || !seller || phase !== 'ready') return;
   busy = true; const account = seller, generation = epoch, task = {}; activeSync = task;
   try {
@@ -164,12 +165,14 @@
  async function connect(connection) {
   const generation = ++epoch;
   clearTimeout(timer); seller = null; meta = null; phase = 'off'; review = null; busy = false; activeSync = null;
+  retryConnection = connection.connected ? { connected: true, account: { id: connection.account.id } } : null;
   if (!connection.connected) { status('Conecte o Mercado Livre para acessar o catálogo da empresa.'); return; }
   try {
    const response = await fetch('/api/catalog/status', { credentials: 'same-origin', cache: 'no-store' });
+   if (!response.ok) throw Object.assign(new Error('O serviço do catálogo está temporariamente indisponível.'), { status: response.status });
    const configuration = response.ok ? await response.json() : null;
    if (generation !== epoch) return;
-   if (!configuration?.configured) { status('Catálogo compartilhado aguardando configuração. Seus dados continuam salvos neste navegador.'); return; }
+   if (!configuration?.configured) { retryConnection = null; status('Catálogo compartilhado aguardando configuração. Seus dados continuam salvos neste navegador.'); return; }
    seller = String(connection.account.id); const account = seller;
    const result = await request();
    if (seller !== account || generation !== epoch) return;
@@ -185,7 +188,13 @@
     beginReview({ products: [], kits: [], fees: remote.fees }, remote, result.revision, true); return;
    }
    apply(remote); meta = { revision: result.revision, base: copy(remote) }; saveMeta(); phase = 'ready'; status('Catálogo compartilhado carregado.');
-  } catch (error) { if (generation === epoch) { phase = 'off'; status(error.message + ' A cópia local foi mantida.'); } }
+  } catch (error) {
+   if (generation === epoch) {
+    const retryable = !error.status || error.status >= 500;
+    phase = retryable ? 'retry' : 'off'; if (!retryable) retryConnection = null;
+    status((error.name === 'TypeError' ? 'Não foi possível acessar o catálogo da empresa.' : error.message) + ' A cópia local foi mantida.' + (retryable ? ' Vamos tentar novamente quando a conexão voltar; você também pode clicar em Sincronizar agora.' : ''), retryable);
+   }
+  }
  }
  function confirmReview(remoteOnly = false) {
   if (!review) return;
@@ -212,8 +221,8 @@
  ui('cloud-review-form').onsubmit = e => { e.preventDefault(); confirmReview(); };
  globalThis.ConduzCatalog = {
   connect,
-  onLocalChange() { if (phase === 'ready') { status('Alteração salva neste navegador; aguardando sincronização.', true); queue(); } },
-  disconnect() { epoch++; seller = null; phase = 'off'; meta = null; review = null; busy = false; activeSync = null; clearTimeout(timer); ui('cloud-review-dialog').close(); status('Conexão encerrada. A cópia local foi mantida.'); },
+  onLocalChange() { if (['ready', 'retry'].includes(phase)) { status('Alteração salva neste navegador; aguardando sincronização.', true); queue(); } },
+  disconnect() { epoch++; seller = null; phase = 'off'; meta = null; review = null; busy = false; activeSync = null; retryConnection = null; clearTimeout(timer); ui('cloud-review-dialog').close(); status('Conexão encerrada. A cópia local foi mantida.'); },
   sync
  };
  globalThis.addEventListener?.('online', () => sync());

@@ -1210,13 +1210,18 @@ $('ml-connect').onclick=$('ml-connect-product').onclick=connectMercadoLivre;
 $('ml-disconnect').onclick=async()=>{try{await mlRequest('disconnect',{method:'POST'});globalThis.ConduzCatalog?.disconnect();mlLookupVersion++;mlAdsEpoch++;resetMlCatalog();mlConnection.connected=false;mlConnection.account=null;renderMlConnection();toast('Conta desconectada neste navegador. Seus produtos e vínculos locais foram mantidos.');}catch(error){toast(error.message);}};
 $('ml-find-item').onclick=()=>importMlItem($('ml-item-query').value.trim());
 $('ml-unlink').onclick=()=>{mlLookupVersion++;mlLinkedDraft=null;mlPricingDraft=null;mlPricingVersion++;mlShippingVersion++;$('ml-auto-fees').checked=false;renderAutomaticShipping();renderAutoPricing();$('ml-item-query').value='';renderMlLink();$('ml-product-status').textContent='Vínculo removido do formulário. Salve o produto para confirmar.';};
+let mlInitializationBusy=false,mlInitializationRetry=false;
 async function initializeMercadoLivre(){
  if(!['https:','http:'].includes(globalThis.location?.protocol)){renderMlConnection('Para conectar o Mercado Livre, abra o painel no endereço publicado. O cadastro manual funciona neste arquivo.');return;}
+ if(mlInitializationBusy)return;
  const query=new URL(location.href).searchParams,callback=query.get('ml');
  if(callback){try{const raw=sessionStorage.getItem('conduz.mlProductDraft');sessionStorage.removeItem('conduz.mlProductDraft');if(raw){const draft=JSON.parse(raw),product=draft.editing?state.products.find(p=>p.id===draft.editing):null;if(!draft.editing||product){openProduct(product);for(const field of draft.fields??[])for(const name of field.name==='ads'?['adsMl','adsShopee']:[field.name]){const input=$('product-form').elements[name];if(input&&['INPUT','SELECT'].includes(input.tagName)){if(input.type==='checkbox')input.checked=Boolean(field.value);else input.value=String(field.value);}}renderAdsRoas();if(validMlLink(draft.linked)){mlLinkedDraft=copyMlLink(draft.linked);renderMlLink();}}}}catch{}
   const clean=new URL(location.href);clean.searchParams.delete('ml');history.replaceState(null,'',clean.href);
  }
- try{mlConnection=await mlRequest('status');await globalThis.ConduzCatalog?.connect(mlConnection);renderMlConnection(callback==='error'?'A autorização não foi concluída. Tente conectar novamente.':undefined);if(mlConnection.connected){$('ml-product-status').textContent='Conta conectada. Busque o anúncio ou escolha do catálogo.';if(!kitEditing&&!kitItems.size)$('kit-auto-fees').checked=true;renderKitPreview();await refreshRegisteredPrices();await refreshRegisteredAds();}}
- catch(error){renderMlConnection(error.message);}
+ mlInitializationBusy=true;
+ try{mlConnection=await mlRequest('status');mlInitializationRetry=false;await globalThis.ConduzCatalog?.connect(mlConnection);renderMlConnection(callback==='error'?'A autorização não foi concluída. Tente conectar novamente.':undefined);if(mlConnection.connected){$('ml-product-status').textContent='Conta conectada. Busque o anúncio ou escolha do catálogo.';if(!kitEditing&&!kitItems.size)$('kit-auto-fees').checked=true;renderKitPreview();await refreshRegisteredPrices();await refreshRegisteredAds();}}
+ catch(error){mlInitializationRetry=!error.status||error.status>=500;renderMlConnection(error.name==='TypeError'?'Sem conexão no momento. Os cadastros locais foram mantidos; tentaremos novamente quando a conexão voltar.':error.message);}
+ finally{mlInitializationBusy=false;}
 }
+for(const event of ['online','focus'])globalThis.addEventListener?.(event,()=>{if(mlInitializationRetry)initializeMercadoLivre();});
 resetKitEditor();showScreen('products');render();if(feesMigrated)persist();if(storageProblem){$('save-status').textContent='⚠ Verifique o armazenamento';toast(storageProblem);}initializeMercadoLivre();

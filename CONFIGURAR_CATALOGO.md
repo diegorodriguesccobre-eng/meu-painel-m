@@ -152,6 +152,31 @@ O painel não apresenta uma tela de restauração dessas revisões nesta etapa.
 origem, transações, conflito de versão, integridade Unicode e validação usando SQLite.
 `tests/catalog-sync.test.cjs` verifica dois funcionários, revisão de conflitos,
 migração inicial, falha de rede e alterações durante gravações.
+`tests/catalog-resilience.test.cjs` usa HTTP local e o mesmo handler de produção,
+com SQLite em memória e uma conta fictícia. Verifica recuperação após queda de rede
+e recarregamento, resposta perdida depois da gravação, erro 503, conflitos em
+produtos/kits/conciliações, escolhas explícitas e proteção de formulários abertos.
+
+Para repetir a conferência pela interface:
+
+```sh
+node tests/support/catalog-lab.cjs
+```
+
+Abra `http://127.0.0.1:43181/` e `http://127.0.0.1:43182/`. As duas origens têm
+armazenamentos locais separados e compartilham somente o banco fictício em memória.
+A página `/__lab` de cada origem permite interromper e restaurar a conexão desse
+cliente. Não usa credenciais reais, não consulta o ML e não acessa o D1 remoto.
+O laboratório fica fora de `dist` e não é publicado. Encerre com Ctrl+C.
+
+Em 24/11/2026, a conferência manual confirmou conflitos nos três tipos de cadastro
+e recuperação sem importação: custo do produto de R$ 19,00, adicional do kit de
+R$ 3,00 e custo conciliado de R$ 30,00 chegaram à segunda sessão sem duplicatas.
+Na primeira conciliação, receita R$ 80,00 menos despesas de R$ 48,00 e Ads de
+R$ 10,00 resultou em R$ 22,00; o gasto de Ads foi descontado uma única vez.
+O aviso de sincronização/revisão fica disponível nas três telas. Uma falha
+temporária na abertura permite nova tentativa sem limpar a cópia local; a
+retomada verifica a sessão existente e continua respeitando sua expiração.
 
 Testes locais não comprovam que a sessão real do navegador tenha sido conectada,
 nem substituem a primeira associação e a conferência dos produtos no endereço publicado.
