@@ -1,4 +1,5 @@
 import { createHandler } from '../netlify/functions/mercadolivre.mjs';
+import { createCatalogHandler } from './catalog.mjs';
 
 // O plano Free aceita 50 subrequisições por execução. Reserva margem para o runtime.
 export const MAX_EXTERNAL_REQUESTS = 45;
@@ -17,6 +18,9 @@ export function createWorker({ fetchImpl = (...args) => globalThis.fetch(...args
   return {
     async fetch(request, env) {
       const { pathname } = new URL(request.url);
+      if (pathname === '/api/catalog' || pathname.startsWith('/api/catalog/')) {
+        return createCatalogHandler({ env, now })(request);
+      }
       const route = pathname.match(/^\/api\/ml\/([a-z-]+)$/);
       if (route) {
         const handler = createHandler({ env, fetchImpl: budgetedFetch(fetchImpl), now });

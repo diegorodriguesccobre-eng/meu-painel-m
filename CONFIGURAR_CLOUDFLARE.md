@@ -4,8 +4,10 @@ Endereço publicado: https://precificacaoconduz.conduz-cobre.workers.dev/
 
 O mesmo repositório publica o painel e a integração de consulta do Mercado Livre.
 Use exclusivamente Workers Free e o endereço gratuito `workers.dev`.
-Não são necessários banco de dados, domínio pago, R2, Durable Objects ou plano pago.
-Os produtos e kits continuam salvos no navegador; não há sincronização entre aparelhos.
+Não são necessários domínio pago, R2, Durable Objects ou plano pago.
+O uso manual mantém os produtos e kits no navegador. Para compartilhar o catálogo
+entre funcionários, o projeto também oferece Cloudflare D1 Free com autenticação
+pela conexão Mercado Livre. Veja [CONFIGURAR_CATALOGO.md](CONFIGURAR_CATALOGO.md).
 
 ## Publicação pelo GitHub
 
@@ -35,7 +37,9 @@ O endereço de retorno depende da implantação: exemplos não substituem a URL 
 No painel antigo, clique em Baixar backup. No painel novo, use Restaurar backup.
 Confirme a contagem de produtos e kits antes de substituir os dados do novo endereço.
 O arquivo é lido no navegador; não é necessário enviar o catálogo a um servidor.
-Cada funcionário pode restaurar uma cópia no seu próprio navegador.
+Sem catálogo compartilhado, cada funcionário pode restaurar uma cópia no seu navegador.
+Com o D1 ativado, associe o catálogo principal uma vez e conecte a mesma conta
+autorizada nos demais aparelhos; a transferência por arquivo passa a ser opcional.
 
 ## Testes e limites gratuitos
 

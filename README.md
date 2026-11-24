@@ -1,7 +1,8 @@
 # Conduz Cobre — Painel de precificação
 
 Painel da Conduz Cobre, em português, para precificar produtos e kits no Mercado Livre e na Shopee.
-Funciona no computador e no celular, com dados salvos no navegador e sem cadastro de usuário do painel.
+Funciona no computador e no celular, sem cadastro de usuário do painel, com cópia no navegador
+e catálogo compartilhado opcional no Cloudflare D1, protegido pela conexão com o Mercado Livre.
 O uso manual funciona localmente; as consultas opcionais ao Mercado Livre usam a integração hospedada.
 
 ## Manual do usuário
@@ -30,6 +31,7 @@ A configuração anterior do Netlify continua disponível durante a migração.
 
 ## Recursos
 
+- Catálogo compartilhado de produtos, kits e taxas, usando a conta autorizada da empresa no Mercado Livre. A ativação exige binding D1 e ID do vendedor; sem configuração, o armazenamento continua local. Sincroniza cadastros diferentes e pede revisão em conflitos no mesmo registro. Relatórios e conciliações da Gestão de Ads permanecem locais nesta etapa. Veja [configuração e limites](CONFIGURAR_CATALOGO.md).
 - Cadastro de produtos com custo, peso, categoria, margem, outros custos e frete.
 - Ads por marketplace em produtos e kits: Ads Mercado Livre (%) vale para Clássico e Premium; Ads Shopee (%) vale somente para a Shopee. Cada percentual entra uma vez no preço, no lucro e no mínimo para 10%. Anúncios vinculados mantêm o preço atual. Kits usam seus próprios percentuais, sem herdar Ads dos componentes. O Ads único de cadastros anteriores é preservado nos dois campos, sem mudar resultados ou cotações. Alterar somente Ads Shopee não dispara consultas do ML. CSV e backup v17 preservam os valores separados, com leitura de backups antigos.
 - Comparação de preços no Mercado Livre Clássico, Mercado Livre Premium e Shopee.
@@ -138,6 +140,8 @@ Os fontes ficam separados para facilitar a manutenção:
 - `src/index.html`: estrutura e campos da página.
 - `src/styles.css`: aparência e adaptação às telas.
 - `src/app.js`: cálculos, armazenamento e comportamento do painel.
+- `src/catalog-sync.js`: sincronização, primeira associação e revisão de conflitos.
+- `cloudflare/catalog.mjs`: acesso autenticado e gravação transacional do catálogo no D1.
 - `netlify/lib/ml-sales.mjs`: consulta, validação e paginação das vendas do TACOS.
 - `netlify/lib/ml-sales-rules.mjs`: regras financeiras de descontos e pagamentos,
   sem consultas externas ou estado do navegador.

@@ -229,3 +229,13 @@ fieldset{min-width:0;margin:0}legend{max-width:100%;white-space:normal}.option-q
 .ads-history-table{white-space:normal}.ads-h-product{min-width:0;max-width:100%}.ads-h-product>div:last-child{flex:1;min-width:0;max-width:100%;overflow-wrap:anywhere}.ads-h-product a,.ads-h-product p,.ads-h-sku{white-space:normal;overflow-wrap:anywhere}
 @media(max-width:650px){.ads-history-filters{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.ads-history-filters>label:nth-child(3){grid-column:1/-1}.ads-history-query-label{grid-column:1/-1}.ads-history-filters .btn{grid-column:1/-1}.ads-history-options>div{min-width:100%}.ads-history-options label{flex:1;min-width:0}.ads-layout-tabs{width:100%}.ads-layout-tabs button{flex:1;font-size:12px;padding:10px 8px}.ads-history-table{min-width:1000px}.ads-history-table .ads-h-ad{width:220px}.ads-history-scroll{border-radius:9px}.ads-history-footer{font-size:10px}.ads-history-options h2{font-size:19px!important}}
 
+/* Compartilhamento: estado explícito e revisão de edições simultâneas. */
+#cloud-catalog .section-head{margin-bottom:0;gap:12px;align-items:center;flex-wrap:wrap}
+#cloud-catalog .actions{display:flex;gap:8px;flex-wrap:wrap}
+#cloud-catalog h2{font-size:1.05rem;margin:0 0 5px}
+#cloud-catalog p{margin:0;max-width:75ch;font-size:.9rem}
+.cloud-conflict{border:1px solid #536075;border-radius:10px;padding:12px;margin:12px 0}
+.cloud-conflict legend{font-weight:700;padding:0 5px}
+.cloud-conflict label{display:flex;gap:8px;align-items:flex-start;margin:10px 0;overflow-wrap:anywhere}
+#cloud-review-dialog{max-width:740px;width:calc(100% - 28px);max-height:90dvh;overflow:auto}
+#cloud-review-dialog .actions{flex-wrap:wrap;gap:8px}

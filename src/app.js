@@ -484,7 +484,7 @@ function renderAdsRoas(){
 function compactStatusTitles(){for(const id of ['ml-product-status','ml-pricing-status','ml-shipping-status','shipping-help','product-shopee-policy-status']){const node=$(id);if(node)node.title=node.textContent;}}
 
 function toast(message){$('toast').textContent=message;$('toast').classList.remove('hidden');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.add('hidden'),4500);}
-function persist(){try{localStorage.setItem(KEY,JSON.stringify(state));$('save-status').textContent='● Salvo neste navegador';return true;}catch{$('save-status').textContent='⚠ Dados só nesta sessão';toast('Não foi possível salvar. Baixe um backup antes de fechar.');return false;}}
+function persist(){try{localStorage.setItem(KEY,JSON.stringify(state));$('save-status').textContent='● Salvo neste navegador';globalThis.ConduzCatalog?.onLocalChange();return true;}catch{$('save-status').textContent='⚠ Dados só nesta sessão';toast('Não foi possível salvar. Baixe um backup antes de fechar.');globalThis.ConduzCatalog?.onLocalChange();return false;}}
 function visibleProducts(){const query=$('search').value.trim().toLocaleLowerCase('pt-BR');return state.products.filter(p=>(p.name+' '+p.category+' '+(p.mercadoLivre?.itemId??'')).toLocaleLowerCase('pt-BR').includes(query)).sort((a,b)=>{const value=p=>SCENARIOS[sort.key]?(saleResult(p,state.fees[marketOf(sort.key)],sort.key)?.price??Infinity):p[sort.key];const av=value(a),bv=value(b);return sort.direction*(typeof av==='string'?av.localeCompare(bv,'pt-BR'):av===bv?0:av>bv?1:-1);});}
 function render(){
  const products=visibleProducts();$('count').textContent=state.products.length;const averages=state.products.map(p=>averageProfit(p,state.fees)).filter(Number.isFinite);$('average').textContent=averages.length?money(averages.reduce((sum,avg)=>sum+avg,0)/averages.length):'—';$('average-help').textContent=state.products.length?'Cálculo completo: '+averages.length+' de '+state.products.length+' produtos':'Estimativa por venda nos três canais';const healthCounts={low:0,risk:0,safe:0,pending:0};for(const p of state.products)healthCounts[pricingHealth(p,state.fees).level]++;$('warning-count').textContent=healthCounts.low;$('risk-count').textContent=healthCounts.risk;$('safe-count').textContent=healthCounts.safe;$('pending-count').textContent=healthCounts.pending?healthCounts.pending+' para recalcular':'';
@@ -585,7 +585,7 @@ $('restore-form').onsubmit=e=>{
   // Grave primeiro: se o armazenamento falhar, o catálogo atual fica intacto.
   localStorage.setItem(KEY,JSON.stringify(restored));
  }catch{$('restore-error').textContent='Não foi possível salvar o backup no navegador. Seus dados atuais foram mantidos. Verifique o espaço disponível e tente novamente.';return;}
- state=restored;editing=null;sort={key:'name',direction:1};$('search').value='';$('save-status').textContent='● Salvo neste navegador';
+ state=restored;editing=null;sort={key:'name',direction:1};$('search').value='';$('save-status').textContent='● Salvo neste navegador';globalThis.ConduzCatalog?.onLocalChange();
  importReadVersion++;importText=null;resetImportPreview();resetKitEditor();render();restoreReadVersion++;clearRestore();$('restore-dialog').close();toast('Backup restaurado: produtos, kits e taxas salvos neste navegador.');
 };
 let kitItems=new Map(),kitEditing=null,kitDeleting=null;
@@ -1169,7 +1169,7 @@ $('ml-picker-close').onclick=()=>$('ml-picker-dialog').close();
 $('ml-picker-items').onclick=e=>{const button=e.target.closest('button');if(!button?.dataset.mlPick)return;$('ml-picker-dialog').close();importMlItem(button.dataset.mlPick);};
 // Fim do controlador do catálogo.
 $('ml-connect').onclick=$('ml-connect-product').onclick=connectMercadoLivre;
-$('ml-disconnect').onclick=async()=>{try{await mlRequest('disconnect',{method:'POST'});mlLookupVersion++;mlAdsEpoch++;resetMlCatalog();mlConnection.connected=false;mlConnection.account=null;renderMlConnection();toast('Conta desconectada neste navegador. Seus produtos e vínculos locais foram mantidos.');}catch(error){toast(error.message);}};
+$('ml-disconnect').onclick=async()=>{try{await mlRequest('disconnect',{method:'POST'});globalThis.ConduzCatalog?.disconnect();mlLookupVersion++;mlAdsEpoch++;resetMlCatalog();mlConnection.connected=false;mlConnection.account=null;renderMlConnection();toast('Conta desconectada neste navegador. Seus produtos e vínculos locais foram mantidos.');}catch(error){toast(error.message);}};
 $('ml-find-item').onclick=()=>importMlItem($('ml-item-query').value.trim());
 $('ml-unlink').onclick=()=>{mlLookupVersion++;mlLinkedDraft=null;mlPricingDraft=null;mlPricingVersion++;mlShippingVersion++;$('ml-auto-fees').checked=false;renderAutomaticShipping();renderAutoPricing();$('ml-item-query').value='';renderMlLink();$('ml-product-status').textContent='Vínculo removido do formulário. Salve o produto para confirmar.';};
 async function initializeMercadoLivre(){
@@ -1178,7 +1178,7 @@ async function initializeMercadoLivre(){
  if(callback){try{const raw=sessionStorage.getItem('conduz.mlProductDraft');sessionStorage.removeItem('conduz.mlProductDraft');if(raw){const draft=JSON.parse(raw),product=draft.editing?state.products.find(p=>p.id===draft.editing):null;if(!draft.editing||product){openProduct(product);for(const field of draft.fields??[])for(const name of field.name==='ads'?['adsMl','adsShopee']:[field.name]){const input=$('product-form').elements[name];if(input&&['INPUT','SELECT'].includes(input.tagName)){if(input.type==='checkbox')input.checked=Boolean(field.value);else input.value=String(field.value);}}renderAdsRoas();if(validMlLink(draft.linked)){mlLinkedDraft=copyMlLink(draft.linked);renderMlLink();}}}}catch{}
   const clean=new URL(location.href);clean.searchParams.delete('ml');history.replaceState(null,'',clean.href);
  }
- try{mlConnection=await mlRequest('status');renderMlConnection(callback==='error'?'A autorização não foi concluída. Tente conectar novamente.':undefined);if(mlConnection.connected){$('ml-product-status').textContent='Conta conectada. Busque o anúncio ou escolha do catálogo.';if(!kitEditing&&!kitItems.size)$('kit-auto-fees').checked=true;renderKitPreview();await refreshRegisteredPrices();await refreshRegisteredAds();}}
+ try{mlConnection=await mlRequest('status');await globalThis.ConduzCatalog?.connect(mlConnection);renderMlConnection(callback==='error'?'A autorização não foi concluída. Tente conectar novamente.':undefined);if(mlConnection.connected){$('ml-product-status').textContent='Conta conectada. Busque o anúncio ou escolha do catálogo.';if(!kitEditing&&!kitItems.size)$('kit-auto-fees').checked=true;renderKitPreview();await refreshRegisteredPrices();await refreshRegisteredAds();}}
  catch(error){renderMlConnection(error.message);}
 }
 resetKitEditor();showScreen('products');render();if(feesMigrated)persist();if(storageProblem){$('save-status').textContent='⚠ Verifique o armazenamento';toast(storageProblem);}initializeMercadoLivre();

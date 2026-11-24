@@ -5,7 +5,7 @@ Edição de **24/11/2026**, baseada nas funções disponíveis nesta versão.
 
 [Abrir o painel](https://precificacaoconduz.conduz-cobre.workers.dev/) · [Página do projeto](README.md)
 
-O painel ajuda a definir preços no Mercado Livre e na Shopee, comparar o lucro por venda e acompanhar publicidade do Mercado Livre. O cadastro fica no próprio navegador. A conexão com o Mercado Livre é opcional e serve para consultar dados; salvar um produto ou simular um orçamento aqui não publica anúncios nem altera campanhas.
+O painel ajuda a definir preços no Mercado Livre e na Shopee, comparar o lucro por venda e acompanhar publicidade do Mercado Livre. Mantém uma cópia no navegador e pode compartilhar produtos e kits na nuvem após a configuração da empresa. A conexão com o Mercado Livre consulta dados do marketplace e também controla o acesso ao catálogo compartilhado; salvar um produto ou simular um orçamento aqui não publica anúncios nem altera campanhas.
 
 ## Índice
 
@@ -35,17 +35,27 @@ Para usar a versão em arquivo no computador, abra `index.html` com duplo clique
 
 ### Onde ficam os dados
 
-Produtos, kits, taxas preservadas, métricas consultadas e conciliações ficam no armazenamento local do navegador. O indicador **Salvo neste navegador** confirma a gravação local.
+O indicador **Salvo neste navegador** confirma a gravação local. Com o catálogo compartilhado configurado, produtos, kits e suas configurações também ficam na nuvem. Comparativos por períodos, resumo do anunciante e conciliações da Gestão de Ads continuam locais nesta etapa.
 
 | Situação | O que acontece com o catálogo |
 |---|---|
 | Reabrir o mesmo endereço, navegador e perfil | O catálogo salvo continua disponível. |
-| Abrir em outro computador, celular, navegador ou perfil | É outro armazenamento; transfira os dados por backup. |
+| Abrir em outro computador, celular, navegador ou perfil | Com compartilhamento ativo, conecte a conta autorizada para carregar o catálogo; no modo local, transfira por backup. |
 | Trocar de domínio, como Netlify para Cloudflare | O novo endereço começa com armazenamento separado. |
-| Limpar os dados do site ou usar uma sessão privada | Os dados podem ser apagados ao encerrar ou limpar a sessão. |
-| Quatro funcionários acessarem o mesmo site | Cada navegador tem seu catálogo; não há sincronização compartilhada. |
+| Limpar os dados do site ou usar uma sessão privada | A cópia local e alterações ainda não sincronizadas podem ser perdidas; o catálogo já confirmado na nuvem pode ser carregado novamente. |
+| Quatro funcionários acessarem o mesmo site | Com o compartilhamento ativo e a conta autorizada conectada, utilizam o mesmo catálogo; sem ele, cada navegador tem sua cópia. |
 
-Escolham quem mantém a cópia principal e usem backups para transferir versões entre aparelhos. Restaurar um backup substitui os dados locais; não combina alterações de vários funcionários.
+### Ativar e usar o catálogo da empresa
+
+Após a [configuração do responsável](CONFIGURAR_CATALOGO.md), conecte o Mercado Livre no navegador que contém os cadastros principais. Em **Catálogo da empresa**, clique em **Revisar alterações**. Confira as quantidades e escolha combinar os registros locais ou usar somente a base da empresa. Antes de aplicar a escolha, o painel preserva uma cópia anterior neste navegador.
+
+Nos outros aparelhos, conecte a mesma conta autorizada. O catálogo passa a carregar sem exportação. Mudanças são enviadas automaticamente e a base é conferida periodicamente; **Sincronizar agora** permite solicitar uma conferência. O estado de gravação mostra quando há pendências. Sem conexão, a cópia local é mantida para nova tentativa.
+
+Alterações em produtos diferentes são combinadas. Quando dois usuários editam o mesmo cadastro de formas diferentes, use **Revisar alterações** e escolha a versão que deve permanecer. Confira kits e componentes antes de resolver exclusões. O painel evita aplicar atualizações externas durante uma edição em andamento.
+
+O acesso à nuvem depende da sessão da conta Mercado Livre permitida, sem uma senha nova do painel. Desconectar mantém a cópia local. Relatórios e conciliações de Ads não são sincronizados nesta etapa. Enquanto aparecer **aguardando configuração**, os cadastros continuam locais.
+
+O backup JSON permanece como cópia independente. No modo local, ele também permite transferir o catálogo entre aparelhos. **Restaurar um backup com compartilhamento ativo pode substituir os cadastros da empresa após a sincronização**; confira o arquivo e combine essa operação com a equipe.
 
 Se aparecer **Dados só nesta sessão**, baixe um backup antes de fechar a página. Veja [como fazer e restaurar backups](#backup).
 
@@ -327,7 +337,7 @@ O backup pode conter informações financeiras da empresa; compartilhe-o apenas 
 4. Confira a quantidade de produtos, kits e o resumo apresentado.
 5. Clique em **Substituir dados e restaurar** para confirmar.
 
-**A restauração substitui o estado local atual.** Não mescla cadastros. Arquivos inválidos não são aplicados. Backups antigos compatíveis são aceitos, mas não recebem métricas históricas que nunca foram registradas. Esta versão gera backup v17.
+**A restauração substitui o estado local atual.** Com o catálogo compartilhado ativo, a mudança também será sincronizada com a empresa e passará pela conferência de versão. A restauração não mescla cadastros. Arquivos inválidos não são aplicados. Backups antigos compatíveis são aceitos, mas não recebem métricas históricas que nunca foram registradas. Esta versão gera backup v17.
 
 Um CSV exportado não é um backup completo e não restaura todas as configurações. O próprio arquivo `index.html` também não contém os produtos salvos pelo seu navegador.
 
@@ -446,7 +456,7 @@ Isso pode indicar falta de histórico, permissão, separação de diretas e indi
 
 | Dúvida ou aviso | O que conferir |
 |---|---|
-| “Meu catálogo sumiu no celular.” | Confirme endereço e navegador. Os dados não são sincronizados; restaure o backup correto. |
+| “Meu catálogo sumiu no celular.” | Confirme endereço e conexão com a conta permitida. Com compartilhamento ativo, sincronize; no modo local, restaure o backup correto. |
 | “A meta é 20%, mas aparece outro lucro.” | Veja se o cartão usa preço atual do anúncio. A meta determina a sugestão; o lucro usa o preço apresentado e seus custos. |
 | “O frete não entrou abaixo de R$ 100.” | Confira se é o modo manual. O automático usa a cotação reconhecida e tem condições próprias. |
 | “As comissões estão bloqueadas.” | Confira se o modo oficial está ativo. Nesse modo os campos mostram a consulta. |
@@ -477,7 +487,7 @@ Ao terminar alterações relevantes, baixe um backup com a data e siga o procedi
 
 ### Como este manual foi preparado
 
-As instruções e os nomes dos controles foram conferidos nos [campos da interface](src/index.html), nas [regras e fluxos do painel](src/app.js) e na consulta de [vendas](netlify/lib/ml-sales.mjs) e [regras financeiras](netlify/lib/ml-sales-rules.mjs), na [revisão f6f2c3a](https://github.com/diegorodriguesccobre-eng/meu-painel-m/tree/f6f2c3a0ba1f26fd3362fdc61f6e43f67e01997f). As faixas, arredondamentos, cores e limites de uso descritos representam esta implementação.
+As instruções e os nomes dos controles foram conferidos nos [campos da interface](src/index.html), nas [regras e fluxos do painel](src/app.js), na [sincronização do catálogo](src/catalog-sync.js) e na consulta de [vendas](netlify/lib/ml-sales.mjs) e [regras financeiras](netlify/lib/ml-sales-rules.mjs). Consulte o [histórico do projeto](https://github.com/diegorodriguesccobre-eng/meu-painel-m/commits/main) para acompanhar as revisões. As faixas, arredondamentos, cores e limites de uso descritos representam esta implementação.
 
 A pesquisa desta edição consultou a documentação oficial disponível e os resultados indexados do Mercado Livre. Algumas páginas oficiais bloquearam a leitura direta, e as páginas da Shopee não disponibilizaram o conteúdo no acesso automatizado. Portanto, os valores incorporados de Shopee e da tabela alternativa de frete mantêm as datas de conferência indicadas; esta edição do manual não declara uma nova validação integral dessas tabelas em 24/11/2026.
 
@@ -501,5 +511,6 @@ A pesquisa desta edição consultou a documentação oficial disponível e os re
 - [Política Shopee incorporada, condições e preservação](POLITICA_SHOPEE.md).
 - [Configuração da integração Mercado Livre](CONFIGURAR_MERCADO_LIVRE.md).
 - [Configuração do Cloudflare e transferência por backup](CONFIGURAR_CLOUDFLARE.md).
+- [Catálogo compartilhado: acesso, sincronização, migração e plano gratuito](CONFIGURAR_CATALOGO.md).
 
 Letzee, AdMan e Mercado Turbo foram referências públicas de apresentação e conceitos. O painel não declara reproduzir seus cálculos internos. Os links e as diferenças de método estão na [documentação de Ads do projeto](ESTATISTICAS_ADS.md#comparativo-por-períodos-e-referências-de-método).
