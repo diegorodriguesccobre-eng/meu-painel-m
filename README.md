@@ -1,13 +1,22 @@
 # Conduz Cobre — Painel de precificação
 
 Painel da Conduz Cobre, em português, para precificar produtos e kits no Mercado Livre e na Shopee.
-Funciona no computador e no celular, com dados salvos no navegador, sem login ou backend.
+Funciona no computador e no celular, com dados salvos no navegador e sem cadastro de usuário do painel.
+O uso manual funciona localmente; as consultas opcionais ao Mercado Livre usam a integração hospedada.
+
+## Manual do usuário
+
+Veja o **[Manual do usuário — Conduz Cobre](MANUAL_DO_USUARIO.md)** para começar,
+cadastrar produtos, montar kits, entender preços e cores, usar CSV e backups e
+acompanhar a Gestão de Ads. O manual descreve as funções disponíveis, suas bases de
+cálculo e limitações, com referências oficiais. Edição: 24/11/2026.
 
 ## Usar no computador
 
 Abra `index.html` no Chrome, Edge ou outro navegador moderno. Não é necessário instalar nada.
 A logo fornecida da Conduz Cobre está incorporada no HTML, sem depender de outro arquivo ou de internet.
-As instruções de todas as funções estão em [LEIA-ME.txt](LEIA-ME.txt).
+As instruções atuais de uso estão no [Manual do usuário](MANUAL_DO_USUARIO.md).
+O arquivo [LEIA-ME.txt](LEIA-ME.txt) contém orientações anteriores.
 
 ## Hospedagem gratuita no Cloudflare
 
@@ -69,7 +78,8 @@ de compra e a margem são informados por você. Em **Taxas deste produto**, é p
 ajustar comissões, impostos, taxas fixas e serviços sem alterar outros cadastros.
 
 O painel continua funcionando localmente para cadastro manual. A conexão com a API
-usa Functions do Netlify e exige um aplicativo do Mercado Livre e variáveis de ambiente.
+usa o Worker do Cloudflare na hospedagem atual (com adaptador Netlify também disponível)
+e exige um aplicativo do Mercado Livre e variáveis de ambiente.
 A consulta é somente de leitura e não altera anúncios no marketplace. Credenciais não
 ficam no HTML, no GitHub ou nos backups. A sessão expira em até seis horas.
 
