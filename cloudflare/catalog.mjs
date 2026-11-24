@@ -28,7 +28,7 @@ async function readBody(request) {
 }
 
 export function validateCatalog(data, sellerId) {
-  if (!object(data) || Object.keys(data).some(k => !['products', 'kits', 'fees'].includes(k))) fail('Formato do catálogo inválido.');
+  if (!object(data) || Object.keys(data).some(k => !['products', 'kits', 'fees', 'adsReports', 'adsAccounts', 'adsReconciliations'].includes(k))) fail('Formato do catálogo inválido.');
   if (!Array.isArray(data.products) || !Array.isArray(data.kits) || data.products.length > 5000 || data.kits.length > 5000) fail('O catálogo aceita até 5.000 produtos e 5.000 kits.');
   const checkFees = fees => {
     if (!object(fees) || !object(fees.ml) || !object(fees.shopee)) fail('Taxas inválidas.');
@@ -65,6 +65,41 @@ export function validateCatalog(data, sellerId) {
       components.add(i.productId);
     }
   }
+  const date = value => typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) && Number.isFinite(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value;
+  const period = r => date(r.dateFrom) && date(r.dateTo) && r.dateFrom <= r.dateTo && (Date.parse(r.dateTo) - Date.parse(r.dateFrom)) / 86400000 < 90;
+  const owned = r => object(r) && String(r.sellerId) === sellerId;
+  const timestamp = value => typeof value === 'string' && Number.isFinite(Date.parse(value));
+  const snapshot = (r, itemId) => {
+    if (!owned(r) || r.itemId !== itemId || !period(r) || r.currency !== 'BRL' || !timestamp(r.fetchedAt) || !['cost', 'revenue', 'clicks'].every(k => number(r[k]))) fail('Métricas de Ads inválidas ou de outra conta.');
+    if (r.sales !== undefined && (!owned(r.sales) || r.sales.itemId !== itemId || r.sales.dateFrom !== r.dateFrom || r.sales.dateTo !== r.dateTo)) fail('A base de vendas de Ads não corresponde à consulta.');
+  };
+  for (const [field, limit, key] of [
+    ['adsReports', null, r => [r.sellerId, r.baseDate, r.bucketDays].join(':')],
+    ['adsAccounts', null, r => [r.sellerId, r.advertiserId, r.dateFrom, r.dateTo].join(':')],
+    ['adsReconciliations', 5000, r => [r.sellerId, r.itemId, r.dateFrom, r.dateTo].join(':')]
+  ]) {
+    if (data[field] === undefined) continue;
+    if (!Array.isArray(data[field]) || (limit !== null && data[field].length > limit)) fail('Quantidade de registros de Ads inválida.');
+    const seen = new Set();
+    for (const r of data[field]) {
+      if (!owned(r) || !period(r) || seen.has(key(r))) fail('Registro de Ads repetido, inválido ou de outra conta.');
+      seen.add(key(r));
+      if (field === 'adsReconciliations') {
+        if (r.source !== 'manual-reconciliation' || !/^MLB\d{5,15}$/.test(r.itemId ?? '') || !['direct', 'attributed'].includes(r.scope) || typeof r.basis !== 'string' || r.basis.length > 2000 || !text(r.notes, 600) || r.notes.trim().length < 3 || !timestamp(r.savedAt) || !['revenue', 'goods', 'fees', 'tax', 'shipping', 'other'].every(k => number(r[k]) && Math.abs(r[k] * 100 - Math.round(r[k] * 100)) < .001)) fail('Conciliação de Ads inválida.');
+      } else if (field === 'adsAccounts') {
+        if (r.source !== 'mercado-livre-product-ads-account-v2' || r.currency !== 'BRL' || !Number.isSafeInteger(r.advertiserId) || r.advertiserId <= 0 || !timestamp(r.fetchedAt) || !['cost', 'revenue', 'clicks'].every(k => number(r[k]))) fail('Resumo do anunciante inválido.');
+      } else {
+        if (r.source !== 'mercado-livre-product-ads-history-v2' || r.currency !== 'BRL' || !date(r.baseDate) || ![7, 14, 30].includes(r.bucketDays) || !timestamp(r.fetchedAt) || !Array.isArray(r.items) || r.items.length > 10000 || !Array.isArray(r.ranges) || r.ranges.length !== (r.bucketDays === 30 ? 3 : 4)) fail('Relatório de Ads inválido.');
+        const items = new Set();
+        for (const row of r.items) {
+          if (!object(row) || !/^MLB\d{5,15}$/.test(row.itemId ?? '') || items.has(row.itemId) || !Array.isArray(row.periods) || row.periods.length !== r.ranges.length) fail('Anúncio repetido ou inválido no relatório.');
+          items.add(row.itemId); snapshot(row.total, row.itemId);
+          if (row.total.dateFrom !== r.dateFrom || row.total.dateTo !== r.dateTo) fail('Total incompatível com o período.');
+          row.periods.forEach((p, i) => { snapshot(p, row.itemId); if (p.dateFrom !== r.ranges[i]?.dateFrom || p.dateTo !== r.ranges[i]?.dateTo) fail('Período do relatório incompatível.'); });
+        }
+      }
+    }
+  }
   return data;
 }
 
@@ -72,7 +107,7 @@ export function createCatalogHandler({ env, now = Date.now }) {
   return async request => {
     const path = new URL(request.url).pathname;
     const configured = Boolean(env.CATALOG_DB && /^\d{1,16}$/.test(env.CATALOG_SELLER_ID ?? ''));
-    if (path === '/api/catalog/status' && request.method === 'GET') return json({ configured });
+    if (path === '/api/catalog/status' && request.method === 'GET') return json({ configured, schemaVersion: 2 });
     if (path !== '/api/catalog') return json({ error: 'NOT_FOUND' }, 404);
     if (!['GET', 'PUT'].includes(request.method)) return json({ error: 'METHOD_NOT_ALLOWED' }, 405, { Allow: 'GET, PUT' });
     if (!configured) return json({ error: 'NOT_CONFIGURED', message: 'O catálogo compartilhado ainda precisa ser configurado.' }, 503);
@@ -109,6 +144,7 @@ export function createCatalogHandler({ env, now = Date.now }) {
       const raw = await readBody(request);
       let body;
       try { body = JSON.parse(raw); } catch { return json({ message: 'Conteúdo inválido.' }, 400); }
+      if (body?.schemaVersion !== 2) return json({ error: 'CLIENT_UPDATE_REQUIRED', message: 'Atualize a página para sincronizar também os relatórios e as conciliações de Ads. A cópia local foi mantida.' }, 426);
       if (!Number.isSafeInteger(body?.revision) || body.revision < 0 || !/^[a-f0-9-]{36}$/.test(body.mutationId ?? '')) fail('Versão de gravação inválida.');
       validateCatalog(body.data, sellerId);
       const content = JSON.stringify(body.data), digest = createHash('sha256').update(content).digest('hex');

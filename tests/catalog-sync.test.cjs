@@ -4,6 +4,7 @@ const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
 const { randomUUID } = require('node:crypto');
+const { report, reconciliation, account } = require('./support/ads-fixtures.cjs');
 const source = fs.readFileSync(path.join(__dirname, '../src/catalog-sync.js'), 'utf8');
 const app = fs.readFileSync(path.join(__dirname, '../src/app.js'), 'utf8');
 const core = app.slice(0, app.indexOf('let state=defaults()'));
@@ -19,6 +20,7 @@ function server() {
    return Response.json({ revision: s.revision, data: clone(s.data) });
   }
   const body = JSON.parse(options.body);
+  assert.equal(body.schemaVersion, 2);
   if (body.revision !== s.revision) return Response.json({ message: 'Conflito' }, { status: 409 });
   s.data = clone(body.data); s.revision++; s.writes++;
   const response = Response.json({ revision: s.revision });
@@ -112,4 +114,60 @@ test('cache local ausente ou corrompido não é enviado como exclusão do catál
   await b.api.connect(connection);
   assert.equal(b.data().products[0].id, 'preservado'); assert.equal(s.writes, writes);
  }
+});
+
+test('relatórios de períodos e anúncios diferentes são combinados sem mudar métricas ou filtros locais', async () => {
+ const s=server(),a=client(s),b=client(s);await a.api.connect(connection);await b.api.connect(connection);
+ const first=report(),second=report({baseDate:'2026-11-16',itemId:'MLB9876543210'});
+ a.context.state.adsHistory=clone(first);await a.api.sync();
+ b.context.state.adsHistory=clone(second);await b.api.sync();await a.api.sync();
+ assert.equal(s.data.adsReports.length,2);assert.equal(a.data().adsReports.length,2);
+ assert.equal(a.data().adsHistory.baseDate,'2026-11-15');assert.equal(b.data().adsHistory.baseDate,'2026-11-16');
+ assert.deepEqual(s.data.adsReports.find(r=>r.baseDate===first.baseDate),first);
+ const next=report({itemId:'MLB2222222222',fetchedAt:'2026-11-24T14:00:00.000Z'});
+ b.context.state.adsHistory=clone(next);await b.api.sync();await a.api.sync();
+ const combined=s.data.adsReports.find(r=>r.baseDate===first.baseDate);
+ assert.equal(combined.items.length,2);assert.deepEqual(combined.items.find(r=>r.itemId===first.items[0].itemId),first.items[0]);
+});
+
+test('resumos e conciliações migram de dados antigos e chegam a um novo funcionário sem exportação',async()=>{
+ const s=server(),a=client(s);await a.api.connect(connection);
+ const h=report(),r=reconciliation(),summary=account();
+ a.context.state.adsHistory=clone(h);a.context.state.adsAccount=clone(summary);a.context.state.adsReconciliations=[clone(r)];
+ await a.api.sync();const b=client(s);await b.api.connect(connection);
+ assert.deepEqual(b.data().adsReconciliations,[r]);assert.deepEqual(b.data().adsAccount,summary);assert.deepEqual(b.data().adsHistory,h);
+ assert.equal(b.data().adsReports.length,1);assert.equal(b.data().adsAccounts.length,1);
+ b.context.state.adsReports=[];b.context.state.adsAccounts=[];b.context.state.adsReconciliations=[];delete b.context.state.adsHistory;delete b.context.state.adsAccount;
+ await b.api.sync();assert.equal(s.data.adsReconciliations.length,1);assert.equal(s.data.adsReports.length,1);
+});
+
+test('conciliações independentes são combinadas e divergência no mesmo anúncio/período pede revisão',async()=>{
+ const s=server(),a=client(s),b=client(s);await a.api.connect(connection);await b.api.connect(connection);
+ const h=report(),r=reconciliation(),other=reconciliation(h.items[0].periods[1]);
+ a.context.state.adsReconciliations=[clone(r)];await a.api.sync();b.context.state.adsReconciliations=[clone(other)];await b.api.sync();await a.api.sync();
+ assert.equal(s.data.adsReconciliations.length,2);
+ a.context.state.adsReconciliations.find(x=>x.dateFrom===r.dateFrom).goods=21;await a.api.sync();
+ b.context.state.adsReconciliations.find(x=>x.dateFrom===r.dateFrom).goods=22;await b.api.sync();
+ assert.equal(s.data.adsReconciliations.find(x=>x.dateFrom===r.dateFrom).goods,21);
+ assert.equal(b.data().adsReconciliations.find(x=>x.dateFrom===r.dateFrom).goods,22);
+ b.get('cloud-review').onclick();assert.match(b.get('cloud-review-options').innerHTML,/Conciliação MLB1234567890/);
+ assert.match(b.get('cloud-review-options').innerHTML,/produtos R\$/);
+});
+
+test('conciliação em edição não é substituída e dados de outra conta ficam apenas no navegador',async()=>{
+ const s=server(),a=client(s),b=client(s);await a.api.connect(connection);await b.api.connect(connection);
+ b.context.state.adsHistory=report({sellerId:999});
+ a.context.state.adsReconciliations=[reconciliation()];await a.api.sync();
+ b.get('ads-reconcile-dialog').open=true;await b.api.sync();assert.equal(b.data().adsReconciliations?.length??0,0);
+ b.get('ads-reconcile-dialog').open=false;await b.api.sync();
+ assert.equal(b.data().adsReconciliations.length,1);assert.ok(b.data().adsReports.some(r=>r.sellerId===999));
+ assert.ok(s.data.adsReports.every(r=>r.sellerId===123));
+});
+
+test('backup v18 preserva vários relatórios e migra v17 sem inventar conciliações ou métricas',()=>{
+ const a=client(server()),h=report(),next=report({baseDate:'2026-11-16'});a.context.state.adsHistory=h;a.context.state.adsReports=[h,next];a.context.state.adsAccounts=[account()];a.context.state.adsReconciliations=[reconciliation()];
+ const backup=a.run('buildBackup(state)'),restored=a.run('parseBackup('+JSON.stringify(backup)+')');
+ assert.equal(JSON.parse(backup).version,18);assert.equal(restored.adsReports.length,2);assert.equal(restored.adsReconciliations[0].goods,20);
+ const legacy={format:'margem-backup',version:17,data:{products:[],kits:[],fees:a.data().fees,adsHistory:h}};
+ a.context.oldBackup=JSON.stringify(legacy);const upgraded=a.run('parseBackup(oldBackup)');assert.equal(upgraded.adsReports.length,1);assert.equal(upgraded.adsReconciliations,undefined);
 });

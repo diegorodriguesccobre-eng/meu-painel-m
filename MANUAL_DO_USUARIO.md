@@ -35,7 +35,7 @@ Para usar a versão em arquivo no computador, abra `index.html` com duplo clique
 
 ### Onde ficam os dados
 
-O indicador **Salvo neste navegador** confirma a gravação local. Com o catálogo compartilhado configurado, produtos, kits e suas configurações também ficam na nuvem. Comparativos por períodos, resumo do anunciante e conciliações da Gestão de Ads continuam locais nesta etapa.
+O indicador **Salvo neste navegador** confirma a gravação local. Com o catálogo compartilhado configurado, produtos, kits e suas configurações também ficam na nuvem. Comparativos por períodos, resumos do anunciante e conciliações da Gestão de Ads também são compartilhados com a conta autorizada da empresa.
 
 | Situação | O que acontece com o catálogo |
 |---|---|
@@ -53,7 +53,7 @@ Nos outros aparelhos, conecte a mesma conta autorizada. O catálogo passa a carr
 
 Alterações em produtos diferentes são combinadas. Quando dois usuários editam o mesmo cadastro de formas diferentes, use **Revisar alterações** e escolha a versão que deve permanecer. Confira kits e componentes antes de resolver exclusões. O painel evita aplicar atualizações externas durante uma edição em andamento.
 
-O acesso à nuvem depende da sessão da conta Mercado Livre permitida, sem uma senha nova do painel. Desconectar mantém a cópia local. Relatórios e conciliações de Ads não são sincronizados nesta etapa. Enquanto aparecer **aguardando configuração**, os cadastros continuam locais.
+O acesso à nuvem depende da sessão da conta Mercado Livre permitida, sem uma senha nova do painel. Desconectar mantém a cópia local. Relatórios e conciliações de Ads também são sincronizados. Os filtros de visualização continuam individuais. Enquanto aparecer **aguardando configuração**, os cadastros continuam locais.
 
 O backup JSON permanece como cópia independente. No modo local, ele também permite transferir o catálogo entre aparelhos. **Restaurar um backup com compartilhamento ativo pode substituir os cadastros da empresa após a sincronização**; confira o arquivo e combine essa operação com a equipe.
 
@@ -337,7 +337,7 @@ O backup pode conter informações financeiras da empresa; compartilhe-o apenas 
 4. Confira a quantidade de produtos, kits e o resumo apresentado.
 5. Clique em **Substituir dados e restaurar** para confirmar.
 
-**A restauração substitui o estado local atual.** Com o catálogo compartilhado ativo, a mudança também será sincronizada com a empresa e passará pela conferência de versão. A restauração não mescla cadastros. Arquivos inválidos não são aplicados. Backups antigos compatíveis são aceitos, mas não recebem métricas históricas que nunca foram registradas. Esta versão gera backup v17.
+**A restauração substitui o estado local atual.** Com o catálogo compartilhado ativo, a mudança também será sincronizada com a empresa e passará pela conferência de versão. A restauração não mescla cadastros. Arquivos inválidos não são aplicados. Backups antigos compatíveis são aceitos, mas não recebem métricas históricas que nunca foram registradas. Esta versão gera backup v18 e aceita backups das versões anteriores.
 
 Um CSV exportado não é um backup completo e não restaura todas as configurações. O próprio arquivo `index.html` também não contém os produtos salvos pelo seu navegador.
 
@@ -398,7 +398,17 @@ O cenário multiplica o orçamento pelos dias e projeta receita, cliques e unida
 | Quinzenal | Quatro períodos de 14 dias; total de 56 dias. |
 | Mensal | Três períodos de 30 dias; total de 90 dias. Não são necessariamente meses do calendário. |
 
-O painel aceita dias encerrados dentro dos últimos 90 dias disponíveis. Por exemplo, data-base 15/11/2026 na visão semanal corresponde a 19–25/10, 26/10–01/11, 02–08/11 e 09–15/11. Quando esse intervalo sair da janela disponível, não poderá ser consultado novamente por esse filtro.
+O painel consulta a API para dias encerrados dentro dos últimos 90 dias disponíveis. Por exemplo, data-base 15/11/2026 na visão semanal corresponde a 19–25/10, 26/10–01/11, 02–08/11 e 09–15/11. Quando esse intervalo sair da janela disponível, não poderá ser atualizado pela API, mas o relatório já salvo continuará disponível para leitura.
+
+### Relatórios e conciliações compartilhados
+
+Com o catálogo da empresa ativo, os comparativos por período, resumos do anunciante e conciliações também são guardados na nuvem. Dados existentes da conta autorizada são incorporados ao sincronizar; não é preciso exportar arquivos. Os dados de outras contas que estiverem no navegador permanecem locais.
+
+Use **Relatórios salvos**, no comparativo, para abrir um período já arquivado. A seleção lê os valores guardados, sem consultar novamente o Mercado Livre. Uma consulta de outro período não apaga esse relatório. A data da consulta continua visível; um relatório salvo não significa que os números foram atualizados hoje. Cada funcionário mantém seus próprios filtros de visualização.
+
+Conciliações de anúncios ou períodos diferentes são combinadas. Se dois funcionários alterarem a mesma conciliação com valores diferentes, o painel pede **Revisar alterações**. Confira receita, despesas, escopo e fonte antes de escolher a versão. Compartilhar uma conciliação não elimina a necessidade de rever os valores quando a evidência de Ads mudar.
+
+Os backups v18 incluem os relatórios arquivados, resumos e conciliações. Backups anteriores continuam aceitos e não apagam os arquivos de Ads já compartilhados. Se uma aba antiga pedir atualização, recarregue a página para usar a sincronização atual.
 
 SKU usa o identificador oficial disponibilizado pelo Mercado Livre. Se a API não informar SKU, use nome ou MLB. Consultas podem demorar conforme o número de anúncios e pedidos. Se forem interrompidas, resultados incompletos são identificados; as partes ausentes não viram zero.
 

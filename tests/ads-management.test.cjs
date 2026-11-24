@@ -42,9 +42,9 @@ test('cenários usam CPC e receitas agregadas; azul é monotônico pelo lucro, n
  assert.equal(api.adsProjection(p.mlAds,-1,30),null);assert.equal(api.adsProjection(p.mlAds,10,0),null);
  assert.ok(api.adsBlueStrength(1000)>api.adsBlueStrength(100));assert.ok(api.adsBlueStrength(100)>api.adsBlueStrength(0));assert.equal(api.adsBlueStrength(-500),api.adsBlueStrength(null));
 });
-test('backup v17 preserva conciliação e separação de receitas; aceita v15 sem completar dados ausentes',()=>{
+test('backup v18 preserva conciliação e separação de receitas; aceita v15 sem completar dados ausentes',()=>{
  const p=product(),r=record(p),data={products:[p],kits:[],fees:api.defaults().fees,adsReconciliations:[r]};
- assert.ok(api.validState(data));const text=api.buildBackup(data),restored=api.parseBackup(text);assert.equal(JSON.parse(text).version,17);assert.deepEqual(clone(restored),clone(data));
+ assert.ok(api.validState(data));const text=api.buildBackup(data),restored=api.parseBackup(text);assert.equal(JSON.parse(text).version,18);assert.deepEqual(clone(restored),clone(data));
  const old=clone(data);delete old.adsReconciliations;delete old.products[0].mlAds.metricsVersion;delete old.products[0].mlAds.breakdownComplete;for(const k of ['directRevenue','indirectRevenue','directUnits','indirectUnits','directSales','indirectSales'])delete old.products[0].mlAds[k];
  const legacy=api.parseBackup(JSON.stringify({format:'margem-backup',version:15,data:old}));assert.equal(legacy.products[0].mlAds.directRevenue,undefined);assert.equal(api.estimateProductAds(legacy.products[0],legacy.fees),null);
  const invalid={...data,adsReconciliations:[record(p,{goods:-1})]};assert.equal(api.validState(invalid),false);
@@ -67,7 +67,7 @@ test('métricas detalhadas não inventam separação quando ela está ausente e 
 test('resumo do anunciante também é preservado no backup e validado contra mistura de receitas',()=>{
  const p=product(),a={source:'mercado-livre-product-ads-account-v2',metricsVersion:2,sellerId:123,advertiserId:88,advertiserName:'Teste',currency:'BRL',...period,fetchedAt:new Date(now).toISOString(),campaignCount:3,cost:100,revenue:1000,clicks:200,breakdownComplete:true,directRevenue:800,indirectRevenue:200,directUnits:8,indirectUnits:2,directSales:7,indirectSales:2};
  const data={products:[p],kits:[],fees:api.defaults().fees,adsAccount:a,adsReconciliations:[record(p)]};
- assert.deepEqual(clone(api.parseBackup(api.buildBackup(data))),clone(data));
+ assert.deepEqual(clone(api.parseBackup(api.buildBackup(data))),clone({...data,adsAccounts:[a]}));
  assert.equal(api.validState({...data,adsAccount:{...a,indirectRevenue:999}}),false);
  const different=api.adsManagementData(data,999,now);assert.equal(different.account,null);assert.equal(different.totals.cost,0);
 });

@@ -5,6 +5,7 @@ const { createCipheriv, randomBytes, randomUUID } = require('node:crypto');
 const fs = require('node:fs');
 const path = require('node:path');
 const load = import('../cloudflare/app.mjs');
+const { report, reconciliation, account } = require('./support/ads-fixtures.cjs');
 const origin = 'https://painel.example';
 
 function database(t) {
@@ -48,7 +49,7 @@ const catalog = () => ({ products: [product()], kits: [], fees });
 function request(method = 'GET', body, options = {}) {
  return new Request(origin + '/api/catalog', { method, headers: { Cookie: session(), ...(method === 'PUT' ? { Origin: origin, 'X-Conduz-Action': 'catalog', 'Content-Type': 'application/json' } : {}), ...options }, ...(body ? { body: JSON.stringify(body) } : {}) });
 }
-const write = (data = catalog(), revision = 0, mutationId = randomUUID()) => ({ revision, mutationId, data });
+const write = (data = catalog(), revision = 0, mutationId = randomUUID()) => ({ schemaVersion: 2, revision, mutationId, data });
 
 test('catálogo reutiliza sessão criptografada, exige conta da empresa e bloqueia origem externa', async t => {
  const { createWorker } = await load, worker = createWorker(), { env } = setup(t);
@@ -109,4 +110,23 @@ test('validação recusa kits órfãos, custos inválidos, conta de outro vended
  for (const data of invalids) assert.equal((await worker.fetch(request('PUT', write(data)), env)).status, 400);
  assert.equal((await worker.fetch(request('PUT', write(), { 'Content-Length': String(9 * 1024 * 1024) }), env)).status, 413);
  assert.equal((await (await worker.fetch(request(), env)).json()).revision, 0);
+});
+
+test('Ads completo é preservado e versões antigas da página não podem apagar relatórios',async t=>{
+ const {createWorker}=await load,worker=createWorker(),{env}=setup(t),data=catalog();
+ data.adsReports=[report()];data.adsAccounts=[account()];data.adsReconciliations=[reconciliation()];
+ assert.equal((await worker.fetch(request('PUT',write(data)),env)).status,200);
+ assert.deepEqual((await (await worker.fetch(request(),env)).json()).data,data);
+ const old=write(catalog(),1);delete old.schemaVersion;
+ assert.equal((await worker.fetch(request('PUT',old),env)).status,426);
+ assert.equal((await (await worker.fetch(request(),env)).json()).data.adsReconciliations.length,1);
+});
+
+test('recusa outra conta nos relatórios, nas métricas internas e nas conciliações',async t=>{
+ const {createWorker}=await load,worker=createWorker(),{env}=setup(t);
+ const cases=[{adsReports:[report({sellerId:999})]},{adsAccounts:[account({sellerId:999})]},{adsReconciliations:[reconciliation(undefined,{sellerId:999})]}];
+ const nested=report();nested.items[0].periods[0].sellerId=999;cases.push({adsReports:[nested]});
+ const duplicate=reconciliation();cases.push({adsReconciliations:[duplicate,duplicate]});
+ for(const extra of cases)assert.equal((await worker.fetch(request('PUT',write({...catalog(),...extra})),env)).status,400);
+ assert.equal((await (await worker.fetch(request(),env)).json()).revision,0);
 });

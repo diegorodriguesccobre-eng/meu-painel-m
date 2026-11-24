@@ -323,8 +323,34 @@ const ADS_RECONCILE_FIELDS=['revenue','goods','fees','tax','shipping','other'];
 function adsEvidenceKey(a){return JSON.stringify(['sellerId','itemId','dateFrom','dateTo','cost','revenue',...ADS_DETAIL_FIELDS].map(k=>a[k]??null));}
 function validAdsReconciliation(r){return r&&r.source==='manual-reconciliation'&&/^MLB\d{5,15}$/.test(r.itemId)&&Number.isSafeInteger(r.sellerId)&&r.sellerId>0&&validAdsDates(r,1,90)&&['direct','attributed'].includes(r.scope)&&typeof r.basis==='string'&&r.basis.length<=2000&&typeof r.notes==='string'&&r.notes.trim().length>=3&&r.notes.length<=600&&typeof r.savedAt==='string'&&Number.isFinite(Date.parse(r.savedAt))&&ADS_RECONCILE_FIELDS.every(k=>Number.isFinite(r[k])&&r[k]>=0&&r[k]<=1e12&&Math.abs(r[k]*100-Math.round(r[k]*100))<.001);}
 function copyAdsReconciliation(r){return Object.fromEntries(['source','itemId','sellerId','dateFrom','dateTo','scope','basis','notes','savedAt',...ADS_RECONCILE_FIELDS].map(k=>[k,r[k]]));}
+const adsReportKey=r=>[r.sellerId,r.baseDate,r.bucketDays].join(':');
+const adsAccountKey=r=>[r.sellerId,r.advertiserId,r.dateFrom,r.dateTo].join(':');
+const adsReconciliationKey=r=>[r.sellerId,r.itemId,r.dateFrom,r.dateTo].join(':');
+function mergeAdsReportList(reports){
+ const result=new Map();
+ for(const report of reports){
+  const key=adsReportKey(report),old=result.get(key);
+  if(!old){result.set(key,copyAdsHistory(report));continue;}
+  const latest=Date.parse(report.fetchedAt)>=Date.parse(old.fetchedAt)?report:old,items=new Map(old.items.map(row=>[row.itemId,row]));
+  for(const row of report.items){const previous=items.get(row.itemId);if(!previous||Date.parse(row.total.fetchedAt)>=Date.parse(previous.total.fetchedAt))items.set(row.itemId,row);}
+  result.set(key,copyAdsHistory({...latest,items:[...items.values()]}));
+ }
+ return [...result.values()];
+}
+function mergeAdsAccountList(accounts){
+ const result=new Map();
+ for(const a of accounts){const key=adsAccountKey(a),old=result.get(key);if(!old||Date.parse(a.fetchedAt)>=Date.parse(old.fetchedAt))result.set(key,copyAdsAccount(a));}
+ return [...result.values()];
+}
+function collectAdsArchives(data){
+ const reports=mergeAdsReportList([...(data.adsReports??[]),...(data.adsHistory?[data.adsHistory]:[])]),accounts=mergeAdsAccountList([...(data.adsAccounts??[]),...(data.adsAccount?[data.adsAccount]:[])]);
+ return {...(reports.length||data.adsReports!==undefined?{adsReports:reports}:{}),...(accounts.length||data.adsAccounts!==undefined?{adsAccounts:accounts}:{})};
+}
 function validAdsManagement(s){
  if(s.adsAccount!==undefined&&!validAdsAccount(s.adsAccount))return false;if(s.adsHistory!==undefined&&!validAdsHistory(s.adsHistory))return false;
+ for(const [field,validate,key] of [['adsReports',validAdsHistory,adsReportKey],['adsAccounts',validAdsAccount,adsAccountKey]]){
+  const values=s[field];if(values!==undefined&&(!Array.isArray(values)||!values.every(validate)||new Set(values.map(key)).size!==values.length))return false;
+ }
  if(s.adsReconciliations===undefined)return true;
  if(!Array.isArray(s.adsReconciliations)||s.adsReconciliations.length>5000||!s.adsReconciliations.every(validAdsReconciliation))return false;
  const keys=s.adsReconciliations.map(r=>[r.sellerId,r.itemId,r.dateFrom,r.dateTo].join(':'));return new Set(keys).size===keys.length;
@@ -441,13 +467,13 @@ function backupData(data){
   return {...Object.fromEntries(['id','name','category','cost','weight','margin','extra','mlShipping'].map(k=>[k,k==='mlShipping'?(p[k]??0):p[k]])),...copyAds(p),...(p.mlAds?{mlAds:copyProductAds(p.mlAds)}:{}),...optionalOptions(p),...(p.mercadoLivre===undefined?{}:{mercadoLivre:copyMlLink(p.mercadoLivre)}),...(p.mlPricing===undefined?{}:{mlPricing:copyOfficialPricing(p.mlPricing)}),...(p.feeSnapshot===undefined?{}:{feeSnapshot:copyFees(p.feeSnapshot)})};
  });
  const fees=Object.fromEntries(Object.keys(MARKETS).map(k=>[k,Object.fromEntries(['commission','fixed','tax',...(k==='ml'?['premiumCommission']:['easyReturnFee','officialEventRate','easyReturnEnabled','officialEventEnabled','policyId'])].filter(f=>data.fees[k][f]!==undefined).map(f=>[f,data.fees[k][f]]))]));
- return {...(data.adsHistory?{adsHistory:copyAdsHistory(data.adsHistory)}:{}),...(data.adsAccount?{adsAccount:copyAdsAccount(data.adsAccount)}:{}),...(data.adsReconciliations?{adsReconciliations:data.adsReconciliations.map(copyAdsReconciliation)}:{}),products,fees,kits:(data.kits??[]).map(k=>({id:k.id,name:k.name,margin:k.margin,extra:k.extra,mlShipping:k.mlShipping,...copyAds(k),...(k.mlContext?{mlContext:copyKitContext(k.mlContext)}:{}),...(k.mlPricing?{mlPricing:copyOfficialPricing(k.mlPricing)}:{}),...optionalOptions(k),...(k.feeSnapshot===undefined?{}:{feeSnapshot:copyFees(k.feeSnapshot)}),items:k.items.map(i=>({productId:i.productId,quantity:i.quantity}))}))};
+ return {...collectAdsArchives(data),...(data.adsHistory?{adsHistory:copyAdsHistory(data.adsHistory)}:{}),...(data.adsAccount?{adsAccount:copyAdsAccount(data.adsAccount)}:{}),...(data.adsReconciliations?{adsReconciliations:data.adsReconciliations.map(copyAdsReconciliation)}:{}),products,fees,kits:(data.kits??[]).map(k=>({id:k.id,name:k.name,margin:k.margin,extra:k.extra,mlShipping:k.mlShipping,...copyAds(k),...(k.mlContext?{mlContext:copyKitContext(k.mlContext)}:{}),...(k.mlPricing?{mlPricing:copyOfficialPricing(k.mlPricing)}:{}),...optionalOptions(k),...(k.feeSnapshot===undefined?{}:{feeSnapshot:copyFees(k.feeSnapshot)}),items:k.items.map(i=>({productId:i.productId,quantity:i.quantity}))}))};
 }
-function buildBackup(data){return JSON.stringify({format:'margem-backup',version:17,createdAt:new Date().toISOString(),data:backupData(data)},null,2);}
+function buildBackup(data){return JSON.stringify({format:'margem-backup',version:18,createdAt:new Date().toISOString(),data:backupData(data)},null,2);}
 function parseBackup(text){
  if(text.length>20*1024*1024)throw Error('O backup deve ter no máximo 20 MB.');
  let backup;try{backup=JSON.parse(text.replace(/^\uFEFF/,''));}catch{throw Error('Não foi possível ler o JSON. Selecione um arquivo gerado por “Baixar backup”.');}
- if(!backup||backup.format!=='margem-backup'||![1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17].includes(backup.version))throw Error('Formato ou versão de backup incompatível. Use um arquivo gerado por este painel.');
+ if(!backup||backup.format!=='margem-backup'||![1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18].includes(backup.version))throw Error('Formato ou versão de backup incompatível. Use um arquivo gerado por este painel.');
  return backupData(backup.data);
 }
 let state=defaults(),storageProblem='',feesMigrated=false;
@@ -484,7 +510,7 @@ function renderAdsRoas(){
 function compactStatusTitles(){for(const id of ['ml-product-status','ml-pricing-status','ml-shipping-status','shipping-help','product-shopee-policy-status']){const node=$(id);if(node)node.title=node.textContent;}}
 
 function toast(message){$('toast').textContent=message;$('toast').classList.remove('hidden');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.add('hidden'),4500);}
-function persist(){try{localStorage.setItem(KEY,JSON.stringify(state));$('save-status').textContent='● Salvo neste navegador';globalThis.ConduzCatalog?.onLocalChange();return true;}catch{$('save-status').textContent='⚠ Dados só nesta sessão';toast('Não foi possível salvar. Baixe um backup antes de fechar.');globalThis.ConduzCatalog?.onLocalChange();return false;}}
+function persist(){try{state={...state,...collectAdsArchives(state)};localStorage.setItem(KEY,JSON.stringify(state));$('save-status').textContent='● Salvo neste navegador';globalThis.ConduzCatalog?.onLocalChange();return true;}catch{$('save-status').textContent='⚠ Dados só nesta sessão';toast('Não foi possível salvar. Baixe um backup antes de fechar.');globalThis.ConduzCatalog?.onLocalChange();return false;}}
 function visibleProducts(){const query=$('search').value.trim().toLocaleLowerCase('pt-BR');return state.products.filter(p=>(p.name+' '+p.category+' '+(p.mercadoLivre?.itemId??'')).toLocaleLowerCase('pt-BR').includes(query)).sort((a,b)=>{const value=p=>SCENARIOS[sort.key]?(saleResult(p,state.fees[marketOf(sort.key)],sort.key)?.price??Infinity):p[sort.key];const av=value(a),bv=value(b);return sort.direction*(typeof av==='string'?av.localeCompare(bv,'pt-BR'):av===bv?0:av>bv?1:-1);});}
 function render(){
  const products=visibleProducts();$('count').textContent=state.products.length;const averages=state.products.map(p=>averageProfit(p,state.fees)).filter(Number.isFinite);$('average').textContent=averages.length?money(averages.reduce((sum,avg)=>sum+avg,0)/averages.length):'—';$('average-help').textContent=state.products.length?'Cálculo completo: '+averages.length+' de '+state.products.length+' produtos':'Estimativa por venda nos três canais';const healthCounts={low:0,risk:0,safe:0,pending:0};for(const p of state.products)healthCounts[pricingHealth(p,state.fees).level]++;$('warning-count').textContent=healthCounts.low;$('risk-count').textContent=healthCounts.risk;$('safe-count').textContent=healthCounts.safe;$('pending-count').textContent=healthCounts.pending?healthCounts.pending+' para recalcular':'';
@@ -855,12 +881,18 @@ function adsSetLayout(layout,load=true){
  renderAdsDashboard();if(load&&mlConnection.connected){if(adsHistoryUi.layout==='periods')refreshAdsHistory();else refreshAdsManagement();}
 }
 function historyQuery(){return {baseDate:$('ads-history-base').value,bucketDays:Number($('ads-history-bucket').value||7)};}
+function currentAdsHistory(){
+ const q=historyQuery(),seller=mlConnection?.account?.id;
+ return [...(state.adsReports??[]),...(state.adsHistory?[state.adsHistory]:[])].find(h=>h.baseDate===q.baseDate&&h.bucketDays===q.bucketDays&&(!seller||h.sellerId===seller)&&validAdsHistory(h))??null;
+}
 function renderAdsHistory(){
  if(!adsHistoryUi)return;
  const saved=state.adsHistory;if(!adsHistoryUi.initialized){$('ads-history-bucket').value=String(saved?.bucketDays??7);adsHistoryUi.initialized=true;}if(!$('ads-history-base').value)$('ads-history-base').value=saved?.baseDate??adsCurrentPeriod().dateTo;
  const q=historyQuery(),ranges=adsHistoryRanges(q.baseDate,q.bucketDays),metric=$('ads-history-metric').value||'cost',color=$('ads-history-color').value||'estimate';
  const latest=adsCurrentPeriod().dateTo,count=q.bucketDays===30?3:4,span=count*q.bucketDays;$('ads-history-base').max=latest;$('ads-history-base').min=new Date(Date.parse(latest)-(90-span)*86400000).toISOString().slice(0,10);
- const matching=validAdsHistory(saved)&&saved.baseDate===q.baseDate&&saved.bucketDays===q.bucketDays&&(!mlConnection.account||saved.sellerId===mlConnection.account.id),h=matching?saved:null;
+ const h=currentAdsHistory(),savedReports=(state.adsReports??[]).filter(r=>!mlConnection.account||r.sellerId===mlConnection.account.id).sort((a,b)=>b.baseDate.localeCompare(a.baseDate)||a.bucketDays-b.bucketDays);
+ $('ads-saved-report').innerHTML='<option value="">Selecione um relatório salvo</option>'+savedReports.map(r=>'<option value="'+escapeHTML(adsReportKey(r))+'">'+adsDate(r.dateFrom)+' a '+adsDate(r.dateTo)+' · '+r.bucketDays+' dias por período · '+r.items.length+' anúncio(s)</option>').join('');
+ $('ads-saved-report').disabled=!savedReports.length;$('ads-saved-report').value=h?adsReportKey(h):'';
  const needle=$('ads-history-query').value.trim().toLocaleLowerCase('pt-BR'),type=$('ads-history-search-type').value||'all',seen=new Set(),rows=[];
  for(const p of state.products){const link=p.mercadoLivre;if(!link||mlConnection.account&&link.sellerId!==mlConnection.account.id)continue;const key=link.sellerId+':'+link.itemId;if(seen.has(key))continue;seen.add(key);const history=h?.items.find(row=>row.itemId===link.itemId),skus=history?.total.skus??link.skus??[];const haystack=type==='sku'?skus.join(' '):type==='id'?link.itemId:type==='name'?p.name:[p.name,link.itemId,...skus].join(' ');if(needle&&!haystack.toLocaleLowerCase('pt-BR').includes(needle))continue;rows.push({product:p,history});}
  rows.sort((a,b)=>{const x=adsHistoryMetric(a.history?.total,a.product,state.fees,state.adsReconciliations??[],metric,a.history),y=adsHistoryMetric(b.history?.total,b.product,state.fees,state.adsReconciliations??[],metric,b.history);return x===null?y===null?a.product.name.localeCompare(b.product.name,'pt-BR'):1:y===null?-1:y-x;});
@@ -908,10 +940,12 @@ function adsHistoryCell(p,a,previous,index,metric,color,max,history){
 async function refreshAdsHistory(force=false){
  if(adsHistoryUi.busy)return;if(!mlConnection.connected){await connectMercadoLivre();return;}
  const q=historyQuery(),ranges=adsHistoryRanges(q.baseDate,q.bucketDays);if(!ranges){$('ads-history-status').textContent='Escolha filtros válidos.';return;}
+ const archived=currentAdsHistory(),latestAvailable=adsCurrentPeriod().dateTo;
+ if(!force&&archived&&ranges[0].dateFrom<new Date(Date.parse(latestAvailable)-89*86400000).toISOString().slice(0,10)){renderAdsHistory();$('ads-history-status').textContent='Relatório salvo disponível para leitura. Novas consultas à API aceitam apenas os últimos 90 dias.';return;}
  const latest=adsCurrentPeriod().dateTo;if(q.baseDate>latest||ranges[0].dateFrom<new Date(Date.parse(latest)-89*86400000).toISOString().slice(0,10)){$('ads-history-status').textContent='Use somente dias encerrados dos últimos 90 dias disponíveis.';return;}
  const seller=mlConnection.account.id,epoch=++adsHistoryUi.epoch,connectionEpoch=mlAdsEpoch;
  const ids=[...new Set(state.products.filter(p=>p.mercadoLivre?.sellerId===seller).map(p=>p.mercadoLivre.itemId))];
- const old=state.adsHistory,matches=validAdsHistory(old)&&old.sellerId===seller&&old.baseDate===q.baseDate&&old.bucketDays===q.bucketDays;
+ const old=currentAdsHistory(),matches=validAdsHistory(old)&&old.sellerId===seller&&old.baseDate===q.baseDate&&old.bucketDays===q.bucketDays;
  if(!force&&matches&&ids.every(id=>old.items.some(row=>row.itemId===id&&Date.now()-Date.parse(row.total.fetchedAt)<600000))){renderAdsHistory();$('ads-history-status').textContent='Comparativo salvo em '+new Date(old.fetchedAt).toLocaleString('pt-BR')+'. Use Filtrar para atualizar.';return;}
  if(!ids.length){renderAdsHistory();$('ads-history-status').textContent='Nenhum anúncio cadastrado está vinculado à conta conectada.';return;}
  const active=()=>mlConnection.connected&&mlConnection.account?.id===seller&&mlAdsEpoch===connectionEpoch&&adsHistoryUi.epoch===epoch&&JSON.stringify(historyQuery())===JSON.stringify(q);
@@ -940,9 +974,13 @@ async function refreshAdsHistory(force=false){
 }
 $('ads-layout-periods').onclick=()=>adsSetLayout('periods');$('ads-layout-cards').onclick=()=>adsSetLayout('cards');
 $('ads-history-filter').onsubmit=e=>{e.preventDefault();refreshAdsHistory(true);};
+$('ads-saved-report').onchange=e=>{
+ const report=(state.adsReports??[]).find(r=>adsReportKey(r)===e.target.value&&(!mlConnection.account||r.sellerId===mlConnection.account.id));if(!report)return;
+ adsHistoryUi.epoch++;adsHistoryUi.initialized=true;state.adsHistory=copyAdsHistory(report);$('ads-history-base').value=report.baseDate;$('ads-history-bucket').value=String(report.bucketDays);persist();renderAdsHistory();$('ads-history-status').textContent='Relatório salvo carregado. Última consulta: '+new Date(report.fetchedAt).toLocaleString('pt-BR')+'. Novas consultas à API continuam limitadas aos últimos 90 dias.';
+};
 for(const id of ['ads-history-metric','ads-history-color','ads-history-search-type','ads-history-query'])$(id).oninput=()=>renderAdsHistory();
 for(const id of ['ads-history-base','ads-history-bucket'])$(id).onchange=()=>{adsHistoryUi.epoch++;renderAdsHistory();};
-$('ads-history-body').onclick=e=>{const button=e.target.closest('button[data-history-reconcile]');if(!button)return;const p=state.products.find(p=>p.id===button.dataset.historyReconcile),row=state.adsHistory?.items.find(row=>row.itemId===p?.mercadoLivre?.itemId),a=button.dataset.historyIndex==='total'?row?.total:row?.periods[Number(button.dataset.historyIndex)];if(a)openAdsReconciliation(p.id,a);};
+$('ads-history-body').onclick=e=>{const button=e.target.closest('button[data-history-reconcile]');if(!button)return;const p=state.products.find(p=>p.id===button.dataset.historyReconcile),row=currentAdsHistory()?.items.find(row=>row.itemId===p?.mercadoLivre?.itemId),a=button.dataset.historyIndex==='total'?row?.total:row?.periods[Number(button.dataset.historyIndex)];if(a)openAdsReconciliation(p.id,a);};
 $('ads-history-export').onclick=()=>{const rows=adsHistoryUi.rows.filter(row=>row.history);if(!rows.length)return;const text=adsHistoryCsv(rows,adsHistoryUi.ranges,adsHistoryUi.metric,state.fees,state.adsReconciliations??[]),url=URL.createObjectURL(new Blob([text],{type:'text/csv;charset=utf-8;'})),link=document.createElement('a');link.href=url;link.download='ads-comparativo-'+$('ads-history-base').value+'.csv';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);};
 
 function renderAdsDashboard(){
@@ -1019,7 +1057,7 @@ $('ads-daily-budget').oninput=()=>{adsUi.budgetTouched=true;renderAdsDashboard()
 $('ads-products-grid').onclick=e=>{const button=e.target.closest('button[data-ads-reconcile]');if(button)openAdsReconciliation(button.dataset.adsReconcile);};
 $('ads-reconcile-close').onclick=$('ads-reconcile-cancel').onclick=()=>$('ads-reconcile-dialog').close();
 $('ads-reconcile-form').onsubmit=e=>{
- e.preventDefault();const form=e.target,p=state.products.find(p=>p.id===adsUi.reconcileProduct),context=adsUi.reconcileContext,row=state.adsHistory?.items.find(r=>r.itemId===p?.mercadoLivre?.itemId),a=adsUi.reconcileFromHistory?[...(row?.periods??[]),row?.total].find(a=>a?.dateFrom===context?.dateFrom&&a?.dateTo===context?.dateTo):p?.mlAds;
+ e.preventDefault();const form=e.target,p=state.products.find(p=>p.id===adsUi.reconcileProduct),context=adsUi.reconcileContext,row=currentAdsHistory()?.items.find(r=>r.itemId===p?.mercadoLivre?.itemId),a=adsUi.reconcileFromHistory?[...(row?.periods??[]),row?.total].find(a=>a?.dateFrom===context?.dateFrom&&a?.dateTo===context?.dateTo):p?.mlAds;
  if(!p||!a||!validProductAds({...p,mlAds:a})||adsEvidenceKey(a)!==adsUi.reconcileBasis){$('ads-reconcile-error').textContent='Os dados de Ads mudaram. Feche e abra a conciliação para conferir novamente.';return;}
  const r={source:'manual-reconciliation',itemId:a.itemId,sellerId:a.sellerId,dateFrom:a.dateFrom,dateTo:a.dateTo,scope:form.elements.scope.value,basis:adsEvidenceKey(a),notes:form.elements.notes.value.trim(),savedAt:new Date().toISOString(),...Object.fromEntries(ADS_RECONCILE_FIELDS.map(k=>[k,form.elements[k].value===''?NaN:Number(form.elements[k].value)]))};
  if(!form.elements.confirmed.checked||!validAdsReconciliation(r)){$('ads-reconcile-error').textContent='Preencha e confirme todos os valores efetivos, inclusive zero quando conferido, e informe a fonte da conciliação.';return;}

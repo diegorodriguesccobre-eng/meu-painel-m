@@ -246,6 +246,9 @@ fieldset{min-width:0;margin:0}legend{max-width:100%;white-space:normal}.option-q
 .cloud-conflict label{display:flex;gap:8px;align-items:flex-start;margin:10px 0;overflow-wrap:anywhere}
 #cloud-review-dialog{max-width:740px;width:calc(100% - 28px);max-height:90dvh;overflow:auto}
 #cloud-review-dialog .actions{flex-wrap:wrap;gap:8px}
+.ads-history-options{flex-wrap:wrap}
+.ads-saved-report{flex:1;min-width:min(100%,230px);max-width:460px}
+.ads-saved-report select{width:100%;max-width:100%}
 </style>
 </head>
 <body>
@@ -272,7 +275,7 @@ fieldset{min-width:0;margin:0}legend{max-width:100%;white-space:normal}.option-q
 <nav class="ads-layout-tabs" aria-label="Visões da Gestão de Ads"><button id="ads-layout-periods" type="button" aria-pressed="true">Comparativo por períodos</button><button id="ads-layout-cards" type="button" aria-pressed="false">Cartões e projeções</button></nav>
 <section id="ads-history-panel" aria-labelledby="ads-history-title">
  <form id="ads-history-filter" class="ads-history-filters"><label>Data-base<input id="ads-history-base" type="date" required aria-label="Data-base do comparativo"></label><label>Período<select id="ads-history-bucket"><option value="7">Semanal (7 dias)</option><option value="14">Quinzenal (14 dias)</option><option value="30">Mensal (30 dias)</option></select></label><label>Métrica<select id="ads-history-metric"><option value="cost">Investimento em Ads</option><option value="revenue">Receita atribuída a Ads</option><option value="acos">ACOS</option><option value="roas">ROAS</option><option value="tacos">TACOS</option><option value="estimate">Lucro estimado · diretas</option><option value="actual">Lucro apurado · conciliado</option></select></label><label>Pesquisar<select id="ads-history-search-type" aria-label="Tipo de busca no comparativo"><option value="all">Nome, MLB ou SKU</option><option value="sku">SKU</option><option value="id">MLB</option><option value="name">Nome</option></select></label><label class="ads-history-query-label"><span>Produto ou anúncio</span><input id="ads-history-query" type="search" placeholder="Busque nos produtos cadastrados" aria-label="Pesquisar no comparativo de Ads"></label><button class="btn primary" id="ads-history-apply" type="submit">Filtrar</button></form>
- <div class="ads-history-options"><div><h2 id="ads-history-title">Evolução da publicidade</h2><p id="ads-history-caption"></p></div><label>Azul por<select id="ads-history-color"><option value="estimate">Lucro estimado · diretas</option><option value="actual">Lucro apurado · conciliado</option><option value="metric">Métrica selecionada</option></select></label><button class="btn quiet" id="ads-history-export" type="button">Exportar CSV</button></div>
+ <div class="ads-history-options"><div><h2 id="ads-history-title">Evolução da publicidade</h2><p id="ads-history-caption"></p></div><label class="ads-saved-report">Relatórios salvos<select id="ads-saved-report" aria-label="Relatórios de Ads salvos"><option value="">Selecione um relatório salvo</option></select></label><label>Azul por<select id="ads-history-color"><option value="estimate">Lucro estimado · diretas</option><option value="actual">Lucro apurado · conciliado</option><option value="metric">Métrica selecionada</option></select></label><button class="btn quiet" id="ads-history-export" type="button">Exportar CSV</button></div>
  <p id="ads-history-status" class="help" role="status" aria-live="polite"></p><p id="ads-history-legend" class="help"></p>
  <div class="ads-history-scroll" tabindex="0" role="region" aria-label="Comparativo de publicidade por anúncio e período; role horizontalmente em telas pequenas"><table class="ads-history-table" aria-label="Métricas de Ads por período"><thead id="ads-history-head"></thead><tbody id="ads-history-body"></tbody></table></div><div class="ads-history-footer"><span id="ads-history-count"></span><span>Dados recentes podem mudar · atribuição de 14 dias · últimos 90 dias disponíveis</span></div>
  <details class="ads-history-method"><summary>Fórmulas, cores e limites da comparação</summary><p>ACOS = investimento / receita atribuída a Ads × 100. ROAS = receita atribuída a Ads / investimento. TACOS = investimento / faturamento confirmado do próprio anúncio × 100. Consultamos os pedidos pagos pela data de criação da venda em São Paulo, somando o valor dos produtos após os descontos oficiais por item e excluindo cancelamentos e reembolsos confirmados. Cupons já embutidos no preço não são descontados de novo. Não entregues com pagamento confirmado permanecem na receita. A base fica antes das tarifas, impostos e frete. Receita indireta atribuída a outros produtos não entra nesse faturamento. Sem acesso completo às vendas, ou com desconto/reembolso sem valor inequívoco por item, o TACOS fica sem dados suficientes. Esta base não equivale ao repasse líquido do Mercado Pago.</p><p>Os totais somam os valores dos períodos e recalculam as razões. Não são médias de ACOS, ROAS ou TACOS. As setas mostram a direção da variação da métrica entre períodos, sem afirmar que mais investimento representa melhor desempenho.</p><p>Por padrão, o azul acompanha o lucro estimado em reais. Você pode escolher lucro conciliado ou intensidade da métrica selecionada; nesse último modo, azul em investimento significa maior gasto. Células sem dados suficientes permanecem neutras. A escala é própria do painel, sem reproduzir algoritmos internos de outros aplicativos.</p><p>Lucro estimado usa custos e tarifas de referência atuais das vendas diretas. Lucro apurado exige conciliar despesas efetivas no período da célula. Receitas indiretas podem vir de outros produtos. Esses filtros não mudam o ACOS de 30 dias utilizado na precificação nem alteram campanhas.</p><p>Referências públicas: <a href="https://letzee.ai/fim-do-acos-no-mercado-livre-entenda-a-mudanca-para-roas-tabela-de-conversao-acos-x-roas/" target="_blank" rel="noopener noreferrer">Letzee</a> · <a href="https://ajuda.ad-man.io/hc/centro-de-ajuda/articles/1761142786-glossario-de-metricas" target="_blank" rel="noopener noreferrer">AdMan</a> · <a href="https://www.mercadoturbo.com.br/funcionalidades/" target="_blank" rel="noopener noreferrer">Mercado Turbo</a> · <a href="https://developers.mercadolivre.com.br/pt_br/product-ads-para-catalogo-e-user-products-leitura" target="_blank" rel="noopener noreferrer">API Mercado Livre</a>.</p></details>
@@ -317,7 +320,7 @@ Garrafa térmica;30,00;0,350
 Camiseta básica;25,00;0,200</pre><label>Arquivo CSV (até 2 MB e 5.000 produtos)<input id="import-file" type="file" accept=".csv,text/csv" required></label><div class="form-grid"><label>Categoria do lote<input id="import-category" value="Importados" required maxlength="80"></label><label>Margem desejada do lote (%)<input id="import-margin" type="number" min="0" max="99.99" step="0.01" value="20" inputmode="decimal" required></label></div><p class="help">Aceita ponto e vírgula, vírgula ou tabulação. Com vírgula como separador, use ponto decimal ou números entre aspas. Frete e outros custos começam em zero. Colunas adicionais são ignoradas. Nomes repetidos criam novos produtos; o catálogo existente é mantido.</p><p id="import-status" role="status" aria-live="polite"></p><ul id="import-errors" class="error" aria-live="polite"></ul><ul id="import-preview" class="import-preview" aria-label="Prévia dos produtos"></ul><div class="dialog-actions"><button id="import-cancel" class="btn quiet" type="button">Cancelar</button><button id="import-confirm" class="btn primary" type="submit" disabled>Importar produtos</button></div></form></dialog>
 <dialog id="restore-dialog" aria-labelledby="restore-title"><form id="restore-form"><h2 id="restore-title">Restaurar backup</h2><p>Escolha o arquivo JSON baixado pelo painel. Você poderá conferir o conteúdo antes de restaurar.</p><label style="margin-top:18px">Arquivo de backup (JSON, até 20 MB)<input id="restore-file" type="file" accept=".json,application/json" required></label><p id="restore-status" role="status" aria-live="polite" style="margin-top:18px"></p><p id="restore-summary" style="white-space:pre-line"></p><p id="restore-error" class="error" role="alert"></p><p class="help">Ao confirmar, todos os produtos, kits e taxas atuais serão substituídos. Com o catálogo da empresa ativo, a alteração também será sincronizada com os demais funcionários. Para guardar o estado atual, cancele e use “Baixar backup” primeiro.</p><div class="dialog-actions"><button class="btn quiet" id="restore-cancel" type="button">Cancelar</button><button class="btn primary" id="restore-confirm" type="submit" disabled>Substituir dados e restaurar</button></div></form></dialog>
 <dialog id="kit-delete-dialog" aria-labelledby="kit-delete-title"><h2 id="kit-delete-title">Excluir kit?</h2><p id="kit-delete-text"></p><div class="dialog-actions"><button class="btn quiet" id="kit-delete-cancel" type="button">Cancelar</button><button class="btn primary" id="kit-delete-confirm" type="button">Excluir kit</button></div></dialog><dialog id="ml-picker-dialog" aria-labelledby="ml-picker-title"><div class="section-head"><h2 id="ml-picker-title">Meu catálogo no Mercado Livre</h2><button type="button" class="row-action" id="ml-picker-close" aria-label="Fechar catálogo">✕</button></div><label>Buscar em todo o catálogo<input id="ml-picker-search" type="search" placeholder="Nome ou ID MLB"></label><p id="ml-picker-status" role="status" class="help"></p><ul id="ml-picker-items" class="ml-catalog"></ul><div class="dialog-actions"><button class="btn quiet" id="ml-load-more" type="button">Atualizar catálogo</button></div></dialog><dialog id="delete-dialog" aria-labelledby="delete-title"><h2 id="delete-title">Excluir produto?</h2><p id="delete-text"></p><div class="dialog-actions"><button class="btn quiet" id="delete-cancel">Cancelar</button><button class="btn primary" id="delete-confirm">Excluir produto</button></div></dialog><div class="toast hidden" id="toast" role="status"></div>
-<dialog id="cloud-review-dialog" class="compact-dialog"><form id="cloud-review-form"><div class="section-head"><h2>Catálogo compartilhado</h2><button type="button" class="btn quiet" id="cloud-review-close" aria-label="Fechar">Fechar</button></div><p id="cloud-review-intro"></p><div id="cloud-review-options"></div><p class="error" id="cloud-review-error" role="alert"></p><p>Antes de aplicar a escolha, uma cópia anterior será preservada neste navegador. Os relatórios e conciliações de Ads continuam locais.</p><div class="actions"><button type="button" class="btn quiet" id="cloud-use-remote">Usar somente o catálogo da empresa</button><button type="submit" class="btn primary" id="cloud-apply-merge">Combinar e sincronizar</button></div></form></dialog>
+<dialog id="cloud-review-dialog" class="compact-dialog"><form id="cloud-review-form"><div class="section-head"><h2>Catálogo compartilhado</h2><button type="button" class="btn quiet" id="cloud-review-close" aria-label="Fechar">Fechar</button></div><p id="cloud-review-intro"></p><div id="cloud-review-options"></div><p class="error" id="cloud-review-error" role="alert"></p><p>Antes de aplicar a escolha, uma cópia anterior será preservada neste navegador. Relatórios e conciliações de Ads também serão compartilhados com a empresa.</p><div class="actions"><button type="button" class="btn quiet" id="cloud-use-remote">Usar somente o catálogo da empresa</button><button type="submit" class="btn primary" id="cloud-apply-merge">Combinar e sincronizar</button></div></form></dialog>
 <script>
 'use strict';
 const KEY='margem.painel.v1';
@@ -643,8 +646,34 @@ const ADS_RECONCILE_FIELDS=['revenue','goods','fees','tax','shipping','other'];
 function adsEvidenceKey(a){return JSON.stringify(['sellerId','itemId','dateFrom','dateTo','cost','revenue',...ADS_DETAIL_FIELDS].map(k=>a[k]??null));}
 function validAdsReconciliation(r){return r&&r.source==='manual-reconciliation'&&/^MLB\d{5,15}$/.test(r.itemId)&&Number.isSafeInteger(r.sellerId)&&r.sellerId>0&&validAdsDates(r,1,90)&&['direct','attributed'].includes(r.scope)&&typeof r.basis==='string'&&r.basis.length<=2000&&typeof r.notes==='string'&&r.notes.trim().length>=3&&r.notes.length<=600&&typeof r.savedAt==='string'&&Number.isFinite(Date.parse(r.savedAt))&&ADS_RECONCILE_FIELDS.every(k=>Number.isFinite(r[k])&&r[k]>=0&&r[k]<=1e12&&Math.abs(r[k]*100-Math.round(r[k]*100))<.001);}
 function copyAdsReconciliation(r){return Object.fromEntries(['source','itemId','sellerId','dateFrom','dateTo','scope','basis','notes','savedAt',...ADS_RECONCILE_FIELDS].map(k=>[k,r[k]]));}
+const adsReportKey=r=>[r.sellerId,r.baseDate,r.bucketDays].join(':');
+const adsAccountKey=r=>[r.sellerId,r.advertiserId,r.dateFrom,r.dateTo].join(':');
+const adsReconciliationKey=r=>[r.sellerId,r.itemId,r.dateFrom,r.dateTo].join(':');
+function mergeAdsReportList(reports){
+ const result=new Map();
+ for(const report of reports){
+  const key=adsReportKey(report),old=result.get(key);
+  if(!old){result.set(key,copyAdsHistory(report));continue;}
+  const latest=Date.parse(report.fetchedAt)>=Date.parse(old.fetchedAt)?report:old,items=new Map(old.items.map(row=>[row.itemId,row]));
+  for(const row of report.items){const previous=items.get(row.itemId);if(!previous||Date.parse(row.total.fetchedAt)>=Date.parse(previous.total.fetchedAt))items.set(row.itemId,row);}
+  result.set(key,copyAdsHistory({...latest,items:[...items.values()]}));
+ }
+ return [...result.values()];
+}
+function mergeAdsAccountList(accounts){
+ const result=new Map();
+ for(const a of accounts){const key=adsAccountKey(a),old=result.get(key);if(!old||Date.parse(a.fetchedAt)>=Date.parse(old.fetchedAt))result.set(key,copyAdsAccount(a));}
+ return [...result.values()];
+}
+function collectAdsArchives(data){
+ const reports=mergeAdsReportList([...(data.adsReports??[]),...(data.adsHistory?[data.adsHistory]:[])]),accounts=mergeAdsAccountList([...(data.adsAccounts??[]),...(data.adsAccount?[data.adsAccount]:[])]);
+ return {...(reports.length||data.adsReports!==undefined?{adsReports:reports}:{}),...(accounts.length||data.adsAccounts!==undefined?{adsAccounts:accounts}:{})};
+}
 function validAdsManagement(s){
  if(s.adsAccount!==undefined&&!validAdsAccount(s.adsAccount))return false;if(s.adsHistory!==undefined&&!validAdsHistory(s.adsHistory))return false;
+ for(const [field,validate,key] of [['adsReports',validAdsHistory,adsReportKey],['adsAccounts',validAdsAccount,adsAccountKey]]){
+  const values=s[field];if(values!==undefined&&(!Array.isArray(values)||!values.every(validate)||new Set(values.map(key)).size!==values.length))return false;
+ }
  if(s.adsReconciliations===undefined)return true;
  if(!Array.isArray(s.adsReconciliations)||s.adsReconciliations.length>5000||!s.adsReconciliations.every(validAdsReconciliation))return false;
  const keys=s.adsReconciliations.map(r=>[r.sellerId,r.itemId,r.dateFrom,r.dateTo].join(':'));return new Set(keys).size===keys.length;
@@ -761,13 +790,13 @@ function backupData(data){
   return {...Object.fromEntries(['id','name','category','cost','weight','margin','extra','mlShipping'].map(k=>[k,k==='mlShipping'?(p[k]??0):p[k]])),...copyAds(p),...(p.mlAds?{mlAds:copyProductAds(p.mlAds)}:{}),...optionalOptions(p),...(p.mercadoLivre===undefined?{}:{mercadoLivre:copyMlLink(p.mercadoLivre)}),...(p.mlPricing===undefined?{}:{mlPricing:copyOfficialPricing(p.mlPricing)}),...(p.feeSnapshot===undefined?{}:{feeSnapshot:copyFees(p.feeSnapshot)})};
  });
  const fees=Object.fromEntries(Object.keys(MARKETS).map(k=>[k,Object.fromEntries(['commission','fixed','tax',...(k==='ml'?['premiumCommission']:['easyReturnFee','officialEventRate','easyReturnEnabled','officialEventEnabled','policyId'])].filter(f=>data.fees[k][f]!==undefined).map(f=>[f,data.fees[k][f]]))]));
- return {...(data.adsHistory?{adsHistory:copyAdsHistory(data.adsHistory)}:{}),...(data.adsAccount?{adsAccount:copyAdsAccount(data.adsAccount)}:{}),...(data.adsReconciliations?{adsReconciliations:data.adsReconciliations.map(copyAdsReconciliation)}:{}),products,fees,kits:(data.kits??[]).map(k=>({id:k.id,name:k.name,margin:k.margin,extra:k.extra,mlShipping:k.mlShipping,...copyAds(k),...(k.mlContext?{mlContext:copyKitContext(k.mlContext)}:{}),...(k.mlPricing?{mlPricing:copyOfficialPricing(k.mlPricing)}:{}),...optionalOptions(k),...(k.feeSnapshot===undefined?{}:{feeSnapshot:copyFees(k.feeSnapshot)}),items:k.items.map(i=>({productId:i.productId,quantity:i.quantity}))}))};
+ return {...collectAdsArchives(data),...(data.adsHistory?{adsHistory:copyAdsHistory(data.adsHistory)}:{}),...(data.adsAccount?{adsAccount:copyAdsAccount(data.adsAccount)}:{}),...(data.adsReconciliations?{adsReconciliations:data.adsReconciliations.map(copyAdsReconciliation)}:{}),products,fees,kits:(data.kits??[]).map(k=>({id:k.id,name:k.name,margin:k.margin,extra:k.extra,mlShipping:k.mlShipping,...copyAds(k),...(k.mlContext?{mlContext:copyKitContext(k.mlContext)}:{}),...(k.mlPricing?{mlPricing:copyOfficialPricing(k.mlPricing)}:{}),...optionalOptions(k),...(k.feeSnapshot===undefined?{}:{feeSnapshot:copyFees(k.feeSnapshot)}),items:k.items.map(i=>({productId:i.productId,quantity:i.quantity}))}))};
 }
-function buildBackup(data){return JSON.stringify({format:'margem-backup',version:17,createdAt:new Date().toISOString(),data:backupData(data)},null,2);}
+function buildBackup(data){return JSON.stringify({format:'margem-backup',version:18,createdAt:new Date().toISOString(),data:backupData(data)},null,2);}
 function parseBackup(text){
  if(text.length>20*1024*1024)throw Error('O backup deve ter no máximo 20 MB.');
  let backup;try{backup=JSON.parse(text.replace(/^\uFEFF/,''));}catch{throw Error('Não foi possível ler o JSON. Selecione um arquivo gerado por “Baixar backup”.');}
- if(!backup||backup.format!=='margem-backup'||![1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17].includes(backup.version))throw Error('Formato ou versão de backup incompatível. Use um arquivo gerado por este painel.');
+ if(!backup||backup.format!=='margem-backup'||![1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18].includes(backup.version))throw Error('Formato ou versão de backup incompatível. Use um arquivo gerado por este painel.');
  return backupData(backup.data);
 }
 let state=defaults(),storageProblem='',feesMigrated=false;
@@ -804,7 +833,7 @@ function renderAdsRoas(){
 function compactStatusTitles(){for(const id of ['ml-product-status','ml-pricing-status','ml-shipping-status','shipping-help','product-shopee-policy-status']){const node=$(id);if(node)node.title=node.textContent;}}
 
 function toast(message){$('toast').textContent=message;$('toast').classList.remove('hidden');clearTimeout(toastTimer);toastTimer=setTimeout(()=>$('toast').classList.add('hidden'),4500);}
-function persist(){try{localStorage.setItem(KEY,JSON.stringify(state));$('save-status').textContent='● Salvo neste navegador';globalThis.ConduzCatalog?.onLocalChange();return true;}catch{$('save-status').textContent='⚠ Dados só nesta sessão';toast('Não foi possível salvar. Baixe um backup antes de fechar.');globalThis.ConduzCatalog?.onLocalChange();return false;}}
+function persist(){try{state={...state,...collectAdsArchives(state)};localStorage.setItem(KEY,JSON.stringify(state));$('save-status').textContent='● Salvo neste navegador';globalThis.ConduzCatalog?.onLocalChange();return true;}catch{$('save-status').textContent='⚠ Dados só nesta sessão';toast('Não foi possível salvar. Baixe um backup antes de fechar.');globalThis.ConduzCatalog?.onLocalChange();return false;}}
 function visibleProducts(){const query=$('search').value.trim().toLocaleLowerCase('pt-BR');return state.products.filter(p=>(p.name+' '+p.category+' '+(p.mercadoLivre?.itemId??'')).toLocaleLowerCase('pt-BR').includes(query)).sort((a,b)=>{const value=p=>SCENARIOS[sort.key]?(saleResult(p,state.fees[marketOf(sort.key)],sort.key)?.price??Infinity):p[sort.key];const av=value(a),bv=value(b);return sort.direction*(typeof av==='string'?av.localeCompare(bv,'pt-BR'):av===bv?0:av>bv?1:-1);});}
 function render(){
  const products=visibleProducts();$('count').textContent=state.products.length;const averages=state.products.map(p=>averageProfit(p,state.fees)).filter(Number.isFinite);$('average').textContent=averages.length?money(averages.reduce((sum,avg)=>sum+avg,0)/averages.length):'—';$('average-help').textContent=state.products.length?'Cálculo completo: '+averages.length+' de '+state.products.length+' produtos':'Estimativa por venda nos três canais';const healthCounts={low:0,risk:0,safe:0,pending:0};for(const p of state.products)healthCounts[pricingHealth(p,state.fees).level]++;$('warning-count').textContent=healthCounts.low;$('risk-count').textContent=healthCounts.risk;$('safe-count').textContent=healthCounts.safe;$('pending-count').textContent=healthCounts.pending?healthCounts.pending+' para recalcular':'';
@@ -1175,12 +1204,18 @@ function adsSetLayout(layout,load=true){
  renderAdsDashboard();if(load&&mlConnection.connected){if(adsHistoryUi.layout==='periods')refreshAdsHistory();else refreshAdsManagement();}
 }
 function historyQuery(){return {baseDate:$('ads-history-base').value,bucketDays:Number($('ads-history-bucket').value||7)};}
+function currentAdsHistory(){
+ const q=historyQuery(),seller=mlConnection?.account?.id;
+ return [...(state.adsReports??[]),...(state.adsHistory?[state.adsHistory]:[])].find(h=>h.baseDate===q.baseDate&&h.bucketDays===q.bucketDays&&(!seller||h.sellerId===seller)&&validAdsHistory(h))??null;
+}
 function renderAdsHistory(){
  if(!adsHistoryUi)return;
  const saved=state.adsHistory;if(!adsHistoryUi.initialized){$('ads-history-bucket').value=String(saved?.bucketDays??7);adsHistoryUi.initialized=true;}if(!$('ads-history-base').value)$('ads-history-base').value=saved?.baseDate??adsCurrentPeriod().dateTo;
  const q=historyQuery(),ranges=adsHistoryRanges(q.baseDate,q.bucketDays),metric=$('ads-history-metric').value||'cost',color=$('ads-history-color').value||'estimate';
  const latest=adsCurrentPeriod().dateTo,count=q.bucketDays===30?3:4,span=count*q.bucketDays;$('ads-history-base').max=latest;$('ads-history-base').min=new Date(Date.parse(latest)-(90-span)*86400000).toISOString().slice(0,10);
- const matching=validAdsHistory(saved)&&saved.baseDate===q.baseDate&&saved.bucketDays===q.bucketDays&&(!mlConnection.account||saved.sellerId===mlConnection.account.id),h=matching?saved:null;
+ const h=currentAdsHistory(),savedReports=(state.adsReports??[]).filter(r=>!mlConnection.account||r.sellerId===mlConnection.account.id).sort((a,b)=>b.baseDate.localeCompare(a.baseDate)||a.bucketDays-b.bucketDays);
+ $('ads-saved-report').innerHTML='<option value="">Selecione um relatório salvo</option>'+savedReports.map(r=>'<option value="'+escapeHTML(adsReportKey(r))+'">'+adsDate(r.dateFrom)+' a '+adsDate(r.dateTo)+' · '+r.bucketDays+' dias por período · '+r.items.length+' anúncio(s)</option>').join('');
+ $('ads-saved-report').disabled=!savedReports.length;$('ads-saved-report').value=h?adsReportKey(h):'';
  const needle=$('ads-history-query').value.trim().toLocaleLowerCase('pt-BR'),type=$('ads-history-search-type').value||'all',seen=new Set(),rows=[];
  for(const p of state.products){const link=p.mercadoLivre;if(!link||mlConnection.account&&link.sellerId!==mlConnection.account.id)continue;const key=link.sellerId+':'+link.itemId;if(seen.has(key))continue;seen.add(key);const history=h?.items.find(row=>row.itemId===link.itemId),skus=history?.total.skus??link.skus??[];const haystack=type==='sku'?skus.join(' '):type==='id'?link.itemId:type==='name'?p.name:[p.name,link.itemId,...skus].join(' ');if(needle&&!haystack.toLocaleLowerCase('pt-BR').includes(needle))continue;rows.push({product:p,history});}
  rows.sort((a,b)=>{const x=adsHistoryMetric(a.history?.total,a.product,state.fees,state.adsReconciliations??[],metric,a.history),y=adsHistoryMetric(b.history?.total,b.product,state.fees,state.adsReconciliations??[],metric,b.history);return x===null?y===null?a.product.name.localeCompare(b.product.name,'pt-BR'):1:y===null?-1:y-x;});
@@ -1228,10 +1263,12 @@ function adsHistoryCell(p,a,previous,index,metric,color,max,history){
 async function refreshAdsHistory(force=false){
  if(adsHistoryUi.busy)return;if(!mlConnection.connected){await connectMercadoLivre();return;}
  const q=historyQuery(),ranges=adsHistoryRanges(q.baseDate,q.bucketDays);if(!ranges){$('ads-history-status').textContent='Escolha filtros válidos.';return;}
+ const archived=currentAdsHistory(),latestAvailable=adsCurrentPeriod().dateTo;
+ if(!force&&archived&&ranges[0].dateFrom<new Date(Date.parse(latestAvailable)-89*86400000).toISOString().slice(0,10)){renderAdsHistory();$('ads-history-status').textContent='Relatório salvo disponível para leitura. Novas consultas à API aceitam apenas os últimos 90 dias.';return;}
  const latest=adsCurrentPeriod().dateTo;if(q.baseDate>latest||ranges[0].dateFrom<new Date(Date.parse(latest)-89*86400000).toISOString().slice(0,10)){$('ads-history-status').textContent='Use somente dias encerrados dos últimos 90 dias disponíveis.';return;}
  const seller=mlConnection.account.id,epoch=++adsHistoryUi.epoch,connectionEpoch=mlAdsEpoch;
  const ids=[...new Set(state.products.filter(p=>p.mercadoLivre?.sellerId===seller).map(p=>p.mercadoLivre.itemId))];
- const old=state.adsHistory,matches=validAdsHistory(old)&&old.sellerId===seller&&old.baseDate===q.baseDate&&old.bucketDays===q.bucketDays;
+ const old=currentAdsHistory(),matches=validAdsHistory(old)&&old.sellerId===seller&&old.baseDate===q.baseDate&&old.bucketDays===q.bucketDays;
  if(!force&&matches&&ids.every(id=>old.items.some(row=>row.itemId===id&&Date.now()-Date.parse(row.total.fetchedAt)<600000))){renderAdsHistory();$('ads-history-status').textContent='Comparativo salvo em '+new Date(old.fetchedAt).toLocaleString('pt-BR')+'. Use Filtrar para atualizar.';return;}
  if(!ids.length){renderAdsHistory();$('ads-history-status').textContent='Nenhum anúncio cadastrado está vinculado à conta conectada.';return;}
  const active=()=>mlConnection.connected&&mlConnection.account?.id===seller&&mlAdsEpoch===connectionEpoch&&adsHistoryUi.epoch===epoch&&JSON.stringify(historyQuery())===JSON.stringify(q);
@@ -1260,9 +1297,13 @@ async function refreshAdsHistory(force=false){
 }
 $('ads-layout-periods').onclick=()=>adsSetLayout('periods');$('ads-layout-cards').onclick=()=>adsSetLayout('cards');
 $('ads-history-filter').onsubmit=e=>{e.preventDefault();refreshAdsHistory(true);};
+$('ads-saved-report').onchange=e=>{
+ const report=(state.adsReports??[]).find(r=>adsReportKey(r)===e.target.value&&(!mlConnection.account||r.sellerId===mlConnection.account.id));if(!report)return;
+ adsHistoryUi.epoch++;adsHistoryUi.initialized=true;state.adsHistory=copyAdsHistory(report);$('ads-history-base').value=report.baseDate;$('ads-history-bucket').value=String(report.bucketDays);persist();renderAdsHistory();$('ads-history-status').textContent='Relatório salvo carregado. Última consulta: '+new Date(report.fetchedAt).toLocaleString('pt-BR')+'. Novas consultas à API continuam limitadas aos últimos 90 dias.';
+};
 for(const id of ['ads-history-metric','ads-history-color','ads-history-search-type','ads-history-query'])$(id).oninput=()=>renderAdsHistory();
 for(const id of ['ads-history-base','ads-history-bucket'])$(id).onchange=()=>{adsHistoryUi.epoch++;renderAdsHistory();};
-$('ads-history-body').onclick=e=>{const button=e.target.closest('button[data-history-reconcile]');if(!button)return;const p=state.products.find(p=>p.id===button.dataset.historyReconcile),row=state.adsHistory?.items.find(row=>row.itemId===p?.mercadoLivre?.itemId),a=button.dataset.historyIndex==='total'?row?.total:row?.periods[Number(button.dataset.historyIndex)];if(a)openAdsReconciliation(p.id,a);};
+$('ads-history-body').onclick=e=>{const button=e.target.closest('button[data-history-reconcile]');if(!button)return;const p=state.products.find(p=>p.id===button.dataset.historyReconcile),row=currentAdsHistory()?.items.find(row=>row.itemId===p?.mercadoLivre?.itemId),a=button.dataset.historyIndex==='total'?row?.total:row?.periods[Number(button.dataset.historyIndex)];if(a)openAdsReconciliation(p.id,a);};
 $('ads-history-export').onclick=()=>{const rows=adsHistoryUi.rows.filter(row=>row.history);if(!rows.length)return;const text=adsHistoryCsv(rows,adsHistoryUi.ranges,adsHistoryUi.metric,state.fees,state.adsReconciliations??[]),url=URL.createObjectURL(new Blob([text],{type:'text/csv;charset=utf-8;'})),link=document.createElement('a');link.href=url;link.download='ads-comparativo-'+$('ads-history-base').value+'.csv';document.body.append(link);link.click();link.remove();setTimeout(()=>URL.revokeObjectURL(url),1000);};
 
 function renderAdsDashboard(){
@@ -1339,7 +1380,7 @@ $('ads-daily-budget').oninput=()=>{adsUi.budgetTouched=true;renderAdsDashboard()
 $('ads-products-grid').onclick=e=>{const button=e.target.closest('button[data-ads-reconcile]');if(button)openAdsReconciliation(button.dataset.adsReconcile);};
 $('ads-reconcile-close').onclick=$('ads-reconcile-cancel').onclick=()=>$('ads-reconcile-dialog').close();
 $('ads-reconcile-form').onsubmit=e=>{
- e.preventDefault();const form=e.target,p=state.products.find(p=>p.id===adsUi.reconcileProduct),context=adsUi.reconcileContext,row=state.adsHistory?.items.find(r=>r.itemId===p?.mercadoLivre?.itemId),a=adsUi.reconcileFromHistory?[...(row?.periods??[]),row?.total].find(a=>a?.dateFrom===context?.dateFrom&&a?.dateTo===context?.dateTo):p?.mlAds;
+ e.preventDefault();const form=e.target,p=state.products.find(p=>p.id===adsUi.reconcileProduct),context=adsUi.reconcileContext,row=currentAdsHistory()?.items.find(r=>r.itemId===p?.mercadoLivre?.itemId),a=adsUi.reconcileFromHistory?[...(row?.periods??[]),row?.total].find(a=>a?.dateFrom===context?.dateFrom&&a?.dateTo===context?.dateTo):p?.mlAds;
  if(!p||!a||!validProductAds({...p,mlAds:a})||adsEvidenceKey(a)!==adsUi.reconcileBasis){$('ads-reconcile-error').textContent='Os dados de Ads mudaram. Feche e abra a conciliação para conferir novamente.';return;}
  const r={source:'manual-reconciliation',itemId:a.itemId,sellerId:a.sellerId,dateFrom:a.dateFrom,dateTo:a.dateTo,scope:form.elements.scope.value,basis:adsEvidenceKey(a),notes:form.elements.notes.value.trim(),savedAt:new Date().toISOString(),...Object.fromEntries(ADS_RECONCILE_FIELDS.map(k=>[k,form.elements[k].value===''?NaN:Number(form.elements[k].value)]))};
  if(!form.elements.confirmed.checked||!validAdsReconciliation(r)){$('ads-reconcile-error').textContent='Preencha e confirme todos os valores efetivos, inclusive zero quando conferido, e informe a fonte da conciliação.';return;}
@@ -1513,8 +1554,10 @@ resetKitEditor();showScreen('products');render();if(feesMigrated)persist();if(st
   return Object.fromEntries(Object.keys(x).sort().filter(k => !ignoreDates || k !== 'fetchedAt').map(k => [k, stable(x[k], ignoreDates)]));
  }
  const equal = (a, b, ignoreDates = false) => JSON.stringify(stable(a, ignoreDates)) === JSON.stringify(stable(b, ignoreDates));
+ const normalize = data => ({ ...data, adsReports: data.adsReports ?? [], adsAccounts: data.adsAccounts ?? [], adsReconciliations: data.adsReconciliations ?? [] });
  function merge(base, local, remote, choices = {}) {
-  const conflicts = [], data = { products: [], kits: [], fees: null };
+  base = normalize(base); local = normalize(local); remote = normalize(remote);
+  const conflicts = [], data = { products: [], kits: [], fees: null, adsReports: [], adsAccounts: [], adsReconciliations: [] };
   function choose(key, before, mine, theirs, label) {
    if (equal(mine, before)) return theirs;
    if (equal(theirs, before) || equal(mine, theirs)) return mine;
@@ -1535,6 +1578,16 @@ resetKitEditor();showScreen('products');render();if(feesMigrated)persist();if(st
     if (row !== undefined) data[type].push(row);
    }
   }
+  const reports = [...base.adsReports, ...local.adsReports, ...remote.adsReports], accounts = [...base.adsAccounts, ...local.adsAccounts, ...remote.adsAccounts];
+  data.adsReports = reports.length ? mergeAdsReportList(reports) : [];
+  data.adsAccounts = accounts.length ? mergeAdsAccountList(accounts) : [];
+  const maps = [base, local, remote].map(x => new Map(x.adsReconciliations.map(r => [adsReconciliationKey(r), r])));
+  for (const key of new Set(maps.flatMap(m => [...m.keys()]))) {
+   const [before, mine, theirs] = maps.map(m => m.get(key)), reference = mine ?? theirs ?? before;
+   // Restaurações antigas e períodos não carregados não excluem conciliações compartilhadas.
+   const row = mine === undefined ? theirs ?? before : theirs === undefined ? mine : choose('reconciliation:' + key, before, mine, theirs, 'Conciliação ' + reference.itemId + ' · ' + reference.dateFrom + ' a ' + reference.dateTo);
+   data.adsReconciliations.push(row);
+  }
   return { data, conflicts };
  }
  globalThis.ConduzCatalogMerge = { merge, equal };
@@ -1545,7 +1598,8 @@ resetKitEditor();showScreen('products');render();if(feesMigrated)persist();if(st
  const cacheKey = () => 'conduz.catalog.sync.v1.' + seller;
  const snapshot = () => {
   const data = backupData(state);
-  return { products: data.products, kits: data.kits, fees: data.fees };
+  const owned = rows => (rows ?? []).filter(r => String(r.sellerId) === seller);
+  return { products: data.products, kits: data.kits, fees: data.fees, adsReports: owned(data.adsReports), adsAccounts: owned(data.adsAccounts), adsReconciliations: owned(data.adsReconciliations) };
  };
  function saveMeta() { try { localStorage.setItem(cacheKey(), JSON.stringify(meta)); } catch { /* A versão confirmada permanece na nuvem. */ } }
  function status(message, pending = false) {
@@ -1561,9 +1615,22 @@ resetKitEditor();showScreen('products');render();if(feesMigrated)persist();if(st
  function valid(data) { return data && validState({ ...state, ...data }); }
  function apply(data) {
   if (!valid(data)) throw Error('O catálogo contém uma combinação inválida de produtos e kits. Confira as dependências antes de combinar.');
-  state = { ...state, ...copy(data) }; localWrite(); render();
+  const incoming = normalize(copy(data)), previousHistory = state.adsHistory, previousAccount = state.adsAccount, localArchives = collectAdsArchives(state);
+  for (const key of ['adsReports', 'adsAccounts', 'adsReconciliations']) incoming[key] = [...(localArchives[key] ?? state[key] ?? []).filter(r => String(r.sellerId) !== seller), ...incoming[key]];
+  state = { ...state, ...incoming };
+  const reports = incoming.adsReports.filter(r => String(r.sellerId) === seller).sort((a, b) => Date.parse(b.fetchedAt) - Date.parse(a.fetchedAt));
+  const report = reports.find(r => previousHistory && adsReportKey(r) === adsReportKey(previousHistory)) ?? reports[0];
+  if (report) {
+   state.adsHistory = copyAdsHistory(report);
+   if (!previousHistory || String(previousHistory.sellerId) !== seller) { ui('ads-history-base').value = report.baseDate; ui('ads-history-bucket').value = String(report.bucketDays); }
+  }
+  const accounts = incoming.adsAccounts.filter(r => String(r.sellerId) === seller).sort((a, b) => Date.parse(b.fetchedAt) - Date.parse(a.fetchedAt));
+  const preferredAdvertiser = (typeof adsUi !== 'undefined' ? adsUi?.selectedAdvertiser : null) ?? previousAccount?.advertiserId, currentPeriod = adsCurrentPeriod();
+  const account = accounts.find(a => (!preferredAdvertiser || a.advertiserId === preferredAdvertiser) && a.dateFrom === currentPeriod.dateFrom && a.dateTo === currentPeriod.dateTo) ?? accounts.find(a => previousAccount && adsAccountKey(a) === adsAccountKey(previousAccount)) ?? accounts[0];
+  if (account) state.adsAccount = copyAdsAccount(account);
+  localWrite(); render();
  }
- function editingDraft() { return Boolean(ui('product-dialog').open || ui('restore-dialog').open || ui('import-dialog').open || kitEditing || kitItems.size); }
+ function editingDraft() { return Boolean(ui('product-dialog').open || ui('restore-dialog').open || ui('import-dialog').open || ui('ads-reconcile-dialog').open || kitEditing || kitItems.size || (typeof adsHistoryUi !== 'undefined' && adsHistoryUi?.busy) || (typeof adsUi !== 'undefined' && adsUi?.busy)); }
  async function request(method = 'GET', body, revision) {
   const response = await fetch('/api/catalog', {
    method, credentials: 'same-origin', cache: 'no-store',
@@ -1574,10 +1641,11 @@ resetKitEditor();showScreen('products');render();if(feesMigrated)persist();if(st
   const value = await response.json();
   if (!response.ok) throw Object.assign(new Error(value.message || 'Não foi possível sincronizar o catálogo.'), { status: response.status });
   if (method === 'GET' && (value.data !== null && !valid(value.data) || !Number.isSafeInteger(value.revision) || value.revision < 0)) throw Error('O catálogo compartilhado retornou dados incompatíveis. A cópia local foi preservada.');
+  if (method === 'GET' && value.data) value.data = normalize(value.data);
   return value;
  }
  function beginReview(base, remote, revision, migration = false) {
-  review = { base: copy(base), remote: copy(remote), revision, migration };
+  review = { base: normalize(copy(base)), remote: normalize(copy(remote)), revision, migration };
   phase = 'review'; status(migration ? 'Escolha como iniciar o catálogo compartilhado com os cadastros deste navegador.' : 'Há alterações simultâneas no mesmo cadastro. Clique em Revisar alterações.', true);
  }
  function openReview() {
@@ -1585,9 +1653,9 @@ resetKitEditor();showScreen('products');render();if(feesMigrated)persist();if(st
   reviewSnapshot = snapshot();
   const result = merge(review.base, reviewSnapshot, review.remote);
   ui('cloud-review-intro').textContent = review.migration
-   ? 'Neste navegador: ' + reviewSnapshot.products.length + ' produto(s) e ' + reviewSnapshot.kits.length + ' kit(s). Na empresa: ' + review.remote.products.length + ' produto(s) e ' + review.remote.kits.length + ' kit(s). Combinar mantém cadastros distintos; nomes iguais com identificadores diferentes podem gerar duplicatas.'
+   ? 'Neste navegador: ' + reviewSnapshot.products.length + ' produto(s), ' + reviewSnapshot.kits.length + ' kit(s), ' + reviewSnapshot.adsReports.length + ' relatório(s) e ' + reviewSnapshot.adsReconciliations.length + ' conciliação(ões). Na empresa: ' + review.remote.products.length + ' produto(s), ' + review.remote.kits.length + ' kit(s), ' + review.remote.adsReports.length + ' relatório(s) e ' + review.remote.adsReconciliations.length + ' conciliação(ões). Combinar mantém cadastros distintos; nomes iguais com identificadores diferentes podem gerar duplicatas.'
    : 'As alterações em cadastros diferentes são combinadas. Para cada cadastro abaixo, escolha a versão que deve permanecer.';
-  const describe = row => row === undefined ? 'Cadastro excluído' : row.cost !== undefined ? row.name + ' · custo ' + money(row.cost) + ' · meta ' + number(row.margin) + '% · Ads ML ' + number(adsRate(row, 'ml')) + '% / Shopee ' + number(adsRate(row, 'shopee')) + '%' : row.items ? row.name + ' · ' + row.items.length + ' componente(s) · meta ' + number(row.margin) + '%' : 'Configurações de taxas preservadas';
+  const describe = row => row === undefined ? 'Cadastro excluído' : row.source === 'manual-reconciliation' ? 'Receita ' + money(row.revenue) + ' · produtos ' + money(row.goods) + ' · tarifas ' + money(row.fees) + ' · imposto ' + money(row.tax) + ' · frete ' + money(row.shipping) + ' · outros ' + money(row.other) + ' · ' + (row.scope === 'direct' ? 'somente diretas' : 'diretas e indiretas') + ' · fonte: ' + row.notes : row.cost !== undefined ? row.name + ' · custo ' + money(row.cost) + ' · meta ' + number(row.margin) + '% · Ads ML ' + number(adsRate(row, 'ml')) + '% / Shopee ' + number(adsRate(row, 'shopee')) + '%' : row.items ? row.name + ' · ' + row.items.length + ' componente(s) · meta ' + number(row.margin) + '%' : 'Configurações de taxas preservadas';
   ui('cloud-review-options').innerHTML = result.conflicts.map((c, i) => '<fieldset class="cloud-conflict"><legend>' + escapeHTML(c.label) + '</legend><label><input type="radio" name="cloud-choice-' + i + '" value="local" required> Minha edição: ' + escapeHTML(describe(c.local)) + '</label><label><input type="radio" name="cloud-choice-' + i + '" value="remote" required> Versão da empresa: ' + escapeHTML(describe(c.remote)) + '</label></fieldset>').join('');
   ui('cloud-use-remote').textContent = 'Usar somente o catálogo da empresa';
   ui('cloud-use-remote').classList.remove('hidden');
@@ -1608,17 +1676,17 @@ resetKitEditor();showScreen('products');render();if(feesMigrated)persist();if(st
    const result = await request('GET', null, changed ? 0 : meta.revision);
    if (account !== seller || generation !== epoch) return;
    if (!result) { const pending = !equal(snapshot(), meta.base); status(pending ? 'Novas alterações locais aguardando sincronização.' : 'Catálogo sincronizado com a empresa.', pending); return; }
-   const remote = result.data ?? { products: [], kits: [], fees: local.fees };
+   const remote = result.data ?? normalize({ products: [], kits: [], fees: local.fees });
    // A revisão é calculada com o estado mais recente, inclusive mudanças durante a consulta.
    const live = snapshot(), combined = merge(meta.base, live, remote);
    if (combined.conflicts.length) { beginReview(meta.base, remote, result.revision); return; }
    if (!valid(combined.data)) { beginReview(meta.base, remote, result.revision); return; }
-   if (editingDraft() && !equal(live, combined.data)) { status('Há uma atualização da empresa. Termine ou cancele o cadastro em edição para recebê-la.', !equal(live, meta.base)); return; }
+   if (editingDraft() && !equal(live, combined.data)) { status('Há uma atualização da empresa. Conclua a edição ou consulta em andamento para recebê-la.', !equal(live, meta.base)); return; }
    if (equal(combined.data, remote)) {
     apply(combined.data); meta = { revision: result.revision, base: copy(remote) }; saveMeta(); status('Catálogo sincronizado com a empresa.'); return;
    }
    const beforeWrite = snapshot();
-   const saved = await request('PUT', { revision: result.revision, mutationId: crypto.randomUUID(), data: combined.data });
+   const saved = await request('PUT', { schemaVersion: 2, revision: result.revision, mutationId: crypto.randomUUID(), data: combined.data });
    if (account !== seller || generation !== epoch) return;
    meta = { revision: saved.revision, base: copy(combined.data) }; saveMeta();
    // Não substitui edições feitas enquanto a gravação estava em andamento.
@@ -1655,10 +1723,10 @@ resetKitEditor();showScreen('products');render();if(feesMigrated)persist();if(st
    try { cached = JSON.parse(localStorage.getItem(cacheKey())); localSourceValid = validState(JSON.parse(localStorage.getItem(KEY))); } catch {}
    // Uma cópia local ausente ou corrompida não representa exclusão de toda a empresa.
    if (localSourceValid && cached && Number.isSafeInteger(cached.revision) && cached.revision <= result.revision && valid(cached.base)) {
-    meta = cached; phase = 'ready'; await sync(); return;
+    meta = { ...cached, base: normalize(cached.base) }; phase = 'ready'; await sync(); return;
    }
-   const local = snapshot(), remote = result.data ?? { products: [], kits: [], fees: local.fees };
-   if (local.products.length || local.kits.length) {
+   const local = snapshot(), remote = result.data ?? normalize({ products: [], kits: [], fees: local.fees });
+   if (local.products.length || local.kits.length || local.adsReports.length || local.adsAccounts.length || local.adsReconciliations.length) {
     // Não envia nem substitui cadastros locais antes da escolha inicial.
     beginReview({ products: [], kits: [], fees: remote.fees }, remote, result.revision, true); return;
    }

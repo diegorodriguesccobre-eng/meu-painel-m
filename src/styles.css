@@ -239,3 +239,6 @@ fieldset{min-width:0;margin:0}legend{max-width:100%;white-space:normal}.option-q
 .cloud-conflict label{display:flex;gap:8px;align-items:flex-start;margin:10px 0;overflow-wrap:anywhere}
 #cloud-review-dialog{max-width:740px;width:calc(100% - 28px);max-height:90dvh;overflow:auto}
 #cloud-review-dialog .actions{flex-wrap:wrap;gap:8px}
+.ads-history-options{flex-wrap:wrap}
+.ads-saved-report{flex:1;min-width:min(100%,230px);max-width:460px}
+.ads-saved-report select{width:100%;max-width:100%}

@@ -1,5 +1,23 @@
 # Gestão de Ads e metodologia do painel
 
+## Armazenamento compartilhado — 24/11/2026
+
+Os relatórios por período, resumos do anunciante e conciliações agora acompanham o
+catálogo compartilhado no Cloudflare D1, com o mesmo acesso pela conta Mercado Livre
+autorizada. Relatórios de filtros diferentes são preservados e podem ser abertos em
+**Relatórios salvos**. Para o mesmo relatório, os anúncios são combinados e as
+referências mais recentes são mantidas; as métricas não são somadas entre consultas.
+
+Conciliações são identificadas por vendedor, anúncio e período. Edições divergentes
+do mesmo registro exigem revisão; períodos distintos são combinados. Fonte, critério,
+escopo, despesas e chave da evidência são preservados. A verificação de lucro apurado
+continua rejeitando conciliações cuja evidência já mudou.
+
+O backup atual é v18, com leitura das versões anteriores. A API bloqueia gravações
+de abas antigas que não conhecem os campos compartilhados. Os limites e passos de
+uso estão em [CONFIGURAR_CATALOGO.md](CONFIGURAR_CATALOGO.md). As fórmulas de preços,
+frete, comissões, ACOS, ROAS e TACOS e a janela de atribuição permanecem as mesmas.
+
 Pesquisa e decisões registradas em 13/11/2026 para retomar em outra sessão.
 O painel possui uma tela separada **Gestão de Ads**, com resumo do anunciante,
 publicidade por produto cadastrado, projeções e conciliação manual de lucro.
