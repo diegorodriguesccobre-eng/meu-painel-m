@@ -1,4 +1,4 @@
-const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+const {test}=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm');
 const itemId='MLB1234567890',otherId='MLB9876543210',sellerId=123,range={dateFrom:'2026-10-19',dateTo:'2026-10-25'};
 function order(id=1,overrides={}){return {id,seller:{id:sellerId},currency_id:'BRL',status:'paid',date_created:'2026-10-20T12:00:00-03:00',buyer:{nickname:'PRIVATE_BUYER',address:'PRIVATE_ADDRESS'},payments:[{id:id+1000,order_id:id,collector:{id:sellerId},status:'approved',currency_id:'BRL',transaction_amount:100,total_paid_amount:100,transaction_amount_refunded:0,shipping_cost:0}],order_items:[{item:{id:itemId},quantity:2,unit_price:50,currency_id:'BRL'}],...overrides};}
 const discount=(type,amount,id=itemId,quantity=2)=>({type,...(type==='coupon'?{coupon:{id:'coupon-1'}}:{}),items:[{id,quantity,amounts:{total:amount,seller:amount}}]});
@@ -13,7 +13,7 @@ function setup(rows,options={}){
  }};
 }
 async function run(rows,options={}){const f=setup(rows,options),{itemSales}=await import('../netlify/lib/ml-sales.mjs');return {sales:await itemSales({itemId,sellerId,range,api:f.api}),calls:f.calls};}
-const html=fs.readFileSync(require('node:path').join(__dirname,'../index.html'),'utf8'),code=html.match(/<script>([\s\S]*?)<\/script>/)[1],ctx=vm.createContext({URL});
+const code=require('./support/app-source.cjs').readAppScript(),ctx=vm.createContext({URL});
 vm.runInContext(code.slice(0,code.indexOf('let state=defaults()'))+code.slice(code.indexOf('async function fetchItemSalesPages'),code.indexOf('function adsHistoryCell'))+';globalThis.core={validItemSales,readyItemSales,combineItemSales,copyItemSales,fetchItemSalesPages,ITEM_SALES_FIELDS};',ctx);const core=ctx.core;
 
 test('promoção já no unit_price não é descontada outra vez nem multiplicada duas vezes',async()=>{

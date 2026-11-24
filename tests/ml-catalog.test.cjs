@@ -1,9 +1,7 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
-const fs=require('node:fs');
 const vm=require('node:vm');
-const html=fs.readFileSync(require('node:path').join(__dirname,'..','index.html'),'utf8');
-const script=html.match(/<script>([\s\S]*?)<\/script>/)[1];
+const script=require('./support/app-source.cjs').readAppScript();
 const controller=script.slice(script.indexOf('// Catálogo completo:'),script.indexOf('// Fim do controlador do catálogo.'));
 const ad=(n,title='Produto '+n)=>({itemId:'MLB'+(9000000000+n),title,listingType:'gold_special',thumbnail:null});
 const deferred=()=>{let resolve;const promise=new Promise(r=>{resolve=r;});return {promise,resolve};};

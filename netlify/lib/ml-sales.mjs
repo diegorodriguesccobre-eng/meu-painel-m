@@ -1,134 +1,263 @@
-import {createHash} from 'node:crypto';
+import { createHash } from 'node:crypto';
+import {
+  salesError,
+  isNonNegative,
+  toCents,
+  readProductValue,
+  applyItemDiscounts,
+  classifyPayment
+} from './ml-sales-rules.mjs';
 
-// Apenas receita dos produtos. Frete, tarifas, repasses e bônus não são receita do TACOS.
-export const SALES_FIELDS=['revenue','paidRevenue','cancelledRevenue','refundedRevenue','discountRevenue','cashbackRevenue','orders','units','cancelledOrders','refundedOrders','refundReview','discountReview','financialReview','logisticsReview','notDeliveredPaidOrders','notDeliveredPaidRevenue'];
-export const SALES_SOURCE='mercado-livre-orders-v2',SALES_BASIS='paid-item-sales-net-of-confirmed-refunds';
-export const SALES_PAGE_SIZE=10;
-const fail=message=>Object.assign(new Error(message),{ads:true,status:422});
-const nonnegative=n=>typeof n==='number'&&Number.isFinite(n)&&n>=0;
-const cents=n=>{if(!nonnegative(n)||!Number.isSafeInteger(Math.round(n*100)))throw fail('Valor de venda inválido.');return Math.round(n*100);};
-const numericId=value=>/^\d{1,20}$/.test(String(value));
-const moneyField=k=>k==='revenue'||k.endsWith('Revenue');
-const review=s=>s.refundReview+s.discountReview+s.financialReview>0;
-function context({itemId,sellerId,range}){
- if(!/^MLB\d{5,15}$/.test(itemId)||!Number.isSafeInteger(sellerId)||sellerId<=0)throw fail('Identificação inválida para consultar o faturamento.');
- const valid=s=>typeof s==='string'&&/^\d{4}-\d{2}-\d{2}$/.test(s)&&Number.isFinite(Date.parse(s))&&new Date(s).toISOString().slice(0,10)===s;
- if(!valid(range?.dateFrom)||!valid(range?.dateTo))throw fail('Período inválido para consultar as vendas.');
- const from=range.dateFrom+'T00:00:00.000-03:00',to=range.dateTo+'T23:59:59.999-03:00';
- if(Date.parse(to)<Date.parse(from)||Date.parse(to)-Date.parse(from)>=90*86400000)throw fail('Consulte até 90 dias de vendas por vez.');
- return {from,to,itemId,sellerId,dateFrom:range.dateFrom,dateTo:range.dateTo};
+export const SALES_FIELDS = [
+  'revenue', 'paidRevenue', 'cancelledRevenue', 'refundedRevenue',
+  'discountRevenue', 'cashbackRevenue', 'orders', 'units', 'cancelledOrders',
+  'refundedOrders', 'refundReview', 'discountReview', 'financialReview',
+  'logisticsReview', 'notDeliveredPaidOrders', 'notDeliveredPaidRevenue'
+];
+export const SALES_SOURCE = 'mercado-livre-orders-v2';
+export const SALES_BASIS = 'paid-item-sales-net-of-confirmed-refunds';
+export const SALES_PAGE_SIZE = 10;
+
+const CANCELLED_STATUSES = ['cancelled', 'pending_cancel'];
+const PAID_STATUSES = ['paid', 'partially_refunded', 'confirmed'];
+const SEARCH_STATUSES = 'paid,partially_refunded,cancelled,pending_cancel,confirmed';
+const MAX_PAGE_OFFSET = 100000;
+const MAX_PAGES = 1000;
+
+const isNumericId = value => /^\d{1,20}$/.test(String(value));
+const isMoneyField = key => key === 'revenue' || key.endsWith('Revenue');
+const hasReview = totals => totals.refundReview + totals.discountReview + totals.financialReview > 0;
+const safeTotals = totals => SALES_FIELDS.every(key => Number.isSafeInteger(totals[key]) && totals[key] >= 0);
+
+function isDate(value) {
+  return typeof value === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(value) &&
+    Number.isFinite(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value;
 }
-function checkOrder(order,c){
- if(!numericId(order?.id)||Number(order.seller?.id)!==c.sellerId||order.currency_id!=='BRL'||!Array.isArray(order.order_items))throw fail('A consulta retornou pedido de outra conta ou moeda inválida.');
- const created=Date.parse(order.date_created);if(!Number.isFinite(created)||created<Date.parse(c.from)||created>Date.parse(c.to))throw fail('As vendas não correspondem ao período solicitado.');
- for(const line of order.order_items)if(!/^MLB\d{5,15}$/.test(line.item?.id)||!Number.isSafeInteger(line.quantity)||line.quantity<=0||line.currency_id!==undefined&&line.currency_id!=='BRL'||!nonnegative(line.unit_price))throw fail('Os itens da venda estão incompletos.');
-}
-function productValue(order,itemId){
- const lines=order.order_items.filter(line=>line.item.id===itemId);
- return {lines,net:lines.reduce((sum,line)=>sum+cents(line.unit_price*line.quantity),0),quantity:lines.reduce((sum,line)=>sum+line.quantity,0)};
-}
-function discountsFor(order,itemId,data){
- const value=productValue(order,itemId);if(!Array.isArray(data?.details))throw fail('Detalhamento de descontos incompleto.');
- let price=0,coupon=0,cashback=0;const couponIds=new Set();
- for(const detail of data.details){
-  if(!['discount','coupon','cashback'].includes(detail.type)||!Array.isArray(detail.items))throw fail('Tipo de desconto não reconhecido.');
-  const entries=detail.items.filter(line=>line.id===itemId);if(!entries.length)continue;
-  if(detail.type==='coupon'&&detail.coupon?.id!==undefined){const key=String(detail.coupon.id);if(couponIds.has(key))throw fail('Cupom duplicado.');couponIds.add(key);}
-  for(const entry of entries){
-   if(!Number.isSafeInteger(entry.quantity)||entry.quantity<=0||entry.quantity>value.quantity)throw fail('Quantidade de desconto inválida.');
-   const amount=cents(entry.amounts?.total); // TOTAL do item, não valor por unidade.
-   if(detail.type==='discount')price+=amount;else if(detail.type==='coupon')coupon+=amount;else cashback+=amount;
+
+function salesContext({ itemId, sellerId, range }) {
+  if (!/^MLB\d{5,15}$/.test(itemId) || !Number.isSafeInteger(sellerId) || sellerId <= 0) {
+    throw salesError('Identificação inválida para consultar o faturamento.');
   }
- }
- // gross_price já é total de todas as unidades. unit_price pode incluir o cupom.
- const hasGross=value.lines.every(line=>nonnegative(line.gross_price));
- const embedded=hasGross?value.lines.reduce((sum,line)=>sum+cents(line.gross_price),0)-value.net:price;
- if(embedded<0)throw fail('Preço bruto menor que o preço pago.');
- let additional=0;
- if(coupon){
-  if(!hasGross)throw fail('Cupom sem base para confirmar se já está incluído no preço.');
-  additional=price+coupon-embedded;
-  if(additional<0||additional>coupon)throw fail('O desconto não concilia com o preço do item.');
- }
- if(additional>value.net)throw fail('Desconto maior que o valor do produto.');
- return {...value,net:value.net-additional,discount:embedded+additional,cashback};
-}
-function paymentState(order,net){
- if(!Array.isArray(order.payments)||!order.payments.length)return {kind:'review'};
- const valid=order.payments.filter(p=>['approved','refunded','partially_refunded','charged_back'].includes(p.status));
- if(valid.some(p=>p.currency_id!==undefined&&p.currency_id!=='BRL'||p.order_id!==undefined&&String(p.order_id)!==String(order.id)||p.collector?.id!==undefined&&Number(p.collector.id)!==Number(order.seller.id)))return {kind:'review'};
- if(valid.length&&valid.every(p=>p.status==='refunded'))return {kind:'full'};
- if(valid.some(p=>p.status==='charged_back')||!valid.length)return {kind:'review'};
- const partial=order.status==='partially_refunded'||valid.some(p=>p.status!=='approved'||nonnegative(p.transaction_amount_refunded)&&p.transaction_amount_refunded>0);
- if(!partial)return {kind:'paid'};
- // Só deduzir parcial quando TODO o pagamento corresponde ao próprio produto.
- // Sem frete/parcelamento/outros itens; nunca ratear reembolso entre produtos.
- const oneProduct=order.order_items.every(line=>line.item.id===order.order_items[0].item.id);
- const exact=oneProduct&&valid.every(p=>p.status==='approved'&&nonnegative(p.transaction_amount)&&nonnegative(p.transaction_amount_refunded)&&p.shipping_cost===0&&nonnegative(p.total_paid_amount)&&cents(p.total_paid_amount)===cents(p.transaction_amount))&&(!nonnegative(order.shipping_cost)||order.shipping_cost===0);
- if(exact&&valid.reduce((sum,p)=>sum+cents(p.transaction_amount),0)===net){
-  const amount=valid.reduce((sum,p)=>sum+cents(p.transaction_amount_refunded),0);
-  if(amount>0&&amount<=net)return {kind:'partial',amount};
- }
- return {kind:'partial-review'};
-}
-function shape(c,values,complete){
- return {source:SALES_SOURCE,basis:SALES_BASIS,itemId:c.itemId,sellerId:c.sellerId,currency:'BRL',dateFrom:c.dateFrom,dateTo:c.dateTo,...Object.fromEntries(SALES_FIELDS.map(k=>[k,moneyField(k)?values[k]/100:values[k]])),complete,status:review(values)?'review':'ready'};
-}
-export function sumItemSales(parts){
- if(!parts.length)return undefined;const first=parts[0];
- if(!parts.every(s=>s.source===SALES_SOURCE&&s.basis===SALES_BASIS&&s.itemId===first.itemId&&s.sellerId===first.sellerId&&s.currency==='BRL'))throw fail('Não é possível misturar bases de faturamento.');
- const totals=Object.fromEntries(SALES_FIELDS.map(k=>[k,parts.reduce((sum,s)=>sum+(moneyField(k)?cents(s[k]):s[k]),0)]));
- if(!SALES_FIELDS.every(k=>Number.isSafeInteger(totals[k])&&totals[k]>=0))throw fail('O total de faturamento excedeu o limite seguro.');
- return shape({...first,dateTo:parts.at(-1).dateTo},totals,true);
-}
-export async function itemSalesPage({itemId,sellerId,range,api,offset=0,expectedTotal=null}){
- const c=context({itemId,sellerId,range});
- if(!Number.isSafeInteger(offset)||offset<0||offset>100000||expectedTotal!==null&&(!Number.isSafeInteger(expectedTotal)||expectedTotal<0))throw fail('Página de vendas inválida.');
- const query=new URLSearchParams({seller:String(sellerId),q:itemId,'order.date_created.from':c.from,'order.date_created.to':c.to,'order.status':'paid,partially_refunded,cancelled,pending_cancel,confirmed',sort:'date_asc',limit:String(SALES_PAGE_SIZE),offset:String(offset)});
- const data=await api('/orders/search?'+query),p=data?.paging,rows=data?.results;
- if(!p||!Number.isSafeInteger(p.total)||p.total<0||!Number.isSafeInteger(p.limit)||p.limit<=0||p.limit>SALES_PAGE_SIZE||p.offset!==offset||!Array.isArray(rows)||rows.length>p.limit||offset+rows.length>p.total||expectedTotal!==null&&p.total!==expectedTotal||offset+rows.length<p.total&&rows.length!==p.limit)throw fail('A paginação de vendas está incompleta ou mudou durante a consulta.');
- const values=Object.fromEntries(SALES_FIELDS.map(k=>[k,0])),keys=[],seen=new Set();
- for(const row of rows){
-  checkOrder(row,c);const key=String(row.id);if(seen.has(key))throw fail('Pedido duplicado na consulta.');seen.add(key);keys.push(createHash('sha256').update(sellerId+':'+key).digest('hex'));
-  let value=productValue(row,itemId);if(!value.lines.length)continue;
-  if(['cancelled','pending_cancel'].includes(row.status)){values.cancelledRevenue+=value.net;values.cancelledOrders++;continue;}
-  const order=await api('/orders/'+key);checkOrder(order,c);
-  if(String(order.id)!==key||!productValue(order,itemId).lines.length)throw fail('O detalhe não corresponde ao pedido consultado.');
-  value=productValue(order,itemId);
-  if(['cancelled','pending_cancel'].includes(order.status)){values.cancelledRevenue+=value.net;values.cancelledOrders++;continue;}
-  if(!['paid','partially_refunded','confirmed'].includes(order.status))throw fail('Status de venda não reconhecido.');
-  try{value=discountsFor(order,itemId,await api('/orders/'+key+'/discounts'));values.discountRevenue+=value.discount;values.cashbackRevenue+=value.cashback;}
-  catch{values.discountReview++;}
-  const payment=paymentState(order,value.net);
-  if(order.status==='confirmed'&&payment.kind==='review')continue;
-  values.orders++;values.units+=value.quantity;values.paidRevenue+=value.net;
-  let refund=0;
-  if(payment.kind==='full'){refund=value.net;values.refundedOrders++;}
-  else if(payment.kind==='partial'){refund=payment.amount;values.refundedOrders++;}
-  else if(payment.kind==='partial-review')values.refundReview++;
-  else if(payment.kind==='review'||order.status==='confirmed')values.financialReview++;
-  values.refundedRevenue+=refund;values.revenue+=value.net-refund;
-  let undelivered=Array.isArray(order.tags)&&order.tags.includes('not_delivered');
-  if(order.shipping?.id!==undefined&&order.shipping.id!==null){
-   if(!numericId(order.shipping.id)){values.logisticsReview++;}
-   else try{
-    const shipment=await api('/shipments/'+order.shipping.id);
-    if(String(shipment.id)!==String(order.shipping.id)||typeof shipment.status!=='string')throw fail('Envio inválido.');
-    undelivered=['not_delivered','cancelled','returned'].includes(shipment.status);
-   }catch{values.logisticsReview++;}
+  if (!isDate(range?.dateFrom) || !isDate(range?.dateTo)) {
+    throw salesError('Período inválido para consultar as vendas.');
   }
-  if(undelivered&&['paid','partial'].includes(payment.kind)){values.notDeliveredPaidOrders++;values.notDeliveredPaidRevenue+=value.net-refund;}
- }
- if(!SALES_FIELDS.every(k=>Number.isSafeInteger(values[k])&&values[k]>=0))throw fail('O faturamento excedeu o limite seguro.');
- const nextOffset=offset+rows.length<p.total?offset+rows.length:null;
- return {sales:shape(c,values,offset===0&&nextOffset===null),page:{offset,count:rows.length,total:p.total,nextOffset,keys}};
+
+  const from = range.dateFrom + 'T00:00:00.000-03:00';
+  const to = range.dateTo + 'T23:59:59.999-03:00';
+  if (Date.parse(to) < Date.parse(from) || Date.parse(to) - Date.parse(from) >= 90 * 86400000) {
+    throw salesError('Consulte até 90 dias de vendas por vez.');
+  }
+
+  return { from, to, itemId, sellerId, dateFrom: range.dateFrom, dateTo: range.dateTo };
 }
-export async function itemSales(options){
- const parts=[],seen=new Set();let offset=0,expectedTotal=null;
- for(let i=0;i<1000;i++){
-  const result=await itemSalesPage({...options,offset,expectedTotal});
-  for(const key of result.page.keys){if(seen.has(key))throw fail('Pedido duplicado entre páginas.');seen.add(key);}
-  parts.push(result.sales);expectedTotal=result.page.total;if(result.page.nextOffset===null)return sumItemSales(parts);offset=result.page.nextOffset;
- }
- throw fail('A consulta de vendas atingiu o limite. Nenhuma soma parcial foi utilizada.');
+
+function validateOrder(order, context) {
+  if (!isNumericId(order?.id) || Number(order.seller?.id) !== context.sellerId ||
+      order.currency_id !== 'BRL' || !Array.isArray(order.order_items)) {
+    throw salesError('A consulta retornou pedido de outra conta ou moeda inválida.');
+  }
+
+  const created = Date.parse(order.date_created);
+  if (!Number.isFinite(created) || created < Date.parse(context.from) || created > Date.parse(context.to)) {
+    throw salesError('As vendas não correspondem ao período solicitado.');
+  }
+
+  for (const line of order.order_items) {
+    if (!/^MLB\d{5,15}$/.test(line.item?.id) || !Number.isSafeInteger(line.quantity) ||
+        line.quantity <= 0 || (line.currency_id !== undefined && line.currency_id !== 'BRL') ||
+        !isNonNegative(line.unit_price)) {
+      throw salesError('Os itens da venda estão incompletos.');
+    }
+  }
+}
+
+function validatePagination(page, rows, offset, expectedTotal) {
+  if (!page || !Number.isSafeInteger(page.total) || page.total < 0 ||
+      !Number.isSafeInteger(page.limit) || page.limit <= 0 || page.limit > SALES_PAGE_SIZE ||
+      page.offset !== offset || !Array.isArray(rows) || rows.length > page.limit ||
+      offset + rows.length > page.total ||
+      (expectedTotal !== null && page.total !== expectedTotal) ||
+      (offset + rows.length < page.total && rows.length !== page.limit)) {
+    throw salesError('A paginação de vendas está incompleta ou mudou durante a consulta.');
+  }
+}
+
+function salesSnapshot(context, totals, complete) {
+  return {
+    source: SALES_SOURCE,
+    basis: SALES_BASIS,
+    itemId: context.itemId,
+    sellerId: context.sellerId,
+    currency: 'BRL',
+    dateFrom: context.dateFrom,
+    dateTo: context.dateTo,
+    ...Object.fromEntries(SALES_FIELDS.map(key => [key, isMoneyField(key) ? totals[key] / 100 : totals[key]])),
+    complete,
+    status: hasReview(totals) ? 'review' : 'ready'
+  };
+}
+
+async function isUndelivered(order, api, totals) {
+  let undelivered = Array.isArray(order.tags) && order.tags.includes('not_delivered');
+  const shippingId = order.shipping?.id;
+  if (shippingId === undefined || shippingId === null) return undelivered;
+
+  if (!isNumericId(shippingId)) {
+    totals.logisticsReview++;
+    return undelivered;
+  }
+
+  try {
+    const shipment = await api('/shipments/' + shippingId);
+    if (String(shipment.id) !== String(shippingId) || typeof shipment.status !== 'string') {
+      throw salesError('Envio inválido.');
+    }
+    undelivered = ['not_delivered', 'cancelled', 'returned'].includes(shipment.status);
+  } catch {
+    totals.logisticsReview++;
+  }
+
+  return undelivered;
+}
+
+async function addPaidOrder({ order, value, itemId, api, totals }) {
+  try {
+    value = applyItemDiscounts(order, itemId, await api('/orders/' + order.id + '/discounts'));
+    totals.discountRevenue += value.discount;
+    totals.cashbackRevenue += value.cashback;
+  } catch {
+    totals.discountReview++;
+  }
+
+  const payment = classifyPayment(order, value.net);
+  if (order.status === 'confirmed' && payment.kind === 'review') return;
+
+  totals.orders++;
+  totals.units += value.quantity;
+  totals.paidRevenue += value.net;
+
+  let refund = 0;
+  if (payment.kind === 'full') {
+    refund = value.net;
+    totals.refundedOrders++;
+  } else if (payment.kind === 'partial') {
+    refund = payment.amount;
+    totals.refundedOrders++;
+  } else if (payment.kind === 'partial-review') {
+    totals.refundReview++;
+  } else if (payment.kind === 'review' || order.status === 'confirmed') {
+    totals.financialReview++;
+  }
+
+  totals.refundedRevenue += refund;
+  totals.revenue += value.net - refund;
+
+  if (await isUndelivered(order, api, totals) && ['paid', 'partial'].includes(payment.kind)) {
+    totals.notDeliveredPaidOrders++;
+    totals.notDeliveredPaidRevenue += value.net - refund;
+  }
+}
+
+export function sumItemSales(parts) {
+  if (!parts.length) return undefined;
+  const first = parts[0];
+  if (!parts.every(part => part.source === SALES_SOURCE && part.basis === SALES_BASIS &&
+      part.itemId === first.itemId && part.sellerId === first.sellerId && part.currency === 'BRL')) {
+    throw salesError('Não é possível misturar bases de faturamento.');
+  }
+
+  const totals = Object.fromEntries(SALES_FIELDS.map(key => [
+    key, parts.reduce((sum, part) => sum + (isMoneyField(key) ? toCents(part[key]) : part[key]), 0)
+  ]));
+  if (!safeTotals(totals)) throw salesError('O total de faturamento excedeu o limite seguro.');
+
+  return salesSnapshot({ ...first, dateTo: parts.at(-1).dateTo }, totals, true);
+}
+
+export async function itemSalesPage({ itemId, sellerId, range, api, offset = 0, expectedTotal = null }) {
+  const context = salesContext({ itemId, sellerId, range });
+  if (!Number.isSafeInteger(offset) || offset < 0 || offset > MAX_PAGE_OFFSET ||
+      (expectedTotal !== null && (!Number.isSafeInteger(expectedTotal) || expectedTotal < 0))) {
+    throw salesError('Página de vendas inválida.');
+  }
+
+  const query = new URLSearchParams({
+    seller: String(sellerId),
+    q: itemId,
+    'order.date_created.from': context.from,
+    'order.date_created.to': context.to,
+    'order.status': SEARCH_STATUSES,
+    sort: 'date_asc',
+    limit: String(SALES_PAGE_SIZE),
+    offset: String(offset)
+  });
+  const data = await api('/orders/search?' + query);
+  const page = data?.paging;
+  const rows = data?.results;
+  validatePagination(page, rows, offset, expectedTotal);
+
+  const totals = Object.fromEntries(SALES_FIELDS.map(key => [key, 0]));
+  const keys = [];
+  const seen = new Set();
+
+  for (const row of rows) {
+    validateOrder(row, context);
+    const key = String(row.id);
+    if (seen.has(key)) throw salesError('Pedido duplicado na consulta.');
+    seen.add(key);
+    keys.push(createHash('sha256').update(sellerId + ':' + key).digest('hex'));
+
+    let value = readProductValue(row, itemId);
+    if (!value.lines.length) continue;
+    if (CANCELLED_STATUSES.includes(row.status)) {
+      totals.cancelledRevenue += value.net;
+      totals.cancelledOrders++;
+      continue;
+    }
+
+    const order = await api('/orders/' + key);
+    validateOrder(order, context);
+    if (String(order.id) !== key || !readProductValue(order, itemId).lines.length) {
+      throw salesError('O detalhe não corresponde ao pedido consultado.');
+    }
+
+    value = readProductValue(order, itemId);
+    if (CANCELLED_STATUSES.includes(order.status)) {
+      totals.cancelledRevenue += value.net;
+      totals.cancelledOrders++;
+      continue;
+    }
+    if (!PAID_STATUSES.includes(order.status)) throw salesError('Status de venda não reconhecido.');
+
+    await addPaidOrder({ order, value, itemId, api, totals });
+  }
+
+  if (!safeTotals(totals)) throw salesError('O faturamento excedeu o limite seguro.');
+  const nextOffset = offset + rows.length < page.total ? offset + rows.length : null;
+  return {
+    sales: salesSnapshot(context, totals, offset === 0 && nextOffset === null),
+    page: { offset, count: rows.length, total: page.total, nextOffset, keys }
+  };
+}
+
+export async function itemSales(options) {
+  const parts = [];
+  const seen = new Set();
+  let offset = 0;
+  let expectedTotal = null;
+
+  for (let index = 0; index < MAX_PAGES; index++) {
+    const result = await itemSalesPage({ ...options, offset, expectedTotal });
+    for (const key of result.page.keys) {
+      if (seen.has(key)) throw salesError('Pedido duplicado entre páginas.');
+      seen.add(key);
+    }
+
+    parts.push(result.sales);
+    expectedTotal = result.page.total;
+    if (result.page.nextOffset === null) return sumItemSales(parts);
+    offset = result.page.nextOffset;
+  }
+
+  throw salesError('A consulta de vendas atingiu o limite. Nenhuma soma parcial foi utilizada.');
 }

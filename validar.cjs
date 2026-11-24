@@ -2,8 +2,8 @@
 const fs = require('node:fs');
 const vm = require('node:vm');
 const assert = require('node:assert/strict');
-const html = fs.readFileSync(__dirname + '/index.html', 'utf8');
-const script = html.match(/<script>([\s\S]*?)<\/script>/)[1];
+const html = require('./preparar-site.cjs').compilePage();
+const script = fs.readFileSync(__dirname + '/src/app.js', 'utf8');
 new vm.Script(script); // Verifica também a sintaxe de todo o aplicativo.
 const context = vm.createContext({URL});
 vm.runInContext(script.slice(0, script.indexOf('let state=defaults()')) +

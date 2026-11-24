@@ -1,9 +1,7 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
-const fs=require('node:fs');
-const path=require('node:path');
 const vm=require('node:vm');
-const script=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8').match(/<script>([\s\S]*?)<\/script>/)[1];
+const script=require('./support/app-source.cjs').readAppScript();
 const context=vm.createContext({URL});
 vm.runInContext(script.slice(0,script.indexOf('let state=defaults()'))+';globalThis.api={defaults,copyFees,productInitialFees,readProductFees,feeFields,calculate};',context);
 const api=context.api;

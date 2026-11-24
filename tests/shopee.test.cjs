@@ -1,9 +1,7 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
-const fs=require('node:fs');
 const vm=require('node:vm');
-const html=fs.readFileSync(require('node:path').join(__dirname,'../index.html'),'utf8');
-const script=html.match(/<script>([\s\S]*?)<\/script>/)[1],context=vm.createContext({URL});
+const script=require('./support/app-source.cjs').readAppScript(),context=vm.createContext({URL});
 vm.runInContext(script.slice(0,script.indexOf('let state=defaults()'))+';globalThis.api={calculate,calculateShopee,shopeeAtPrice,withShopeePolicy,defaults,buildBackup,parseBackup,kitTotals,validState,SHOPEE_POLICY_ID};',context);
 const api=context.api;
 const fees=api.withShopeePolicy(api.defaults().fees);

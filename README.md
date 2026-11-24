@@ -123,8 +123,24 @@ e não é versionado.
 
 ## Registrar alterações
 
-Edite o `index.html` da raiz, execute os testes e registre suas alterações em commits.
-A pasta `dist` é gerada pelo build e não precisa ser enviada ao GitHub.
+Os fontes ficam separados para facilitar a manutenção:
+
+- `src/index.html`: estrutura e campos da página.
+- `src/styles.css`: aparência e adaptação às telas.
+- `src/app.js`: cálculos, armazenamento e comportamento do painel.
+- `netlify/lib/ml-sales.mjs`: consulta, validação e paginação das vendas do TACOS.
+- `netlify/lib/ml-sales-rules.mjs`: regras financeiras de descontos e pagamentos,
+  sem consultas externas ou estado do navegador.
+
+Edite esses fontes, execute `npm run build` e registre as alterações em commits.
+O build gera o `index.html` da raiz e a cópia de publicação em `dist`, incorporando
+CSS e JavaScript. O arquivo final continua portátil: abre por duplo clique e pode
+ser transferido sozinho para o celular. Não edite o HTML gerado diretamente,
+pois a próxima montagem substitui seu conteúdo.
+
+`validar.cjs` e os testes leem o JavaScript dos fontes. Os testes de montagem
+verificam a distribuição em arquivo único e impedem publicar fontes, documentação
+ou testes por engano. A pasta `dist` não precisa ser enviada ao GitHub.
 
 O frete automático não usa o antigo limite manual de R$100. Consulta todas as faixas, inclusive quando o comprador paga o envio. Para produtos novos em Full, Coleta ou Agências, simula frete rápido a partir de R$79, de acordo com a [tabela oficial 40538](https://www.mercadolivre.com.br/ajuda/40538). O peso faturável e eventuais condições da conta continuam determinados pela API.
 

@@ -1,6 +1,6 @@
-const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),path=require('node:path'),vm=require('node:vm');
+const {test}=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm');
 const now=()=>Date.parse('2026-11-16T13:00:00Z'),id='MLB1234567890';
-const code=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8').match(/<script>([\s\S]*?)<\/script>/)[1];
+const code=require('./support/app-source.cjs').readAppScript();
 const context=vm.createContext({URL});vm.runInContext(code.slice(0,code.indexOf('let state=defaults()'))+code.slice(code.indexOf('function csvCell'),code.indexOf("$('export').onclick"))+';globalThis.api={defaults,validState,validProductAds,validAdsHistory,adsHistoryRanges,adsHistoryMetric,adsHistoryCsv,adsEvidenceKey,adsReconciled,buildBackup,parseBackup,adsTrend};',context);const core=context.api;
 function setup(options={}){
  const calls=[],page=results=>({paging:{offset:0,total:results.length,limit:50},results});

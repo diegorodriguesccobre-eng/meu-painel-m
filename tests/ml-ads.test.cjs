@@ -1,6 +1,6 @@
 const {test}=require('node:test');
 const assert=require('node:assert/strict');
-const fs=require('node:fs'),vm=require('node:vm');
+const vm=require('node:vm');
 const modulePromise=import('../netlify/lib/ml-ads.mjs');
 const now=()=>Date.parse('2026-11-13T15:00:00Z');
 const item='MLB1234567890',other='MLB9876543210';
@@ -82,7 +82,7 @@ test('rota Ads exige sessão, origem própria e repassa versões sem mudar escop
  const response=await handler(req({Cookie:cookie,Origin:origin,'X-Conduz-Action':'mercadolivre'}));assert.equal(response.status,200);assert.equal(response.headers.get('cache-control'),'no-store');
  assert.equal((await response.json()).advertising.items[0].status,'no-ad');
 });
-const script=fs.readFileSync(require('node:path').join(__dirname,'../index.html'),'utf8').match(/<script>([\s\S]*?)<\/script>/)[1];
+const script=require('./support/app-source.cjs').readAppScript();
 const context=vm.createContext({URL,Intl,Date});
 vm.runInContext(script.slice(0,script.indexOf('let state=defaults()'))+script.slice(script.indexOf('function applyProductAds('),script.indexOf('async function refreshRegisteredAds('))+';globalThis.api={applyProductAds,validProductAds,buildBackup,parseBackup,defaults,cardAdsHTML,calculate,saleResult,officialQuote};',context);
 const app=context.api;

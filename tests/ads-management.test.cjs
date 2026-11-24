@@ -1,5 +1,5 @@
-const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),path=require('node:path');
-const script=fs.readFileSync(path.join(__dirname,'../index.html'),'utf8').match(/<script>([\s\S]*?)<\/script>/)[1];
+const {test}=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm');
+const script=require('./support/app-source.cjs').readAppScript();
 const ctx=vm.createContext({URL});vm.runInContext(script.slice(0,script.indexOf('let state=defaults()'))+';globalThis.api={defaults,validState,validProductAds,validAdsAccount,validAdsReconciliation,validAdsManagement,adsEvidenceKey,adsReconciled,estimateProductAds,adsBlueStrength,adsCurrentPeriod,adsManagementData,adsProjection,buildBackup,parseBackup,copyProductAds};',ctx);
 const api=ctx.api,now=Date.parse('2026-11-16T13:00:00Z'),period={dateFrom:'2026-10-17',dateTo:'2026-11-15'};
 const clone=v=>JSON.parse(JSON.stringify(v));
