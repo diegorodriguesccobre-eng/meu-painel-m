@@ -8,6 +8,9 @@
   ],
   "workers_dev": true,
   "preview_urls": false,
+  "vars": {
+    "CATALOG_SELLER_ID": "311509489"
+  },
   "d1_databases": [
     {
       "binding": "CATALOG_DB",
