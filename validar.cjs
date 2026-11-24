@@ -89,6 +89,11 @@ function runtime(storage=new Map()) {
   vm.runInContext(script,sandbox);
   return {get,sandbox,storage,headers,downloads,run:code=>vm.runInContext(code,sandbox)};
 }
+// Dados sintéticos exclusivos dos testes; não há ação de demonstração no painel.
+function loadCatalogFixture(app){
+ const fixtures=products.map(p=>({...p,id:'example-'+p.name,mlShipping:0}));
+ app.run(`state.products=${JSON.stringify(fixtures)}.map(p=>({...p,feeSnapshot:withShopeePolicy(state.fees)}));persist();render();`);
+}
 // Varia os padrões legados guardados em backups para verificar a preservação dos cadastros.
 function changeDefaultFixture(app,elements){
  const candidate=JSON.parse(JSON.stringify(copyFees(fees)));
@@ -97,13 +102,11 @@ function changeDefaultFixture(app,elements){
 }
 const app=runtime();
 assert.equal(app.get('count').textContent,0);
-app.get('examples').onclick();
+loadCatalogFixture(app);
 assert.equal(app.get('count').textContent,3);
 assert.equal(app.get('warning-count').textContent,0);
 assert.ok(app.get('rows').innerHTML.includes('class="health-risk"'));
 assert.ok(app.get('rows').innerHTML.includes('117,65'));
-app.get('examples').onclick();
-assert.equal(app.get('count').textContent,3); // Não duplica exemplos.
 app.get('search').value='MODA';app.get('search').oninput();
 assert.equal(app.get('table-count').textContent,'1 de 3 produtos');
 assert.ok(app.get('rows').innerHTML.includes('Camiseta básica'));
@@ -141,7 +144,7 @@ assert.ok(!app.run("state.products.some(p=>p.id==='new-product')"));
 const broken=runtime(new Map([['margem.painel.v1','{broken']]));
 assert.equal(broken.get('count').textContent,0);
 assert.ok(broken.get('save-status').textContent.includes('Verifique'));
-checks+=24;
+checks+=23;
 // Frete condicional: verifica o limite, o lucro e a independência da Shopee.
 const shippingResults=[];
 for(const [cost,expectedPrice,expectedShipping] of [[53.99,99.99,0],[54,100,0],[54.01,130.02,18]]){
@@ -238,7 +241,7 @@ assert.throws(()=>parseImportCSV('nome;custo;peso\n'+('Teste;1;0\n').repeat(5001
 assert.throws(()=>parseImportCSV(simpleCSV,{category:' ',margin:20}));
 assert.throws(()=>parseImportCSV(simpleCSV,{category:'Teste',margin:100}));
 // Fluxo completo de prévia e confirmação, mantendo os produtos existentes.
-const bulk=runtime();bulk.get('examples').onclick();
+const bulk=runtime();loadCatalogFixture(bulk);
 bulk.get('import-category').value='Lote teste';bulk.get('import-margin').value='20';
 bulk.get('import').onclick();
 assert.equal(bulk.get('import-confirm').disabled,true);
@@ -288,7 +291,7 @@ assert.throws(()=>parseBackup(JSON.stringify({...envelope,data:{products:[{...pr
 assert.throws(()=>parseBackup(JSON.stringify({...envelope,data:{products,fees:{...fees,ml:{commission:99,fixed:0,tax:6}}}})));
 assert.throws(()=>parseBackup(JSON.stringify({...envelope,data:{products:[{...products[0],mlShipping:-1}],fees}})));
 assert.throws(()=>parseBackup(' '.repeat(20*1024*1024+1)));
-const recovered=runtime();recovered.get('examples').onclick();
+const recovered=runtime();loadCatalogFixture(recovered);
 recovered.get('search').value='Moda';recovered.get('search').oninput();
 recovered.get('download-backup').onclick();
 assert.equal(recovered.downloads.length,1);
@@ -315,7 +318,7 @@ recovered.run("previewRestore('{arquivo inválido')");
 assert.equal(recovered.get('restore-confirm').disabled,true);
 assert.deepEqual(JSON.parse(recovered.run('JSON.stringify(state)')),complete);
 // Uma falha de gravação não substitui nem o estado em memória nem o já salvo.
-const failing=runtime();failing.get('examples').onclick();
+const failing=runtime();loadCatalogFixture(failing);
 const oldMemory=failing.run('JSON.stringify(state)'),oldSaved=failing.storage.get('margem.painel.v1');
 failing.run(`previewRestore(${JSON.stringify(backupText)});localStorage.setItem=()=>{throw Error('Sem espaço');}`);
 failing.get('restore-form').onsubmit({preventDefault(){}});
@@ -351,7 +354,7 @@ assert.deepEqual(JSON.parse(JSON.stringify(parseBackup(kitBackup).kits)),[kit]);
 const legacyBackup=JSON.stringify({format:'margem-backup',version:1,data:{products,fees}});
 assert.equal(parseBackup(legacyBackup).kits.length,0);
 assert.equal(runtime(new Map([['margem.painel.v1',JSON.stringify({products,fees})]])).run('state.kits.length'),0);
-const kitApp=runtime();kitApp.get('examples').onclick();
+const kitApp=runtime();loadCatalogFixture(kitApp);
 kitApp.get('view-kits').onclick();
 assert.equal(kitApp.get('view-kits')['aria-pressed'],'true');
 assert.ok(kitApp.get('kit-picker').innerHTML.includes('Garrafa térmica'));
@@ -418,7 +421,7 @@ assert.ok(modeCSV.includes('Mercado Livre Premium - preço (R$)'));
 assert.equal((modeCSV.match(/"Sim";"Sim"/g)??[]).length,3);
 assert.ok(modeCSV.includes('"66,98"'));
 assert.ok(modeCSV.includes('"22,50";"4,49"'));
-const modes=runtime();modes.get('examples').onclick();modes.run('renderProductRates(state.fees)');
+const modes=runtime();loadCatalogFixture(modes);modes.run('renderProductRates(state.fees)');
 assert.ok(modes.get('product-rate-fields').innerHTML.includes('name="product-shopee-easyReturnEnabled"'));
 assert.ok(modes.get('product-rate-fields').innerHTML.includes('name="product-shopee-officialEventEnabled"'));
 assert.ok(!html.includes('name="shopeeEasyReturn"'));
@@ -541,7 +544,7 @@ assert.equal(importedSnapshot.run("calculate(state.products[0],state.fees.ml,'ml
 assert.ok(importedSnapshot.run('state.products[0].feeSnapshot.ml!==state.products[1].feeSnapshot.ml'));
 checks+=40;
 // Kits também preservam suas taxas, independentemente das taxas dos componentes.
-const frozenKits=runtime();frozenKits.run("let kitFeeId=0;crypto.randomUUID=()=> 'kit-fee-'+(++kitFeeId)");frozenKits.get('examples').onclick();
+const frozenKits=runtime();frozenKits.run("let kitFeeId=0;crypto.randomUUID=()=> 'kit-fee-'+(++kitFeeId)");loadCatalogFixture(frozenKits);
 function saveFeeKit(app,name){
  app.get('kit-new').onclick();app.get('kit-name').value=name;app.get('kit-margin').value='20';app.get('kit-extra').value='5';app.get('kit-shipping').value='18';
  app.get('kit-picker').onchange({target:{dataset:{kitProduct:'example-Garrafa térmica 500 ml'},checked:true}});

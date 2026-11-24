@@ -63,7 +63,7 @@ o preço mínimo para 10%, o CSV de produtos e o backup respeitam as taxas guard
 
 Ao abrir esta versão, produtos e kits antigos sem taxas próprias recebem uma cópia das
 taxas atuais salvas no navegador. Valores históricos que nunca foram registrados
-não podem ser recuperados. O cadastro manual, os exemplos e a importação CSV guardam
+não podem ser recuperados. O cadastro manual e a importação CSV guardam
 as taxas vigentes no momento de incluir cada produto. Ao salvar um kit, ele recebe
 sua própria cópia das taxas gerais, independente das taxas dos produtos componentes.
 Os custos e pesos dos componentes continuam atualizados pelo catálogo. A restauração
@@ -164,7 +164,7 @@ Na tela Montar kits, selecione os componentes e as quantidades, confira a catego
 
 O painel consulta Clássico, Premium e a referência para 10% com custo e peso somados. Medidas opcionais são da embalagem do conjunto. Sem medidas, o frete é estimado pela tabela oficial com o peso total; a embalagem volumétrica pode mudar o custo. São preservados categoria, referência, dimensões, frete, comissões, imposto e data da consulta no kit e no backup v17. Kits antigos mantêm o modo manual e suas taxas até serem editados. Alterações nos custos ou pesos dos componentes invalidam a cotação anterior e pedem atualização, sem alterar silenciosamente as tarifas guardadas.
 
-O bloco geral “Taxas dos marketplaces” foi removido da tela principal. Valores padrão legados continuam nos dados para compatibilidade com backups, exemplos, importação e kits manuais; remover a interface não altera taxas ou cotações de cadastros existentes.
+O bloco geral “Taxas dos marketplaces” foi removido da tela principal. Valores padrão legados continuam nos dados para compatibilidade com backups, importação e kits manuais; remover a interface não altera taxas ou cotações de cadastros existentes.
 
 O favicon usa somente o raio da Conduz Cobre, em SVG com alternativa PNG de 32 px e fundo transparente.
 

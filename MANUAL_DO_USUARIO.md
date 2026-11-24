@@ -98,8 +98,6 @@ Use a busca de **Meus produtos** para procurar por nome, categoria ou ID do Merc
 
 Clique em **Editar** para ajustar um produto e salve ao terminar. **Excluir** pede confirmação. Se o produto participa de um kit, primeiro remova-o do kit ou exclua esse kit. Excluir um kit mantém os produtos individuais.
 
-O botão **Exemplos** acrescenta três produtos de demonstração usando as configurações disponíveis. Eles são cadastros locais e podem ser removidos depois.
-
 <a id="mercado-livre"></a>
 
 ## 4. Conectar um anúncio do Mercado Livre

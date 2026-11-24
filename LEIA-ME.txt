@@ -18,7 +18,7 @@ O material para estatísticas futuras está no arquivo ESTATISTICAS_ADS.md.
 1. No computador, abra a pasta painel_precos e dê dois cliques em index.html.
    Ele abre no navegador. Não precisa instalar nada, iniciar servidor ou fazer login.
    O painel funciona sem internet: não usa fontes, bibliotecas nem serviços externos.
-2. Clique em “Carregar 3 exemplos” para experimentar ou em “Novo produto”.
+2. Clique em “Novo produto” para cadastrar um produto.
 3. Ajuste as comissões Clássica e Premium do Mercado Livre, as taxas da Shopee,
    as taxas fixas e os impostos. Clique em “Salvar taxas”.
    As taxas iniciais são ilustrativas, não tabelas oficiais dos marketplaces.
@@ -71,7 +71,7 @@ Cada produto guarda uma cópia das comissões Clássica e Premium, taxas fixas,
 impostos, adicionais e serviços ativos da Shopee no momento em que é cadastrado.
 Alterar “Taxas dos marketplaces” só altera os padrões para os próximos produtos;
 os produtos anteriores mantêm suas próprias taxas. Isso também vale para produtos
-importados por CSV ou adicionados pelos exemplos.
+importados por CSV.
 Editar nome, custo, peso, frete ou margem mantém as taxas originais do produto.
 A tabela, a ordenação por preço, o mínimo de 10% e o CSV usam as taxas preservadas.
 O backup completo inclui essas cópias e as mantém ao restaurar.
