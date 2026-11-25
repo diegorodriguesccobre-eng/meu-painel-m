@@ -141,6 +141,10 @@ Se aparecer **Dados só nesta sessão**, baixe um backup antes de fechar a pági
 
 ## 2. Conhecer as telas
 
+Use o **menu lateral** para abrir **Meus produtos**, **Montar kits** ou **Gestão de Ads**. No computador, ele permanece disponível ao lado do conteúdo. No celular e em telas menores, toque em **Menu** para abri-lo; escolha uma opção, toque em **Fechar menu**, toque fora do menu ou pressione Escape para fechá-lo.
+
+O botão **Manual do usuário**, no mesmo menu, abre este documento no GitHub em uma nova aba. Ele está disponível nas três telas e não exige conexão com o Mercado Livre. A aba do painel permanece aberta, sem substituir seus cadastros ou reiniciar os formulários. Ler o manual no GitHub exige internet.
+
 | Tela | Para que serve |
 |---|---|
 | **Meus produtos** | Cadastrar, pesquisar, ordenar e comparar os preços e lucros dos produtos; importar CSV, exportar e fazer backup. |

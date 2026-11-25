@@ -703,6 +703,28 @@ function showScreen(screen){
  if(active==='kits')renderKitScreen();if(active==='ads')adsSetLayout(adsHistoryUi.layout);
 }
 $('view-products').onclick=()=>showScreen('products');$('view-kits').onclick=()=>showScreen('kits');$('view-ads').onclick=()=>showScreen('ads');
+const sidebarMedia=globalThis.matchMedia?.('(max-width: 1100px)');
+let sidebarOpen=false;
+function setSidebarOpen(open,restoreFocus=true){
+ const mobile=Boolean(sidebarMedia?.matches);sidebarOpen=mobile&&open;
+ document.body?.classList?.toggle('navigation-open',sidebarOpen);
+ $('app-sidebar').inert=mobile&&!sidebarOpen;$('main-content').inert=sidebarOpen;
+ $('sidebar-overlay').hidden=!sidebarOpen;$('sidebar-toggle').setAttribute('aria-expanded',String(!mobile||sidebarOpen));
+ if(sidebarOpen)$('sidebar-menu').querySelector?.('button[aria-pressed="true"]')?.focus();
+ else if(mobile&&restoreFocus)$('sidebar-toggle').focus?.();
+}
+$('sidebar-toggle').onclick=()=>setSidebarOpen(!sidebarOpen);
+$('sidebar-close').onclick=$('sidebar-overlay').onclick=()=>setSidebarOpen(false);
+$('sidebar-menu').addEventListener?.('click',e=>{if(e.target.closest('button[id^="view-"],a'))setSidebarOpen(false);});
+document.addEventListener?.('keydown',e=>{
+ if(!sidebarOpen)return;
+ if(e.key==='Escape'){e.preventDefault();setSidebarOpen(false);return;}
+ if(e.key!=='Tab')return;
+ const items=Array.from($('app-sidebar').querySelectorAll('button:not(:disabled),a[href]')),first=items[0],last=items[items.length-1];
+ if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}
+ else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}
+});
+sidebarMedia?.addEventListener?.('change',()=>setSidebarOpen(false,false));setSidebarOpen(false,false);
 $('kit-search').oninput=renderKitPicker;
 $('kit-picker').onchange=e=>{
  const input=e.target;
