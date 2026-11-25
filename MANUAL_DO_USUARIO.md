@@ -30,6 +30,7 @@ O painel ajuda a definir preços no Mercado Livre e na Shopee, comparar o lucro 
   - [Exportar no computador](#exportar-csv-computador)
   - [Exportar no celular](#exportar-csv-celular)
   - [Quando Exportar CSV fica desativado](#exportar-csv-desativado)
+  - [Reativar CSV ao trocar por uma busca válida](#exportar-csv-busca-valida)
   - [Exportar todos ao limpar a busca](#exportar-todos-produtos)
 - [9. Baixar e restaurar um backup](#backup)
 - [10. Usar a Gestão de Ads](#ads)
@@ -537,6 +538,8 @@ O comportamento é o mesmo nas duas telas: mudar a busca, o critério ou a dire�
 
 No computador e no celular, uma busca sem resultados mantém **Exportar CSV** visível, mas **desativado**. A lista mostra **Nenhum produto corresponde à busca** e um contador como **0 de 3 produtos**. Isso significa que nenhum cadastro corresponde ao filtro; os produtos continuam salvos.
 
+Você pode [substituir a busca por uma válida](#exportar-csv-busca-valida) para exportar somente os produtos encontrados, ou limpar a busca para exportar todos, conforme os passos abaixo.
+
 Para reativar o botão e exportar todos os produtos na ordem escolhida, siga os passos da sua tela.
 
 **No computador:**
@@ -556,6 +559,30 @@ Para reativar o botão e exportar todos os produtos na ordem escolhida, siga os 
 **Limpar a busca reativa o botão, mas não inicia o download.** Clique ou toque em **Exportar CSV** para gerar o arquivo completo. Por exemplo, com **Peso** e **↑ Crescente**, todos os produtos são exportados do menor para o maior peso; com **ML Clássico** e **↓ Decrescente**, do maior para o menor preço desse marketplace. Limpar a busca e exportar preservam os cadastros e suas configurações.
 
 Se o catálogo estiver vazio, com **0 de 0 produtos**, limpar a busca não cria resultados: é preciso cadastrar produtos ou carregar o catálogo da empresa para exportar.
+
+<a id="exportar-csv-busca-valida"></a>
+
+#### Reativar CSV ao trocar por uma busca válida
+
+No computador e no celular, você pode substituir uma busca sem resultados por outra que encontre produtos. **Exportar CSV é reativado automaticamente** assim que houver resultados. O critério em **Ordenar por** e a direção **↑ Crescente** ou **↓ Decrescente** são mantidos. Ao exportar, o arquivo inclui **somente os produtos encontrados**, nessa ordem.
+
+**No computador:**
+
+1. Em **Meus produtos**, clique em **Buscar produto ou categoria** e substitua o texto da busca sem resultados por parte de um nome, categoria ou ID MLB vinculado. Não é necessário limpar a busca em uma etapa separada nem apertar Enter.
+2. Confira os cartões e o contador. **2 de 3 produtos**, por exemplo, significa que o CSV terá dois produtos; o terceiro permanece cadastrado e fica fora do arquivo porque não corresponde à busca. O botão **Exportar CSV** volta a ficar disponível.
+3. Confira **Ordenar por** e **↑ Crescente** ou **↓ Decrescente**. Trocar o texto da busca preserva o critério e a direção que estavam selecionados.
+4. Clique em **Exportar CSV** e abra o arquivo baixado. As linhas seguem os resultados e a sequência dos cartões, além da linha de cabeçalhos.
+
+**No celular:**
+
+1. Se estiver em outra tela, toque em **Menu** e escolha **Meus produtos**. Em **Buscar produto ou categoria**, substitua o texto sem resultados por uma busca válida.
+2. Confira os cartões encontrados e o contador, como **2 de 3 produtos**. **Exportar CSV** é reativado automaticamente; os demais produtos continuam salvos, fora da seleção.
+3. Confira **Ordenar por** e **↑ Crescente** ou **↓ Decrescente**. O critério e a direção escolhidos no celular são mantidos ao trocar a busca.
+4. Toque em **Exportar CSV** e confira o arquivo na área de downloads do navegador. Ele inclui todos os resultados do filtro, inclusive os cartões mais abaixo na página, na mesma ordem da lista.
+
+**Exemplo ilustrativo:** em um catálogo com **Cabo A**, **Cabo B** e **Tomada C**, uma busca que não corresponde a nenhum produto desativa o botão. Substituí-la por `cabo` faz o botão voltar a funcionar. Com **Nome** e **↓ Decrescente**, o CSV traz **Cabo B** e depois **Cabo A**; **Tomada C** fica fora do arquivo.
+
+Trocar a busca reativa o botão, mas não inicia o download: clique ou toque em **Exportar CSV** para gerar o arquivo com a seleção atual. Se a nova busca também não encontrar produtos, o botão continua desativado. Para [exportar o catálogo completo](#exportar-todos-produtos), apague todo o texto da busca. Pesquisar, ordenar e exportar preservam os cadastros e suas configurações.
 
 <a id="exportar-todos-produtos"></a>
 
@@ -727,7 +754,7 @@ Isso pode indicar falta de histórico, permissão, separação de diretas e indi
 
 | Dúvida ou aviso | O que conferir |
 |---|---|
-| “Exportar CSV está desativado.” | Confira se a busca retornou zero produtos. Apague o texto de Buscar produto ou categoria; quando os produtos reaparecerem, o botão será reativado automaticamente no computador e no celular. Clique ou toque em Exportar CSV para baixar todos os produtos, mantendo o critério e a direção escolhidos em Ordenar por. Veja [quando o botão fica desativado e como reativá-lo](#exportar-csv-desativado). |
+| “Exportar CSV está desativado.” | Confira se a busca retornou zero produtos. Em Buscar produto ou categoria, [troque por uma busca válida](#exportar-csv-busca-valida) para exportar somente os encontrados, ou [apague a busca](#exportar-csv-desativado) para exportar todos. Quando houver resultados, o botão será reativado automaticamente no computador e no celular. Clique ou toque em Exportar CSV para baixar a seleção, mantendo o critério e a direção escolhidos em Ordenar por. |
 | “O CSV trouxe menos produtos ou uma ordem diferente da que eu esperava.” | Confira a busca, o critério em Ordenar por e o botão Crescente/Decrescente antes do download. Para incluir todos, apague a busca: o critério e a direção são mantidos. Exporte novamente para baixar o catálogo completo nessa ordem. Veja [como exportar todos ao limpar a busca](#exportar-todos-produtos). |
 | “A lista está vazia, mas há produtos cadastrados.” | Apague o conteúdo de Buscar produto ou categoria e confira o contador abaixo da lista. Verifique também os acentos e a grafia da pesquisa. Se espera cadastros feitos por um colega, confira a [sincronização do catálogo](#sincronizacao). |
 | “Ordenar por Margem não acompanha as cores de risco.” | Margem usa a meta digitada no cadastro. As cores usam o lucro calculado sobre o preço de venda, conforme as [regras de lucros e cores](#precos). |
