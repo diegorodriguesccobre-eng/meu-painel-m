@@ -26,6 +26,9 @@ O painel ajuda a definir preços no Mercado Livre e na Shopee, comparar o lucro 
 - [6. Entender tarifas, impostos e frete](#tarifas)
 - [7. Montar e manter kits](#kits)
 - [8. Importar e exportar CSV](#csv)
+  - [Exportar produtos filtrados em CSV](#exportar-produtos-filtrados)
+  - [Exportar no computador](#exportar-csv-computador)
+  - [Exportar no celular](#exportar-csv-celular)
 - [9. Baixar e restaurar um backup](#backup)
 - [10. Usar a Gestão de Ads](#ads)
 - [11. Resolver dúvidas e avisos](#duvidas)
@@ -494,13 +497,45 @@ Organizador;18,90;0,125
 
 Havendo erro em qualquer linha, nenhum produto do arquivo é importado até a correção. O catálogo existente é mantido; nomes repetidos criam novos cadastros. O lote recebe categoria, margem e taxas preparadas na importação. Frete e outros custos começam em zero. A planilha de três colunas não cria vínculos com anúncios nem configura Ads; revise os novos registros depois de importar.
 
-### Exportar a precificação
+<a id="exportar-produtos-filtrados"></a>
 
-Em **Meus produtos**, **Exportar CSV** baixa os produtos visíveis, na ordem atual. Se há uma busca ativa, apenas os resultados encontrados são exportados. Limpe a busca para exportar todo o catálogo de produtos.
+### Exportar produtos filtrados em CSV
+
+Em **Meus produtos**, **Exportar CSV** baixa somente os produtos que correspondem à busca, na ordem escolhida em **Ordenar por** e no botão de direção. O filtro vale para todos os resultados da lista, inclusive os cartões mais abaixo na página. Cada linha de dados do arquivo corresponde a um produto, além da linha de cabeçalhos.
+
+<a id="exportar-csv-computador"></a>
+
+#### Exportar no computador
+
+1. Abra **Meus produtos** pelo menu lateral.
+2. Em **Buscar produto ou categoria**, digite parte do nome, da categoria ou do ID MLB vinculado. A lista é filtrada enquanto você digita.
+3. Em **Ordenar por**, escolha o critério desejado, como **Nome**, **Custo** ou o preço de um marketplace. Confira os [sete critérios disponíveis](#ordenar-produtos).
+4. Ajuste o botão para **↑ Crescente** ou **↓ Decrescente**. Ao trocar o critério, a direção atual é mantida.
+5. Confira os produtos, a sequência dos cartões e o contador abaixo da lista. **2 de 3 produtos**, por exemplo, significa que o CSV terá dois produtos, mesmo que o catálogo tenha três.
+6. Clique em **Exportar CSV** e abra o arquivo baixado. Os nomes e a sequência das linhas seguem a lista filtrada no momento do clique.
+
+<a id="exportar-csv-celular"></a>
+
+#### Exportar no celular
+
+1. Toque em **Menu** e escolha **Meus produtos**.
+2. Acima dos cartões, toque em **Buscar produto ou categoria** e digite o filtro.
+3. Toque em **Ordenar por** para escolher o critério e em **↑ Crescente** ou **↓ Decrescente** para definir a direção.
+4. Confira os cartões encontrados e o contador de resultados.
+5. Toque em **Exportar CSV**. O navegador baixa o arquivo ou apresenta as opções para salvá-lo; consulte a área de downloads do navegador para encontrá-lo.
+6. Ao abrir o arquivo, confira se as linhas correspondem aos produtos filtrados e à ordem apresentada no painel.
+
+O comportamento é o mesmo nas duas telas: mudar a busca, o critério ou a direção antes de exportar determina o conteúdo do próximo CSV. O arquivo já baixado é uma cópia daquele momento; para receber outra seleção ou outra ordem, exporte novamente.
+
+**Exemplo ilustrativo:** em um catálogo com **Cabo A**, **Cabo B** e **Tomada C**, a busca `cabo` deixa dois produtos. Com **Nome** e **↑ Crescente**, o CSV traz **Cabo A** e depois **Cabo B**. Com **↓ Decrescente**, traz **Cabo B** e depois **Cabo A**. **Tomada C** fica fora dos dois arquivos porque não corresponde à busca.
+
+Para exportar **todos os produtos**, apague o texto da busca, escolha a ordem desejada e clique ou toque em **Exportar CSV**. Se não houver resultados, o botão fica desativado; ajuste ou limpe a pesquisa.
 
 O arquivo reúne preços, lucros, mínimos para 10%, Ads, taxas, origem das consultas e classificações. Alguns cabeçalhos conservam o termo técnico “margem efetiva”; ele corresponde ao percentual calculado de lucro sobre o preço.
 
-Na **Gestão de Ads**, o botão **Exportar CSV** pertence ao comparativo e exporta seus resultados filtrados. Ele é diferente do CSV de precificação. Para recuperar todos os produtos, kits e configurações, use o backup JSON.
+O nome do arquivo segue o padrão `precos-marketplaces-AAAA-MM-DD.csv`. Ao importar em um programa de planilhas, use **UTF-8** e **ponto e vírgula (`;`)** como separador de colunas. Os números usam vírgula decimal. Esses parâmetros mantêm os acentos e os valores nas colunas corretas.
+
+A exportação preserva os produtos e suas configurações no painel. Para recuperar todos os produtos, kits e configurações em outro navegador, use o [backup JSON](#backup). Na **Gestão de Ads**, o botão **Exportar CSV** pertence ao comparativo e exporta seus próprios resultados filtrados, conforme as [instruções da Gestão de Ads](#ads).
 
 <a id="backup"></a>
 
@@ -651,6 +686,7 @@ Isso pode indicar falta de histórico, permissão, separação de diretas e indi
 
 | Dúvida ou aviso | O que conferir |
 |---|---|
+| “O CSV trouxe menos produtos ou uma ordem diferente da que eu esperava.” | Confira a busca, o critério em Ordenar por e o botão Crescente/Decrescente antes do download. O arquivo usa a lista naquele momento. Para incluir todos, apague a busca; para outra ordem, ajuste os controles e exporte novamente. Veja [como exportar os produtos filtrados](#exportar-produtos-filtrados). |
 | “A lista está vazia, mas há produtos cadastrados.” | Apague o conteúdo de Buscar produto ou categoria e confira o contador abaixo da lista. Verifique também os acentos e a grafia da pesquisa. Se espera cadastros feitos por um colega, confira a [sincronização do catálogo](#sincronizacao). |
 | “Ordenar por Margem não acompanha as cores de risco.” | Margem usa a meta digitada no cadastro. As cores usam o lucro calculado sobre o preço de venda, conforme as [regras de lucros e cores](#precos). |
 | “No computador, só aparecem ícones no menu.” | O menu está recolhido. Passe o mouse ou use Tab para identificar os atalhos. Clique na seta Expandir menu lateral para mostrar os nomes, conforme as [instruções do computador](#menu-computador). |
