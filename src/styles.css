@@ -262,8 +262,24 @@ fieldset{min-width:0;margin:0}legend{max-width:100%;white-space:normal}.option-q
 .sidebar-manual small{display:block;margin-top:4px;font-size:10px;font-weight:400;color:#a0a7b3}
 .app-sidebar .sidebar-external{width:14px;height:14px;margin-left:auto;margin-top:3px;color:#939eae}
 .sidebar-toggle,.sidebar-close,.sidebar-overlay{display:none}
+.sidebar-collapse{display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;flex:none;padding:5px;border:1px solid #414955;border-radius:8px;background:transparent;color:#aeb8c7;cursor:pointer}
+.sidebar-collapse svg{width:20px;height:20px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
+.sidebar-collapse:hover{background:#2a3038;color:var(--text);border-color:#6c7788}
+.sidebar-tooltip{position:fixed;z-index:30;transform:translateY(-50%);max-width:260px;padding:8px 12px;border:1px solid #536071;border-radius:8px;background:#252c36;color:var(--text);box-shadow:0 5px 18px #0005;font-size:13px;line-height:1.4;pointer-events:none}
+.sidebar-tooltip[hidden]{display:none}
+@media(min-width:1101px){
+ .shell.sidebar-collapsed{grid-template-columns:80px minmax(0,1fr)}
+ .sidebar-collapsed .app-sidebar{padding:30px 12px}
+ .sidebar-collapsed .sidebar-heading{flex-direction:column;gap:12px;margin:0 0 24px}
+ .sidebar-collapsed .sidebar-brand{justify-content:center}
+ .sidebar-collapsed .sidebar-brand>div,.sidebar-collapsed .sidebar-label,.sidebar-collapsed .sidebar-link>span,.sidebar-collapsed .sidebar-external{display:none}
+ .sidebar-collapsed .sidebar-collapse svg{transform:rotate(180deg)}
+ .sidebar-collapsed .app-sidebar .sidebar-link{justify-content:center;gap:0;padding:12px 8px}
+ .sidebar-collapsed .app-sidebar .sidebar-manual{align-items:center}
+}
 @media(max-width:1100px){
  .shell{display:block}
+ .sidebar-collapse{display:none}
  .app-sidebar{position:fixed;inset:0 auto 0 0;width:min(292px,calc(100vw - 40px));z-index:20;padding:24px 16px;visibility:hidden;transform:translateX(-100%);transition:transform .18s ease,visibility .18s ease;box-shadow:12px 0 35px #0005}
  body.navigation-open{overflow:hidden}
  body.navigation-open .app-sidebar{visibility:visible;transform:translateX(0)}

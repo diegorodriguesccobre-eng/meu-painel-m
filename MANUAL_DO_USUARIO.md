@@ -143,6 +143,8 @@ Se aparecer **Dados só nesta sessão**, baixe um backup antes de fechar a pági
 
 Use o **menu lateral** para abrir **Meus produtos**, **Montar kits** ou **Gestão de Ads**. No computador, ele permanece disponível ao lado do conteúdo. No celular e em telas menores, toque em **Menu** para abri-lo; escolha uma opção, toque em **Fechar menu**, toque fora do menu ou pressione Escape para fechá-lo.
 
+No computador, use **Recolher menu lateral**, ao lado da marca, para deixar somente os ícones e aumentar o espaço do conteúdo. Use **Expandir menu lateral** para voltar aos nomes completos. Os três atalhos e o manual continuam funcionando com o menu recolhido; passe o mouse ou navegue com Tab para identificar cada ícone. A preferência é guardada neste navegador quando o armazenamento está disponível e não altera o catálogo compartilhado. No celular, o menu continua abrindo com os nomes completos.
+
 O botão **Manual do usuário**, no mesmo menu, abre este documento no GitHub em uma nova aba. Ele está disponível nas três telas e não exige conexão com o Mercado Livre. A aba do painel permanece aberta, sem substituir seus cadastros ou reiniciar os formulários. Ler o manual no GitHub exige internet.
 
 | Tela | Para que serve |
