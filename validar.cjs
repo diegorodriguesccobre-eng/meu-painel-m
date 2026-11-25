@@ -73,13 +73,8 @@ function runtime(storage=new Map()) {
       reset(){},setAttribute(k,v){this[k]=v;},elements:{}});
     return nodes.get(id);
   };
-  const headers=['name','cost','weight','margin','ml','mlPremium','shopee'].map(key=>{
-    const button={textContent:key+' ↕'};
-    const th={dataset:{key},setAttribute(k,v){this[k]=v;},querySelector(){return button;}};
-    button.parentElement=th;return th;
-  });
   const sandbox=vm.createContext({
-    document:{getElementById:get,querySelectorAll:selector=>selector.includes(' button')?headers.map(th=>th.querySelector()):headers,
+    document:{getElementById:get,querySelectorAll:()=>[],
       body:{append(){}},createElement(){return {click(){downloads.push({filename:this.download,blob:lastBlob});},remove(){}};}},
     Blob:class{constructor(parts,options){this.parts=parts;this.type=options.type;}},
     URL:class extends URL{static createObjectURL(blob){lastBlob=blob;return 'blob:teste';}static revokeObjectURL(){}},
@@ -87,7 +82,7 @@ function runtime(storage=new Map()) {
     setTimeout:()=>1,clearTimeout(){},crypto:{randomUUID:()=> 'new-product'}
   });
   vm.runInContext(script,sandbox);
-  return {get,sandbox,storage,headers,downloads,run:code=>vm.runInContext(code,sandbox)};
+  return {get,sandbox,storage,downloads,run:code=>vm.runInContext(code,sandbox)};
 }
 // Dados sintéticos exclusivos dos testes; não há ação de demonstração no painel.
 function loadCatalogFixture(app){
@@ -112,9 +107,9 @@ assert.equal(app.get('table-count').textContent,'1 de 3 produtos');
 assert.ok(app.get('rows').innerHTML.includes('Camiseta básica'));
 assert.ok(!app.get('rows').innerHTML.includes('Fone Bluetooth'));
 app.get('search').value='';app.get('search').oninput();
-app.headers.find(th=>th.dataset.key==='cost').querySelector().onclick();
+app.get('mobile-sort').onchange({target:{value:'cost'}});
 assert.equal(app.run('visibleProducts()[0].cost'),25);
-app.headers.find(th=>th.dataset.key==='cost').querySelector().onclick();
+app.get('sort-direction').onclick();
 assert.equal(app.run('visibleProducts()[0].cost'),60);
 app.get('add').onclick();
 const productForm={elements:Object.fromEntries(Object.entries({name:'Produto teste',category:'Teste',cost:10,weight:.3,margin:20,extra:2,mlShipping:18}).map(([k,v])=>[k,{value:String(v)}]))};
@@ -877,4 +872,3 @@ console.table(shippingResults);
 console.table(minimumResults);
 console.table(scenarios);
 console.log(`${checks} verificações passaram: cálculos, arredondamento, margem, entradas inviáveis, frete, CSV e eventos com DOM simulado (cadastro, edição, taxas, busca, ordenação, exclusão e persistência).`);
-fs.writeFileSync(__dirname+'/resultados-testes.json', JSON.stringify({taxas:fees,produtos:results,freteCondicional:shippingResults,minimosPara10PorCento:minimumResults,opcoesShopee:scenarios,verificacoes:checks},null,2)+'\n');

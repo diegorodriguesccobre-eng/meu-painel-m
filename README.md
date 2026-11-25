@@ -10,14 +10,13 @@ O uso manual funciona localmente; as consultas opcionais ao Mercado Livre usam a
 Veja o **[Manual do usuário — Conduz Cobre](MANUAL_DO_USUARIO.md)** para começar,
 cadastrar produtos, montar kits, entender preços e cores, usar CSV e backups e
 acompanhar a Gestão de Ads. O manual descreve as funções disponíveis, suas bases de
-cálculo e limitações, com referências oficiais. Edição: 24/11/2026.
+cálculo e limitações, com referências oficiais. Edição: 25/11/2026.
 
 ## Usar no computador
 
 Abra `index.html` no Chrome, Edge ou outro navegador moderno. Não é necessário instalar nada.
 A logo fornecida da Conduz Cobre está incorporada no HTML, sem depender de outro arquivo ou de internet.
 As instruções atuais de uso estão no [Manual do usuário](MANUAL_DO_USUARIO.md).
-O arquivo [LEIA-ME.txt](LEIA-ME.txt) contém orientações anteriores.
 
 ## Hospedagem gratuita no Cloudflare
 
@@ -127,11 +126,12 @@ npm test
 npm run build
 ```
 
-Não há dependências externas. Há testes simulados da API e do fluxo OAuth em
+O painel no navegador não carrega bibliotecas externas. O Wrangler é usado no desenvolvimento
+e na publicação no Cloudflare. Há testes simulados da API e do fluxo OAuth em
 `tests/mercadolivre.test.cjs`. Os testes do painel verificam cálculos, frete, modalidades, adicionais,
 kits, CSV, backup e eventos com DOM simulado. Eles não substituem testes visuais em navegador
-ou em um celular físico. O resultado detalhado em `resultados-testes.json` é gerado localmente
-e não é versionado.
+ou em um celular físico. Os resultados são apresentados no terminal, sem criar arquivos
+de relatório dentro do projeto.
 
 ## Registrar alterações
 
@@ -142,6 +142,8 @@ Os fontes ficam separados para facilitar a manutenção:
 - `src/app.js`: cálculos, armazenamento e comportamento do painel.
 - `src/catalog-sync.js`: sincronização, primeira associação e revisão de conflitos.
 - `cloudflare/catalog.mjs`: acesso autenticado e gravação transacional do catálogo no D1.
+- `netlify/functions/mercadolivre.mjs` e `netlify/lib/`: integração e regras do Mercado Livre,
+  reutilizadas pelo Cloudflare; essa pasta continua sendo necessária também nesta hospedagem.
 - `netlify/lib/ml-sales.mjs`: consulta, validação e paginação das vendas do TACOS.
 - `netlify/lib/ml-sales-rules.mjs`: regras financeiras de descontos e pagamentos,
   sem consultas externas ou estado do navegador.

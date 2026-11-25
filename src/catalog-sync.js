@@ -170,7 +170,7 @@
   try {
    const response = await fetch('/api/catalog/status', { credentials: 'same-origin', cache: 'no-store' });
    if (!response.ok) throw Object.assign(new Error('O serviço do catálogo está temporariamente indisponível.'), { status: response.status });
-   const configuration = response.ok ? await response.json() : null;
+   const configuration = await response.json();
    if (generation !== epoch) return;
    if (!configuration?.configured) { retryConnection = null; status('Catálogo compartilhado aguardando configuração. Seus dados continuam salvos neste navegador.'); return; }
    seller = String(connection.account.id); const account = seller;
