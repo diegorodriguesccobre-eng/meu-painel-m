@@ -29,6 +29,7 @@ O painel ajuda a definir preços no Mercado Livre e na Shopee, comparar o lucro 
   - [Exportar produtos filtrados em CSV](#exportar-produtos-filtrados)
   - [Exportar no computador](#exportar-csv-computador)
   - [Exportar no celular](#exportar-csv-celular)
+  - [Quando Exportar CSV fica desativado](#exportar-csv-desativado)
   - [Exportar todos ao limpar a busca](#exportar-todos-produtos)
 - [9. Baixar e restaurar um backup](#backup)
 - [10. Usar a Gestão de Ads](#ads)
@@ -251,7 +252,7 @@ No computador, abra **Meus produtos** e use o campo **Buscar produto ou categori
 
 A pesquisa aceita maiúsculas e minúsculas e ignora espaços no início e no fim do texto. Os acentos são considerados: se não encontrar um produto, confira a grafia do cadastro ou pesquise outro trecho do nome. O filtro procura nos produtos já cadastrados no painel; o [catálogo de anúncios do Mercado Livre](#mercado-livre) tem sua própria busca, usada ao vincular um anúncio.
 
-Se aparecer **Nenhum produto corresponde à busca**, limpe ou ajuste o texto. Os cadastros continuam guardados. **Exportar CSV** fica indisponível enquanto não houver resultados visíveis.
+Se aparecer **Nenhum produto corresponde à busca**, **Exportar CSV** fica desativado no computador e no celular. Ao limpar a busca, os produtos cadastrados voltam à lista e o botão é reativado automaticamente. Os cadastros continuam guardados. Veja [como reativar a exportação](#exportar-csv-desativado).
 
 <a id="ordenar-produtos"></a>
 
@@ -530,6 +531,21 @@ O comportamento é o mesmo nas duas telas: mudar a busca, o critério ou a dire�
 
 **Exemplo ilustrativo:** em um catálogo com **Cabo A**, **Cabo B** e **Tomada C**, a busca `cabo` deixa dois produtos. Com **Nome** e **↑ Crescente**, o CSV traz **Cabo A** e depois **Cabo B**. Com **↓ Decrescente**, traz **Cabo B** e depois **Cabo A**. **Tomada C** fica fora dos dois arquivos porque não corresponde à busca.
 
+<a id="exportar-csv-desativado"></a>
+
+#### Quando Exportar CSV fica desativado
+
+No computador e no celular, uma busca sem resultados mantém **Exportar CSV** visível, mas **desativado**. A lista mostra **Nenhum produto corresponde à busca** e um contador como **0 de 3 produtos**. Isso significa que nenhum cadastro corresponde ao filtro; os produtos continuam salvos.
+
+Para reativar o botão, limpe o campo **Buscar produto ou categoria**:
+
+- **No computador:** clique no campo e apague todo o texto.
+- **No celular:** toque no campo e apague todo o texto.
+
+Os produtos cadastrados reaparecem, o contador volta a mostrar a lista completa, como **3 de 3 produtos**, e **Exportar CSV é reativado automaticamente**. O critério em **Ordenar por** e a direção crescente ou decrescente são mantidos. Você pode então clicar ou tocar no botão para baixar o CSV.
+
+Se o catálogo estiver vazio, com **0 de 0 produtos**, limpar a busca não cria resultados: é preciso cadastrar produtos ou carregar o catálogo da empresa para exportar.
+
 <a id="exportar-todos-produtos"></a>
 
 #### Exportar todos ao limpar a busca
@@ -700,6 +716,7 @@ Isso pode indicar falta de histórico, permissão, separação de diretas e indi
 
 | Dúvida ou aviso | O que conferir |
 |---|---|
+| “Exportar CSV está desativado.” | Confira se a busca retornou zero produtos. Apague o texto de Buscar produto ou categoria; quando os produtos reaparecerem, o botão será reativado automaticamente no computador e no celular. Veja [quando o botão fica desativado e como reativá-lo](#exportar-csv-desativado). |
 | “O CSV trouxe menos produtos ou uma ordem diferente da que eu esperava.” | Confira a busca, o critério em Ordenar por e o botão Crescente/Decrescente antes do download. Para incluir todos, apague a busca: o critério e a direção são mantidos. Exporte novamente para baixar o catálogo completo nessa ordem. Veja [como exportar todos ao limpar a busca](#exportar-todos-produtos). |
 | “A lista está vazia, mas há produtos cadastrados.” | Apague o conteúdo de Buscar produto ou categoria e confira o contador abaixo da lista. Verifique também os acentos e a grafia da pesquisa. Se espera cadastros feitos por um colega, confira a [sincronização do catálogo](#sincronizacao). |
 | “Ordenar por Margem não acompanha as cores de risco.” | Margem usa a meta digitada no cadastro. As cores usam o lucro calculado sobre o preço de venda, conforme as [regras de lucros e cores](#precos). |
