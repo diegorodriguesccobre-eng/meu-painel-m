@@ -14,6 +14,9 @@ O painel ajuda a definir preços no Mercado Livre e na Shopee, comparar o lucro 
   - [Entender os avisos de sincronização](#sincronizacao)
   - [Resolver conflitos de edição](#conflitos)
 - [2. Conhecer as telas](#telas)
+  - [Recolher e expandir o menu no computador](#menu-computador)
+  - [Entender como a preferência fica salva](#preferencia-menu)
+  - [Usar o menu no celular](#menu-celular)
 - [3. Cadastrar e editar produtos](#produtos)
 - [4. Conectar um anúncio do Mercado Livre](#mercado-livre)
 - [5. Entender preços, lucros e cores](#precos)
@@ -141,17 +144,59 @@ Se aparecer **Dados só nesta sessão**, baixe um backup antes de fechar a pági
 
 ## 2. Conhecer as telas
 
-Use o **menu lateral** para abrir **Meus produtos**, **Montar kits** ou **Gestão de Ads**. No computador, ele permanece disponível ao lado do conteúdo. No celular e em telas menores, toque em **Menu** para abri-lo; escolha uma opção, toque em **Fechar menu**, toque fora do menu ou pressione Escape para fechá-lo.
-
-No computador, use **Recolher menu lateral**, ao lado da marca, para deixar somente os ícones e aumentar o espaço do conteúdo. Use **Expandir menu lateral** para voltar aos nomes completos. Os três atalhos e o manual continuam funcionando com o menu recolhido; passe o mouse ou navegue com Tab para identificar cada ícone. A preferência é guardada neste navegador quando o armazenamento está disponível e não altera o catálogo compartilhado. No celular, o menu continua abrindo com os nomes completos.
-
-O botão **Manual do usuário**, no mesmo menu, abre este documento no GitHub em uma nova aba. Ele está disponível nas três telas e não exige conexão com o Mercado Livre. A aba do painel permanece aberta, sem substituir seus cadastros ou reiniciar os formulários. Ler o manual no GitHub exige internet.
+Use o **menu lateral** para acessar as três telas do painel. O quarto atalho, **Manual do usuário**, abre este documento no GitHub.
 
 | Tela | Para que serve |
 |---|---|
 | **Meus produtos** | Cadastrar, pesquisar, ordenar e comparar os preços e lucros dos produtos; importar CSV, exportar e fazer backup. |
 | **Montar kits** | Selecionar produtos e quantidades, calcular o conjunto e guardar kits. |
 | **Gestão de Ads** | Consultar investimento e atribuição, comparar períodos, projetar cenários e conciliar lucro. |
+
+<a id="menu-computador"></a>
+
+### Recolher e expandir o menu no computador
+
+Em uma janela larga, o menu fica ao lado do conteúdo. Para ganhar espaço na tela:
+
+1. No cabeçalho do menu, junto à marca Conduz Cobre, clique no botão com seta **Recolher menu lateral**.
+2. O menu passa a mostrar somente os ícones. Os quatro atalhos continuam disponíveis: **Meus produtos**, **Montar kits**, **Gestão de Ads** e **Manual do usuário**.
+3. Passe o mouse sobre um ícone para ver o nome do atalho. Pelo teclado, use **Tab** para chegar ao ícone e **Enter** para abri-lo; o nome também aparece ao receber o foco. O destaque indica a tela selecionada.
+4. Para voltar aos nomes completos, clique no botão com seta **Expandir menu lateral**. Também é possível chegar a esse botão com **Tab** e acioná-lo com **Enter**.
+
+Recolher ou expandir mantém a tela atual e os campos já preenchidos no formulário em andamento. Você pode usar esse controle em **Meus produtos**, **Montar kits** e **Gestão de Ads**.
+
+<a id="preferencia-menu"></a>
+
+### Como a preferência fica salva
+
+Ao recolher ou expandir, o painel guarda a escolha automaticamente no armazenamento local do navegador. Não é preciso clicar em Salvar nem estar conectado ao Mercado Livre para guardar essa preferência.
+
+| Situação | Comportamento do menu |
+|---|---|
+| Recarregar ou reabrir o mesmo endereço, no mesmo navegador e perfil | No computador, o menu volta ao estado escolhido: recolhido ou expandido. |
+| Outro funcionário acessar o catálogo ou você abrir outro navegador, perfil ou aparelho | Cada navegador tem sua própria preferência de menu. |
+| Sincronizar o catálogo ou baixar um backup do painel | A preferência do menu não é compartilhada pela nuvem nem incluída no backup. |
+| Limpar os dados do site ou encerrar uma sessão privada | A preferência pode ser perdida; sem uma escolha salva, o menu do computador começa expandido. |
+| O navegador bloquear o armazenamento local | O botão continua funcionando durante o uso, mas a escolha pode não permanecer ao recarregar. |
+
+Essa escolha muda apenas a apresentação do menu. Os produtos, kits, relatórios, conciliações e cálculos continuam com seus próprios dados e regras de sincronização.
+
+<a id="menu-celular"></a>
+
+### Usar o menu no celular
+
+No celular e em janelas menores, o menu fica fechado para liberar espaço:
+
+1. Toque em **Menu** para abrir o menu lateral.
+2. Os quatro atalhos aparecem com os **nomes completos**, mesmo que você tenha deixado o menu recolhido no computador ou recarregado a página no tamanho de celular.
+3. Toque em **Meus produtos**, **Montar kits** ou **Gestão de Ads** para abrir a tela escolhida. O menu fecha após a seleção. **Manual do usuário** abre o GitHub em uma nova aba e também fecha o menu.
+4. Para fechar sem trocar de tela, toque em **Fechar menu** ou fora do menu. Com um teclado conectado, também é possível usar **Escape**.
+
+O botão de recolher para somente ícones aparece apenas no modo de computador. Usar o menu no celular não apaga a preferência salva: ao voltar a uma janela larga no mesmo navegador e perfil, o painel retoma o estado recolhido ou expandido escolhido antes.
+
+### Abrir o manual pelo painel
+
+O atalho **Manual do usuário** fica disponível nas três telas, inclusive quando o menu do computador mostra somente ícones. Ele não exige conexão com o Mercado Livre. O documento abre no GitHub em uma nova aba e a aba do painel permanece aberta, com a tela e os campos em andamento. Ler o manual no GitHub exige internet.
 
 No celular, os produtos são apresentados em cartões. O cadastro compacto pode usar as abas **Produto**, **Anúncio**, **Mercado Livre** e **Shopee**. Na montagem de kits, telas menores usam **Montagem** e **Preços**. Alternar essas abas mantém os campos preenchidos. O botão **Ajuda** explica a tela em que você está.
 
@@ -552,6 +597,9 @@ Isso pode indicar falta de histórico, permissão, separação de diretas e indi
 
 | Dúvida ou aviso | O que conferir |
 |---|---|
+| “No computador, só aparecem ícones no menu.” | O menu está recolhido. Passe o mouse ou use Tab para identificar os atalhos. Clique na seta Expandir menu lateral para mostrar os nomes, conforme as [instruções do computador](#menu-computador). |
+| “O menu não ficou recolhido depois de reabrir.” | Confira se abriu o mesmo endereço, navegador e perfil e se o armazenamento local está permitido. Limpar os dados do site ou encerrar uma sessão privada pode remover a escolha. Veja [como a preferência fica salva](#preferencia-menu). |
+| “No celular, o menu mostra os nomes mesmo com a preferência de recolhimento salva.” | Esse é o comportamento esperado. Toque em Menu para acessar os quatro atalhos com os nomes completos. A preferência de somente ícones volta a ser aplicada em uma janela larga do mesmo navegador; veja as [instruções do celular](#menu-celular). |
 | “Meu catálogo sumiu no celular.” | Confirme endereço e conexão com a conta permitida. Com compartilhamento ativo, sincronize; no modo local, restaure o backup correto. |
 | “Meu colega ainda não recebeu a alteração.” | Confira se você clicou em Salvar e se aparece Catálogo sincronizado com a empresa. No outro aparelho, termine a edição em andamento e use Sincronizar agora com a mesma conta autorizada. |
 | “Não aparece Revisar alterações.” | O botão fica oculto sem conflito ou primeira associação pendente. Confira a mensagem no bloco Catálogo da empresa, disponível nas três telas. |
