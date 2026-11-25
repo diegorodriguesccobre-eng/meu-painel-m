@@ -18,6 +18,9 @@ O painel ajuda a definir preços no Mercado Livre e na Shopee, comparar o lucro 
   - [Entender como a preferência fica salva](#preferencia-menu)
   - [Usar o menu no celular](#menu-celular)
 - [3. Cadastrar e editar produtos](#produtos)
+  - [Buscar produtos](#buscar-produtos)
+  - [Ordenar produtos](#ordenar-produtos)
+  - [Usar busca e ordenação no celular](#busca-ordenacao-celular)
 - [4. Conectar um anúncio do Mercado Livre](#mercado-livre)
 - [5. Entender preços, lucros e cores](#precos)
 - [6. Entender tarifas, impostos e frete](#tarifas)
@@ -231,9 +234,60 @@ Cada produto guarda suas configurações de taxas, serviços e, quando houver, c
 
 Essa preservação também se aplica aos kits. Há duas atualizações específicas nos produtos vinculados: o preço do anúncio pode ser renovado, e o ACOS observado pode atualizar o Ads do Mercado Livre. As respectivas consultas e datas são apresentadas no painel.
 
+<a id="buscar-produtos"></a>
+
+### Buscar produtos
+
+No computador, abra **Meus produtos** e use o campo **Buscar produto ou categoria**, acima dos cartões:
+
+1. Digite parte do **nome**, da **categoria** ou do **ID MLB do anúncio vinculado**. Por exemplo, `disjuntor` encontra nomes que contêm esse trecho. Para buscar pelo ID, use o número com o prefixo `MLB` que aparece no vínculo do produto.
+2. A lista é filtrada enquanto você digita; não é preciso apertar Enter ou clicar em um botão de pesquisa.
+3. Confira o contador abaixo da lista. **1 de 3 produtos**, por exemplo, significa que um cadastro corresponde à busca e o catálogo tem três produtos.
+4. Para voltar ao catálogo completo, apague todo o conteúdo do campo de busca.
+
+A pesquisa aceita maiúsculas e minúsculas e ignora espaços no início e no fim do texto. Os acentos são considerados: se não encontrar um produto, confira a grafia do cadastro ou pesquise outro trecho do nome. O filtro procura nos produtos já cadastrados no painel; o [catálogo de anúncios do Mercado Livre](#mercado-livre) tem sua própria busca, usada ao vincular um anúncio.
+
+Se aparecer **Nenhum produto corresponde à busca**, limpe ou ajuste o texto. Os cadastros continuam guardados. **Exportar CSV** fica indisponível enquanto não houver resultados visíveis.
+
+<a id="ordenar-produtos"></a>
+
+### Ordenar produtos
+
+No computador, os controles de ordenação ficam acima dos cartões, junto à busca:
+
+1. Em **Ordenar por**, escolha o critério desejado na tabela abaixo.
+2. Confira o botão de direção: **↑ Crescente** mostra os menores valores primeiro; **↓ Decrescente** mostra os maiores primeiro. Para nome, a ordem é alfabética ou alfabética inversa.
+3. Clique nesse botão para inverter a direção. Ao escolher outro critério, a direção atual é mantida; confira o texto do botão antes de comparar os resultados.
+
+| Opção em Ordenar por | Valor utilizado |
+|---|---|
+| **Nome** | Nome do produto, em ordem alfabética. |
+| **Custo** | Custo de uma unidade informado no cadastro. |
+| **Peso** | Peso em quilogramas informado no cadastro. |
+| **Margem** | Margem desejada cadastrada, usada como meta de precificação. Não é o percentual de lucro calculado no cartão. |
+| **ML Clássico** | Preço de venda exibido no cartão do Mercado Livre Clássico. |
+| **ML Premium** | Preço de venda exibido no cartão do Mercado Livre Premium. |
+| **Preço na Shopee** | Preço de venda exibido no cartão da Shopee. |
+
+Nos cartões do Mercado Livre, o preço pode ser o **atual do anúncio vinculado** ou o **sugerido**, conforme a modalidade e os dados disponíveis. Produtos com valores iguais ficam empatados no critério escolhido.
+
+Você pode combinar busca e ordenação: primeiro filtre os produtos, depois escolha o critério e a direção. Apenas os resultados encontrados são ordenados. **Exportar CSV** usa os produtos visíveis na ordem apresentada; para incluir todos, limpe a busca antes de exportar.
+
+<a id="busca-ordenacao-celular"></a>
+
+### Usar busca e ordenação no celular
+
+1. Toque em **Menu** e escolha **Meus produtos**.
+2. Acima da lista de cartões, toque em **Buscar produto ou categoria** e digite o nome, a categoria ou o ID MLB vinculado. Os resultados aparecem enquanto você digita.
+3. Toque em **Ordenar por** e escolha uma das mesmas sete opções disponíveis no computador.
+4. Toque em **↑ Crescente** ou **↓ Decrescente** para inverter a ordem. A busca permanece aplicada ao mudar o critério ou a direção.
+5. Para exibir todos os produtos novamente, apague o texto da busca. Se quiser voltar à ordem alfabética, escolha **Nome** e deixe o botão em **↑ Crescente**.
+
+Os controles se adaptam à largura da tela e os produtos aparecem em cartões. Busca e ordenação mudam apenas a apresentação da lista, preservando os valores cadastrados.
+
 ### Encontrar, editar e excluir
 
-Use a busca de **Meus produtos** para procurar por nome, categoria ou ID do Mercado Livre. Em **Ordenar por**, escolha nome, custo, peso, margem ou o preço de um canal; o botão de direção alterna crescente e decrescente.
+Use a [busca](#buscar-produtos) e a [ordenação](#ordenar-produtos) para localizar o cadastro que deseja ajustar.
 
 Clique em **Editar** para ajustar um produto e salve ao terminar. **Excluir** pede confirmação. Se o produto participa de um kit, primeiro remova-o do kit ou exclua esse kit. Excluir um kit mantém os produtos individuais.
 
@@ -597,6 +651,8 @@ Isso pode indicar falta de histórico, permissão, separação de diretas e indi
 
 | Dúvida ou aviso | O que conferir |
 |---|---|
+| “A lista está vazia, mas há produtos cadastrados.” | Apague o conteúdo de Buscar produto ou categoria e confira o contador abaixo da lista. Verifique também os acentos e a grafia da pesquisa. Se espera cadastros feitos por um colega, confira a [sincronização do catálogo](#sincronizacao). |
+| “Ordenar por Margem não acompanha as cores de risco.” | Margem usa a meta digitada no cadastro. As cores usam o lucro calculado sobre o preço de venda, conforme as [regras de lucros e cores](#precos). |
 | “No computador, só aparecem ícones no menu.” | O menu está recolhido. Passe o mouse ou use Tab para identificar os atalhos. Clique na seta Expandir menu lateral para mostrar os nomes, conforme as [instruções do computador](#menu-computador). |
 | “O menu não ficou recolhido depois de reabrir.” | Confira se abriu o mesmo endereço, navegador e perfil e se o armazenamento local está permitido. Limpar os dados do site ou encerrar uma sessão privada pode remover a escolha. Veja [como a preferência fica salva](#preferencia-menu). |
 | “No celular, o menu mostra os nomes mesmo com a preferência de recolhimento salva.” | Esse é o comportamento esperado. Toque em Menu para acessar os quatro atalhos com os nomes completos. A preferência de somente ícones volta a ser aplicada em uma janela larga do mesmo navegador; veja as [instruções do celular](#menu-celular). |
