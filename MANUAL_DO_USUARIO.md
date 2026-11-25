@@ -29,6 +29,7 @@ O painel ajuda a definir preços no Mercado Livre e na Shopee, comparar o lucro 
   - [Exportar produtos filtrados em CSV](#exportar-produtos-filtrados)
   - [Exportar no computador](#exportar-csv-computador)
   - [Exportar no celular](#exportar-csv-celular)
+  - [Exportar todos ao limpar a busca](#exportar-todos-produtos)
 - [9. Baixar e restaurar um backup](#backup)
 - [10. Usar a Gestão de Ads](#ads)
 - [11. Resolver dúvidas e avisos](#duvidas)
@@ -512,7 +513,7 @@ Em **Meus produtos**, **Exportar CSV** baixa somente os produtos que corresponde
 3. Em **Ordenar por**, escolha o critério desejado, como **Nome**, **Custo** ou o preço de um marketplace. Confira os [sete critérios disponíveis](#ordenar-produtos).
 4. Ajuste o botão para **↑ Crescente** ou **↓ Decrescente**. Ao trocar o critério, a direção atual é mantida.
 5. Confira os produtos, a sequência dos cartões e o contador abaixo da lista. **2 de 3 produtos**, por exemplo, significa que o CSV terá dois produtos, mesmo que o catálogo tenha três.
-6. Clique em **Exportar CSV** e abra o arquivo baixado. Os nomes e a sequência das linhas seguem a lista filtrada no momento do clique.
+6. Clique em **Exportar CSV** e abra o arquivo baixado. Os nomes e a sequência das linhas seguem a lista no momento do clique. Se você limpou a busca, o arquivo inclui todos os produtos, mantendo o critério e a direção escolhidos.
 
 <a id="exportar-csv-celular"></a>
 
@@ -523,13 +524,26 @@ Em **Meus produtos**, **Exportar CSV** baixa somente os produtos que corresponde
 3. Toque em **Ordenar por** para escolher o critério e em **↑ Crescente** ou **↓ Decrescente** para definir a direção.
 4. Confira os cartões encontrados e o contador de resultados.
 5. Toque em **Exportar CSV**. O navegador baixa o arquivo ou apresenta as opções para salvá-lo; consulte a área de downloads do navegador para encontrá-lo.
-6. Ao abrir o arquivo, confira se as linhas correspondem aos produtos filtrados e à ordem apresentada no painel.
+6. Ao abrir o arquivo, confira se as linhas correspondem à lista e à ordem apresentada no painel. Com a busca limpa, todos os produtos são incluídos, mantendo o critério e a direção escolhidos no celular.
 
 O comportamento é o mesmo nas duas telas: mudar a busca, o critério ou a direção antes de exportar determina o conteúdo do próximo CSV. O arquivo já baixado é uma cópia daquele momento; para receber outra seleção ou outra ordem, exporte novamente.
 
 **Exemplo ilustrativo:** em um catálogo com **Cabo A**, **Cabo B** e **Tomada C**, a busca `cabo` deixa dois produtos. Com **Nome** e **↑ Crescente**, o CSV traz **Cabo A** e depois **Cabo B**. Com **↓ Decrescente**, traz **Cabo B** e depois **Cabo A**. **Tomada C** fica fora dos dois arquivos porque não corresponde à busca.
 
-Para exportar **todos os produtos**, apague o texto da busca, escolha a ordem desejada e clique ou toque em **Exportar CSV**. Se não houver resultados, o botão fica desativado; ajuste ou limpe a pesquisa.
+<a id="exportar-todos-produtos"></a>
+
+#### Exportar todos ao limpar a busca
+
+No computador e no celular, **limpar a busca restaura todos os produtos e mantém a ordenação selecionada**. O critério em **Ordenar por** e o sentido **↑ Crescente** ou **↓ Decrescente** continuam valendo para a lista completa e para o próximo CSV.
+
+1. Escolha o critério e a direção desejados, ou mantenha os que já estão selecionados.
+2. Apague todo o conteúdo de **Buscar produto ou categoria**.
+3. Confira se o contador mostra o catálogo completo, por exemplo **3 de 3 produtos**, e se a sequência dos cartões corresponde à ordem escolhida.
+4. Clique ou toque em **Exportar CSV**. O arquivo terá todos os produtos nessa sequência, além da linha de cabeçalhos.
+
+No exemplo de **Cabo A**, **Cabo B** e **Tomada C**, apagar a busca `cabo` faz **Tomada C** voltar à lista e ao próximo CSV. Com **Nome** e **↑ Crescente**, o arquivo traz **Cabo A**, **Cabo B** e **Tomada C**. Se a direção escolhida for **↓ Decrescente**, traz **Tomada C**, **Cabo B** e **Cabo A**.
+
+O CSV já baixado permanece como estava: clique ou toque novamente em **Exportar CSV** depois de limpar a busca para gerar o arquivo completo. Limpar a busca e exportar preservam os cadastros e suas configurações no painel. Se a busca não tiver resultados, o botão fica desativado; ajuste ou limpe a pesquisa.
 
 O arquivo reúne preços, lucros, mínimos para 10%, Ads, taxas, origem das consultas e classificações. Alguns cabeçalhos conservam o termo técnico “margem efetiva”; ele corresponde ao percentual calculado de lucro sobre o preço.
 
@@ -686,7 +700,7 @@ Isso pode indicar falta de histórico, permissão, separação de diretas e indi
 
 | Dúvida ou aviso | O que conferir |
 |---|---|
-| “O CSV trouxe menos produtos ou uma ordem diferente da que eu esperava.” | Confira a busca, o critério em Ordenar por e o botão Crescente/Decrescente antes do download. O arquivo usa a lista naquele momento. Para incluir todos, apague a busca; para outra ordem, ajuste os controles e exporte novamente. Veja [como exportar os produtos filtrados](#exportar-produtos-filtrados). |
+| “O CSV trouxe menos produtos ou uma ordem diferente da que eu esperava.” | Confira a busca, o critério em Ordenar por e o botão Crescente/Decrescente antes do download. Para incluir todos, apague a busca: o critério e a direção são mantidos. Exporte novamente para baixar o catálogo completo nessa ordem. Veja [como exportar todos ao limpar a busca](#exportar-todos-produtos). |
 | “A lista está vazia, mas há produtos cadastrados.” | Apague o conteúdo de Buscar produto ou categoria e confira o contador abaixo da lista. Verifique também os acentos e a grafia da pesquisa. Se espera cadastros feitos por um colega, confira a [sincronização do catálogo](#sincronizacao). |
 | “Ordenar por Margem não acompanha as cores de risco.” | Margem usa a meta digitada no cadastro. As cores usam o lucro calculado sobre o preço de venda, conforme as [regras de lucros e cores](#precos). |
 | “No computador, só aparecem ícones no menu.” | O menu está recolhido. Passe o mouse ou use Tab para identificar os atalhos. Clique na seta Expandir menu lateral para mostrar os nomes, conforme as [instruções do computador](#menu-computador). |
