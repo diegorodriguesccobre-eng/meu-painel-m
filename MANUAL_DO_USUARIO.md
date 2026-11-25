@@ -1,15 +1,18 @@
 # Manual do usuário — Conduz Cobre
 
 **Painel de precificação, kits e Gestão de Ads**  
-Edição de **24/11/2026**, baseada nas funções disponíveis nesta versão.
+Edição de **25/11/2026**, baseada nas funções disponíveis nesta versão.
 
 [Abrir o painel](https://precificacaoconduz.conduz-cobre.workers.dev/) · [Página do projeto](README.md)
 
-O painel ajuda a definir preços no Mercado Livre e na Shopee, comparar o lucro por venda e acompanhar publicidade do Mercado Livre. Mantém uma cópia no navegador e pode compartilhar produtos e kits na nuvem após a configuração da empresa. A conexão com o Mercado Livre consulta dados do marketplace e também controla o acesso ao catálogo compartilhado; salvar um produto ou simular um orçamento aqui não publica anúncios nem altera campanhas.
+O painel ajuda a definir preços no Mercado Livre e na Shopee, comparar o lucro por venda e acompanhar publicidade do Mercado Livre. Mantém uma cópia no navegador e compartilha produtos, kits, relatórios e conciliações de Ads na nuvem quando o catálogo da empresa está ativo. A conexão com o Mercado Livre consulta dados do marketplace e também controla o acesso ao catálogo compartilhado; salvar um produto ou simular um orçamento aqui não publica anúncios nem altera campanhas.
 
 ## Índice
 
 - [1. Começar e cuidar dos dados](#comecar)
+  - [Acessar o catálogo compartilhado](#catalogo-compartilhado)
+  - [Entender os avisos de sincronização](#sincronizacao)
+  - [Resolver conflitos de edição](#conflitos)
 - [2. Conhecer as telas](#telas)
 - [3. Cadastrar e editar produtos](#produtos)
 - [4. Conectar um anúncio do Mercado Livre](#mercado-livre)
@@ -45,15 +48,90 @@ O indicador **Salvo neste navegador** confirma a gravação local. Com o catálo
 | Limpar os dados do site ou usar uma sessão privada | A cópia local e alterações ainda não sincronizadas podem ser perdidas; o catálogo já confirmado na nuvem pode ser carregado novamente. |
 | Quatro funcionários acessarem o mesmo site | Com o compartilhamento ativo e a conta autorizada conectada, utilizam o mesmo catálogo; sem ele, cada navegador tem sua cópia. |
 
-### Ativar e usar o catálogo da empresa
+<a id="catalogo-compartilhado"></a>
 
-Após a [configuração do responsável](CONFIGURAR_CATALOGO.md), conecte o Mercado Livre no navegador que contém os cadastros principais. Em **Catálogo da empresa**, clique em **Revisar alterações**. Confira as quantidades e escolha combinar os registros locais ou usar somente a base da empresa. Antes de aplicar a escolha, o painel preserva uma cópia anterior neste navegador.
+### Acessar o catálogo compartilhado — passo a passo para os funcionários
 
-Nos outros aparelhos, conecte a mesma conta autorizada. O catálogo passa a carregar sem exportação. Mudanças são enviadas automaticamente e a base é conferida periodicamente; **Sincronizar agora** permite solicitar uma conferência. O estado de gravação mostra quando há pendências. Sem conexão, a cópia local é mantida para nova tentativa.
+1. No computador ou celular, abra o [endereço oficial do painel](https://precificacaoconduz.conduz-cobre.workers.dev/).
+2. Clique em **Conectar Mercado Livre** quando a conta estiver desconectada. Use a conta autorizada da empresa, seguindo o procedimento de acesso combinado com o responsável. Conclua a identificação e a autorização no próprio Mercado Livre se forem solicitadas.
+3. Confira o nome da conta conectada em **Meus produtos**. Uma conta pessoal ou outra loja não dá acesso ao catálogo da Conduz Cobre.
+4. No bloco **Catálogo da empresa**, aguarde **Catálogo compartilhado carregado** ou **Catálogo sincronizado com a empresa**. Esse bloco aparece acima do conteúdo em **Meus produtos**, **Montar kits** e **Gestão de Ads**.
+5. Confira os produtos e kits. Na Gestão de Ads, use **Relatórios salvos** para abrir um comparativo já guardado. Não é necessário importar arquivos para receber os dados confirmados na nuvem.
 
-Alterações em produtos diferentes são combinadas. Quando dois usuários editam o mesmo cadastro de formas diferentes, use **Revisar alterações** e escolha a versão que deve permanecer. Confira kits e componentes antes de resolver exclusões. O painel evita aplicar atualizações externas durante uma edição em andamento.
+O painel usa a conexão existente com o Mercado Livre, sem uma senha própria. Cada navegador precisa ter uma sessão válida da conta autorizada. Esta versão não possui convites por e-mail, perfis individuais ou permissões diferentes por funcionário, nem identifica qual pessoa fez cada edição.
 
-O acesso à nuvem depende da sessão da conta Mercado Livre permitida, sem uma senha nova do painel. Desconectar mantém a cópia local. Relatórios e conciliações de Ads também são sincronizados. Os filtros de visualização continuam individuais. Enquanto aparecer **aguardando configuração**, os cadastros continuam locais.
+**Navegador sem cadastros locais:** carrega a base compartilhada ao conectar. **Navegador que já tem produtos, kits ou dados de Ads:** pode pedir uma primeira associação antes de enviar ou substituir esses dados.
+
+### Primeira associação de um navegador que já possui dados
+
+Após a [configuração do responsável](CONFIGURAR_CATALOGO.md), abra **Revisar alterações**, no bloco **Catálogo da empresa**, quando o painel pedir para escolher como iniciar o compartilhamento.
+
+Confira as quantidades locais e da empresa. **Combinar e sincronizar** mantém cadastros distintos dos dois lados e pede uma escolha para as diferenças em um mesmo registro. Produtos com o mesmo nome, mas cadastrados separadamente, podem virar duplicatas: combinar não identifica produtos apenas pelo nome.
+
+**Usar somente o catálogo da empresa** adota a base compartilhada no lugar da cópia local desses cadastros. Use essa opção somente se os dados locais não precisarem ser acrescentados à empresa. Antes de confirmar, o painel preserva uma cópia anterior neste navegador; esse registro não é uma tela de histórico nem substitui um backup JSON que você possa baixar e guardar.
+
+<a id="sincronizacao"></a>
+
+### Como funciona a sincronização
+
+Primeiro, conclua o formulário com **Salvar produto**, **Salvar kit** ou **Salvar conciliação**. Campos de um formulário ainda aberto não são enviados como um cadastro salvo. Depois de salvar, o painel mantém a cópia local e tenta enviar a alteração automaticamente.
+
+Com a página visível e sem edição ou consulta em andamento, a base da empresa é conferida aproximadamente a cada minuto. O painel também tenta conferir os dados ao recuperar a conexão ou retornar à janela. Para solicitar uma conferência, clique em **Sincronizar agora**. A atualização não é instantânea entre todos os aparelhos.
+
+| Mensagem no painel | O que significa e o que fazer |
+|---|---|
+| **Salvo neste navegador** | Existe uma cópia local. Isso, sozinho, não confirma o envio para a nuvem. Confira a conexão e o bloco Catálogo da empresa. |
+| **Catálogo compartilhado carregado** | A base da empresa foi recebida neste navegador. |
+| **Alteração salva neste navegador; aguardando sincronização** ou **Alterações aguardando sincronização** | Há uma gravação local pendente. Aguarde a confirmação ou use Sincronizar agora. |
+| **Catálogo sincronizado com a empresa** | A conferência terminou e os dados foram confirmados na base compartilhada. |
+| **Há uma atualização da empresa. Conclua a edição ou consulta em andamento para recebê-la** | O painel está protegendo o trabalho em andamento. Termine ou cancele o formulário e solicite a sincronização. |
+| **Há alterações simultâneas no mesmo cadastro** | É necessário [revisar o conflito](#conflitos). Sincronizar novamente não escolhe uma versão por você. |
+| **Catálogo compartilhado aguardando configuração** | Os dados continuam locais. Procure o responsável pela integração. |
+| **A cópia local foi mantida**, junto de uma falha de conexão | As alterações não foram descartadas. Recupere a conexão e tente novamente. Se o aviso pedir para conectar a conta, conclua a entrada no Mercado Livre. |
+
+Se o painel já estiver carregado quando a conexão cair, você pode salvar alterações localmente. Mantenha esse navegador e aguarde a confirmação de sincronização; não limpe os dados do site nem encerre uma sessão privada enquanto houver pendências. Se a falha ocorrer ao abrir, o painel tenta retomar a sessão existente quando a conexão voltar, respeitando sua validade. Sessão expirada exige nova conexão com o Mercado Livre.
+
+| Compartilhado com a empresa | Mantido por navegador |
+|---|---|
+| Produtos, custos, pesos, Ads, vínculos, taxas e cotações preservadas | Sessão de acesso ao Mercado Livre |
+| Kits, componentes, quantidades e parâmetros próprios | Filtros de visualização e campos de simulação |
+| Relatórios de Ads por período e resumos do anunciante | Formulários ainda não salvos |
+| Conciliações de Ads, com receitas, despesas, fonte e critério | Cópia local usada para continuar o trabalho |
+
+Sincronizar um relatório guardado não significa atualizar suas métricas no Mercado Livre. Confira o período e a data da consulta; **Atualizar dados de Ads** tem outra finalidade.
+
+<a id="conflitos"></a>
+
+### Resolver conflitos em produtos, kits e conciliações de Ads
+
+Edições em cadastros diferentes são combinadas automaticamente. Se duas pessoas mudarem o mesmo cadastro de formas diferentes, o painel pede revisão, mesmo que tenham alterado campos diferentes. Uma exclusão feita ao mesmo tempo que uma edição também pode exigir escolha.
+
+1. Procure o bloco **Catálogo da empresa** em qualquer uma das três telas.
+2. Clique em **Revisar alterações**. Esse botão aparece quando há conflito ou primeira associação pendente; ficar oculto quando tudo está sincronizado é normal.
+3. Confira cada registro e compare **Minha edição** com **Versão da empresa**. A primeira é a versão deste navegador; a segunda é a versão compartilhada apresentada para a conferência. Os nomes não identificam qual funcionário fez a alteração.
+4. Marque uma opção para **cada** registro em conflito. A escolha mantém o cadastro inteiro daquela versão: não combina automaticamente campos isolados, não soma despesas e não calcula uma média entre as opções.
+5. Clique em **Salvar escolhas e sincronizar**. Aguarde **Catálogo sincronizado com a empresa**. Se outra pessoa salvar nesse intervalo, pode ser necessária uma nova conferência.
+6. Confira o cadastro escolhido. Nos demais aparelhos, aguarde a atualização ou use **Sincronizar agora**.
+
+| Tipo de conflito | O que conferir antes de escolher |
+|---|---|
+| **Produto** | Nome, custo, margem desejada e Ads de cada marketplace apresentados na revisão. A versão escolhida também carrega seus outros dados, taxas, vínculo e cotação. Confira os kits que usam esse produto: mudanças no custo ou peso do componente podem alterar seus resultados. |
+| **Kit** | Nome, quantidade de componentes e meta apresentados no resumo. Confirme também produtos, quantidades, custos adicionais e parâmetros próprios da versão que pretende manter. O resumo do diálogo não mostra todos esses detalhes. Uma escolha não pode deixar um kit sem seus produtos componentes. |
+| **Conciliação de Ads** | Anúncio, datas, receita, custo dos produtos, tarifas, impostos, frete, outras despesas, fonte e escopo — somente diretas ou diretas e indiretas. Escolha a conferência correta daquele anúncio e período; não some duas versões da mesma conciliação. |
+
+**Exemplo fictício:** um funcionário salva o custo de um produto como R$ 12,00 e outro salva R$ 13,00 a partir da versão anterior. O painel pede uma escolha; o último clique em Salvar não garante que sua versão substitua a do colega. O mesmo vale para duas margens diferentes no mesmo kit ou duas apurações diferentes do mesmo anúncio e período.
+
+Se o resumo não mostrar a diferença necessária ou você não souber qual valor está correto, clique em **Fechar** e confira com o colega ou responsável. Fechar não aplica escolhas nem resolve o conflito; a edição local permanece pendente.
+
+**Usar somente o catálogo da empresa** se aplica à base compartilhada completa apresentada na revisão, não apenas ao registro selecionado. Para resolver diferenças pontuais, escolha uma versão por registro e use **Salvar escolhas e sincronizar**.
+
+Se aparecer **A escolha deixa um kit sem seus componentes**, revise as escolhas dos produtos e do kit para manter uma combinação válida. Se os dados locais mudarem durante a revisão, confira novamente as opções. Se não for possível guardar a cópia anterior, libere espaço no navegador ou baixe um backup antes de continuar.
+
+Conciliações de anúncios ou períodos diferentes são mantidas separadamente. Compartilhar uma conciliação não elimina a conferência financeira: se a evidência de Ads mudar, revise a apuração na Gestão de Ads antes de considerar o lucro conciliado. Veja [como conciliar o lucro apurado](#conciliar-lucro).
+
+### Backup e desconexão no trabalho compartilhado
+
+Desconectar o Mercado Livre mantém a cópia local e encerra o acesso à sincronização nesse navegador. Conecte novamente a conta autorizada para voltar à base da empresa.
 
 O backup JSON permanece como cópia independente. No modo local, ele também permite transferir o catálogo entre aparelhos. **Restaurar um backup com compartilhamento ativo pode substituir os cadastros da empresa após a sincronização**; confira o arquivo e combine essa operação com a equipe.
 
@@ -406,7 +484,7 @@ Com o catálogo da empresa ativo, os comparativos por período, resumos do anunc
 
 Use **Relatórios salvos**, no comparativo, para abrir um período já arquivado. A seleção lê os valores guardados, sem consultar novamente o Mercado Livre. Uma consulta de outro período não apaga esse relatório. A data da consulta continua visível; um relatório salvo não significa que os números foram atualizados hoje. Cada funcionário mantém seus próprios filtros de visualização.
 
-Conciliações de anúncios ou períodos diferentes são combinadas. Se dois funcionários alterarem a mesma conciliação com valores diferentes, o painel pede **Revisar alterações**. Confira receita, despesas, escopo e fonte antes de escolher a versão. Compartilhar uma conciliação não elimina a necessidade de rever os valores quando a evidência de Ads mudar.
+Conciliações de anúncios ou períodos diferentes são combinadas. Se dois funcionários alterarem a mesma conciliação com valores diferentes, o painel pede **Revisar alterações**, no bloco Catálogo da empresa, visível também na Gestão de Ads. Siga o [passo a passo de conflitos](#conflitos) e confira receita, despesas, escopo e fonte antes de escolher a versão. Esse botão resolve diferenças entre as cópias dos funcionários; **Revisar conciliação** abre a conferência financeira de um período. Compartilhar uma conciliação não elimina a necessidade de rever os valores quando a evidência de Ads mudar.
 
 Os backups v18 incluem os relatórios arquivados, resumos e conciliações. Backups anteriores continuam aceitos e não apagam os arquivos de Ads já compartilhados. Se uma aba antiga pedir atualização, recarregue a página para usar a sincronização atual.
 
@@ -436,6 +514,8 @@ O painel consulta os pedidos da conta por anúncio e data de criação da venda 
 Descontos já incluídos no preço não são abatidos outra vez. Cancelamentos e reembolsos confirmados são tratados pela situação financeira. Uma entrega pendente ou devolução física não comprova reembolso: vendas pagas podem permanecer na receita. Desconto ou restituição parcial sem valor inequívoco do item deixa o TACOS pendente. Essas são regras do painel para aplicar os dados de [pedidos e descontos oficiais](https://developers.mercadolivre.com.br/pt_br/gerenciamento-de-vendas), não uma promessa de reproduzir a metodologia de outro aplicativo.
 
 Sem **Vendas — Leitura**, acesso completo ou confirmação financeira suficiente, o TACOS mostra **Sem dados suficientes**. Ter ACOS e ROAS disponíveis não comprova que os pedidos também estejam acessíveis. A consulta de faturamento para TACOS não calcula automaticamente o custo efetivo de cada venda.
+
+<a id="conciliar-lucro"></a>
 
 ### Conciliar o lucro apurado
 
@@ -467,6 +547,9 @@ Isso pode indicar falta de histórico, permissão, separação de diretas e indi
 | Dúvida ou aviso | O que conferir |
 |---|---|
 | “Meu catálogo sumiu no celular.” | Confirme endereço e conexão com a conta permitida. Com compartilhamento ativo, sincronize; no modo local, restaure o backup correto. |
+| “Meu colega ainda não recebeu a alteração.” | Confira se você clicou em Salvar e se aparece Catálogo sincronizado com a empresa. No outro aparelho, termine a edição em andamento e use Sincronizar agora com a mesma conta autorizada. |
+| “Não aparece Revisar alterações.” | O botão fica oculto sem conflito ou primeira associação pendente. Confira a mensagem no bloco Catálogo da empresa, disponível nas três telas. |
+| “Há alterações simultâneas no mesmo cadastro.” | Abra Revisar alterações e escolha uma versão por registro, conforme o [procedimento de conflitos](#conflitos). Repetir Salvar não resolve a divergência. |
 | “A meta é 20%, mas aparece outro lucro.” | Veja se o cartão usa preço atual do anúncio. A meta determina a sugestão; o lucro usa o preço apresentado e seus custos. |
 | “O frete não entrou abaixo de R$ 100.” | Confira se é o modo manual. O automático usa a cotação reconhecida e tem condições próprias. |
 | “As comissões estão bloqueadas.” | Confira se o modo oficial está ativo. Nesse modo os campos mostram a consulta. |
@@ -479,17 +562,17 @@ Isso pode indicar falta de histórico, permissão, separação de diretas e indi
 | “A importação não aceita o CSV.” | Confira cabeçalho, separador, casas decimais e mensagens por linha. Corrija o arquivo e selecione-o novamente. |
 | “Não consigo excluir um produto.” | Remova-o dos kits que o utilizam ou exclua esses kits primeiro. |
 | “Aparece Dados só nesta sessão.” | Baixe um backup imediatamente e confira se o navegador permite armazenamento local. |
-| “A conexão falhou ou expirou.” | Conecte novamente. Se o aviso indicar configuração ou permissão, encaminhe-o ao responsável pela integração. |
+| “A conexão falhou ou expirou.” | Se for uma falha temporária, recupere a internet e aguarde a retomada; use Sincronizar agora quando estiver habilitado. Se a sessão expirou, conecte novamente o Mercado Livre. Para configuração ou acesso de outra conta, procure o responsável pela integração. |
 
 <a id="rotina"></a>
 
 ## 12. Rotina sugerida
 
-Ao começar, confira se está usando o catálogo correto e se a gravação local está funcionando. Atualize os preços e Ads quando precisar de uma análise renovada. Revise os produtos em vermelho ou amarelo olhando também as despesas detalhadas.
+Ao começar, abra o endereço oficial, confira a conta autorizada e a mensagem de sincronização em Catálogo da empresa. Use Sincronizar agora se precisar conferir a base antes de trabalhar. Atualize os preços e Ads quando precisar de uma análise renovada. Revise os produtos em vermelho ou amarelo olhando também as despesas detalhadas.
 
 Ao alterar custo ou embalagem, confira os kits afetados e refaça cotações pendentes. Na Gestão de Ads, leia o período e a cobertura da consulta antes dos totais. Para registrar lucro apurado, use despesas efetivas do mesmo período e guarde a fonte da conferência.
 
-Ao terminar alterações relevantes, baixe um backup com a data e siga o procedimento combinado entre os funcionários para manter a cópia principal.
+Ao terminar, salve os formulários, resolva eventuais conflitos e aguarde Catálogo sincronizado com a empresa. Os colegas recebem essa base sem importar arquivos. Guarde backups datados conforme a rotina combinada com a empresa; eles são uma cópia adicional, não uma etapa obrigatória para cada sincronização.
 
 <a id="fontes"></a>
 
@@ -499,7 +582,9 @@ Ao terminar alterações relevantes, baixe um backup com a data e siga o procedi
 
 As instruções e os nomes dos controles foram conferidos nos [campos da interface](src/index.html), nas [regras e fluxos do painel](src/app.js), na [sincronização do catálogo](src/catalog-sync.js) e na consulta de [vendas](netlify/lib/ml-sales.mjs) e [regras financeiras](netlify/lib/ml-sales-rules.mjs). Consulte o [histórico do projeto](https://github.com/diegorodriguesccobre-eng/meu-painel-m/commits/main) para acompanhar as revisões. As faixas, arredondamentos, cores e limites de uso descritos representam esta implementação.
 
-A pesquisa desta edição consultou a documentação oficial disponível e os resultados indexados do Mercado Livre. Algumas páginas oficiais bloquearam a leitura direta, e as páginas da Shopee não disponibilizaram o conteúdo no acesso automatizado. Portanto, os valores incorporados de Shopee e da tabela alternativa de frete mantêm as datas de conferência indicadas; esta edição do manual não declara uma nova validação integral dessas tabelas em 24/11/2026.
+Os procedimentos de catálogo compartilhado foram conferidos também na [documentação da configuração](CONFIGURAR_CATALOGO.md) e nos [testes de recuperação e edições simultâneas](tests/catalog-resilience.test.cjs). A conferência visual usou a página publicada sem conexão com a conta e uma cópia idêntica com dados fictícios para os conflitos; não provocou conflitos nos cadastros reais.
+
+As referências externas abaixo foram reunidas na edição anterior, a partir da documentação oficial disponível e de resultados indexados do Mercado Livre. Algumas páginas oficiais bloquearam a leitura direta, e as páginas da Shopee não disponibilizaram o conteúdo no acesso automatizado. Os valores incorporados de Shopee e da tabela alternativa de frete mantêm as datas de conferência indicadas. A atualização de 25/11/2026 trata do catálogo compartilhado e da resolução de conflitos; não declara uma nova validação dessas tabelas.
 
 ### Documentação oficial
 
