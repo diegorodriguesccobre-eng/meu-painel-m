@@ -5,7 +5,7 @@ let KEY=LEGACY_CATALOG_KEY,activeCatalogAccount=null,legacyCatalogAccount=null;
 const validCatalogAccount=id=>typeof id==='string'&&/^[1-9]\d{0,15}$/.test(id);
 function accountCatalogKey(id){if(!validCatalogAccount(id))throw Error('Conta do catálogo inválida.');return LEGACY_CATALOG_KEY+'.account.'+id;}
 function catalogOwners(data){
- const ids=[...(data.products??[]).flatMap(p=>[p.mercadoLivre?.sellerId,p.mlAds?.sellerId]),...(data.adsReports??[]).map(r=>r.sellerId),...(data.adsAccounts??[]).map(r=>r.sellerId),...(data.adsReconciliations??[]).map(r=>r.sellerId),data.adsHistory?.sellerId,data.adsAccount?.sellerId];
+ const ids=[...(data.products??[]).flatMap(p=>[p.mercadoLivre?.sellerId,p.mlAds?.sellerId]),...(data.pendingProducts??[]).map(p=>p.item?.sellerId),...(data.adsReports??[]).map(r=>r.sellerId),...(data.adsAccounts??[]).map(r=>r.sellerId),...(data.adsReconciliations??[]).map(r=>r.sellerId),data.adsHistory?.sellerId,data.adsAccount?.sellerId];
  return new Set(ids.filter(id=>id!==undefined&&id!==null).map(String));
 }
 function planAccountCatalog(data,sellerId,previousId,legacyId,read){
@@ -84,6 +84,11 @@ function copyCommissionReference(r){return {itemId:r.itemId,categoryId:r.categor
 function validMlSkus(skus){return skus===undefined||Array.isArray(skus)&&skus.length<=100&&skus.every(s=>typeof s==='string'&&s.trim().length>0&&s.length<=120&&!/[\u0000-\u001f]/.test(s));}
 function validMlLink(link){return link&&validMlSkus(link.skus)&&/^MLB\d{5,15}$/.test(link.itemId)&&Number.isSafeInteger(link.sellerId)&&link.sellerId>0&&typeof link.title==='string'&&link.title.length<=256&&typeof link.listingType==='string'&&link.listingType.length<=50&&Boolean(mlSafeUrl(link.permalink,'mercadolivre.com.br'))&&(link.categoryId===null||/^MLB\d+$/.test(link.categoryId))&&(link.catalogProductId===null||/^MLB\d+$/.test(link.catalogProductId))&&(link.categoryName===null||(typeof link.categoryName==='string'&&link.categoryName.length<=80))&&(link.price===null||(Number.isFinite(link.price)&&link.price>=0))&&(link.weight===null||(Number.isFinite(link.weight)&&link.weight>0&&link.weight<=1e6))&&(link.thumbnail===null||Boolean(mlSafeUrl(link.thumbnail,'mlstatic.com')))&&Number.isInteger(link.variationCount)&&link.variationCount>=0&&typeof link.fetchedAt==='string'&&Number.isFinite(Date.parse(link.fetchedAt))&&(link.shippingQuote===undefined||validShippingQuote(link.shippingQuote)&&link.shippingQuote.itemId===link.itemId)&&validCurrentLinkFields(link);}
 function copyMlLink(link){return {...(link.skus?{skus:link.skus.slice()}:{}),...Object.fromEntries(['itemId','sellerId','title','categoryId','categoryName','catalogProductId','listingType','permalink','price','weight','thumbnail','variationCount','fetchedAt'].map(k=>[k,link[k]])),...(link.shippingQuote?{shippingQuote:copyShippingQuote(link.shippingQuote)}:{}),...(link.currentFees?{currentFees:copyCommissionReference(link.currentFees)}:{}),...(link.currentShipping?{currentShipping:copyShippingQuote(link.currentShipping)}:{})};}
+function validPendingProducts(rows){
+ if(rows===undefined)return true;if(!Array.isArray(rows)||rows.length>5000)return false;
+ const ids=new Set(),items=new Set();return rows.every(p=>{const key=p?.item?.sellerId+':'+p?.item?.itemId;if(!p||'cost' in p||typeof p.id!=='string'||!p.id.trim()||p.id.length>200||ids.has(p.id)||items.has(key)||!validMlLink(p.item)||!Number.isFinite(p.margin)||p.margin<0||p.margin>=100||!validFees(p.feeSnapshot)||typeof p.importedAt!=='string'||!Number.isFinite(Date.parse(p.importedAt)))return false;ids.add(p.id);items.add(key);return true;});
+}
+function copyPendingProduct(p){return {id:p.id,item:copyMlLink(p.item),margin:p.margin,feeSnapshot:copyFees(p.feeSnapshot),importedAt:p.importedAt};}
 const ML_QUOTE_FIELDS=['price','profit','margin','shippingApplied','commission','fixed','saleFeeAmount','listingFeeAmount','feeAmount'];
 function validKitContext(c){return c&&/^MLB\d+$/.test(c.categoryId??'')&&typeof c.categoryName==='string'&&c.categoryName.length>0&&c.categoryName.length<=80&&/^MLB\d{5,15}$/.test(c.referenceItemId??'')&&(c.dimensions===null||c.dimensions&&['height','width','length'].every(k=>Number.isFinite(c.dimensions[k])&&c.dimensions[k]>0&&c.dimensions[k]<=1000));}
 function copyKitContext(c){return {categoryId:c.categoryId,categoryName:c.categoryName,referenceItemId:c.referenceItemId,dimensions:c.dimensions?Object.fromEntries(['height','width','length'].map(k=>[k,c.dimensions[k]])):null};}
@@ -477,7 +482,7 @@ function saleCardHTML(product,fee,scenario,{result=saleResult(product,fee,scenar
  const breakdown=result?`<dl class="sale-breakdown">${row('Custo do produto',d.cost,false)}${d.extra>0?row('Outros custos',d.extra):''}${row('Imposto ('+number(d.taxRate)+'%)',d.tax)}${row(d.commissionLabel,d.commission)}${d.fixed>0?row(result.shopeePolicy?'Taxa fixa por item':'Taxa fixa',d.fixed):''}${d.returns>0?row('Devolução Fácil (por pedido)',d.returns):''}${row('Custo de frete',d.shipping)}${d.ads>0?row('Ads ('+number(d.adsRate)+'%)',d.ads):''}</dl>`:'';
  return `<article class="sale-card ${pending?'health-pending':health.className}" aria-label="Resultado ${SCENARIOS[scenario]}"><div class="sale-top"><h3 class="sale-market sale-market-${scenario}">${name}</h3>${healthBadge(health)}</div>${result&&!pending?`<div class="sale-main"><span class="sale-price-label">${result.basis==='current'?'Preço de venda atual':'Preço sugerido de venda'}</span><strong class="sale-price">${money(result.price)}</strong><div class="sale-profits" title="Lucro após os custos, taxas e a reserva de publicidade (Ads). O percentual é calculado sobre o preço de venda.">Lucros: ${money(result.profit)} · ${number(profitRate(result))}%</div>${cardAdsHTML(product,scenario)}</div>${compact?'':breakdown}<div class="sale-footer">${result.basis==='current'?`<div class="sale-target"><span class="sub">Sugestão para sua meta de ${number(product.margin)}%</span><strong>${suggested?money(suggested.price):'Atualize a cotação'}</strong></div>`:''}<div class="minimum"><span>${product.mlPricing&&marketOf(scenario)==='ml'?'Preço para 10% (API)':'Mínimo para 10%'}</span>${minimum?`<strong>${money(minimum.price)}</strong>${minimum.shippingApplied>0?`<span class="sub">Inclui ${money(minimum.shippingApplied)} de frete</span>`:''}`:'<span class="danger-text">Inviável com estas taxas</span>'}</div>${scenario===best?'<span class="sale-best">↗ Maior lucro</span>':''}<details><summary>${compact?'Ver custos e taxas':'Taxas e serviços aplicados'}</summary>${compact?breakdown:''}${feeDetailsHTML(product,fee,scenario,result)}</details></div>`:`<p class="sale-pending">${pending?'Aguardando cotação oficial.':hasCurrentPrice(product,scenario)?'Consulte as tarifas do preço atual para apurar o lucro.':product.mlPricing&&marketOf(scenario)==='ml'?'Atualize a cotação: os dados mudaram.':'Inviável: confira custos, taxas e margem desejada.'}</p>${cardAdsHTML(product,scenario)}`}</article>`;
 }
-function validState(s){return s&&validAdsManagement(s)&&Array.isArray(s.products)&&validFees(s.fees)&&s.products.every(p=>p&&validAds(p)&&validProductAds(p)&&typeof p.id==='string'&&typeof p.name==='string'&&p.name.trim()&&typeof p.category==='string'&&['cost','weight','margin','extra'].every(k=>Number.isFinite(p[k])&&p[k]>=0)&&(p.mlShipping===undefined||(Number.isFinite(p.mlShipping)&&p.mlShipping>=0))&&p.cost>0&&p.margin<100&&validOptions(p)&&(p.mercadoLivre===undefined||validMlLink(p.mercadoLivre))&&(p.mlPricing===undefined||(validOfficialPricing(p.mlPricing)&&p.mlPricing.itemId===p.mercadoLivre?.itemId))&&(p.feeSnapshot===undefined||validFees(p.feeSnapshot)))&&validKits(s.kits??[],s.products);}
+function validState(s){return s&&validPendingProducts(s.pendingProducts)&&validAdsManagement(s)&&Array.isArray(s.products)&&validFees(s.fees)&&s.products.every(p=>p&&validAds(p)&&validProductAds(p)&&typeof p.id==='string'&&typeof p.name==='string'&&p.name.trim()&&typeof p.category==='string'&&['cost','weight','margin','extra'].every(k=>Number.isFinite(p[k])&&p[k]>=0)&&(p.mlShipping===undefined||(Number.isFinite(p.mlShipping)&&p.mlShipping>=0))&&p.cost>0&&p.margin<100&&validOptions(p)&&(p.mercadoLivre===undefined||validMlLink(p.mercadoLivre))&&(p.mlPricing===undefined||(validOfficialPricing(p.mlPricing)&&p.mlPricing.itemId===p.mercadoLivre?.itemId))&&(p.feeSnapshot===undefined||validFees(p.feeSnapshot)))&&validKits(s.kits??[],s.products);}
 function backupData(data){
  if(!validState(data))throw Error('O arquivo contém produtos ou taxas inválidos.');
  const ids=new Set();
@@ -487,13 +492,13 @@ function backupData(data){
   return {...Object.fromEntries(['id','name','category','cost','weight','margin','extra','mlShipping'].map(k=>[k,k==='mlShipping'?(p[k]??0):p[k]])),...copyAds(p),...(p.mlAds?{mlAds:copyProductAds(p.mlAds)}:{}),...optionalOptions(p),...(p.mercadoLivre===undefined?{}:{mercadoLivre:copyMlLink(p.mercadoLivre)}),...(p.mlPricing===undefined?{}:{mlPricing:copyOfficialPricing(p.mlPricing)}),...(p.feeSnapshot===undefined?{}:{feeSnapshot:copyFees(p.feeSnapshot)})};
  });
  const fees=Object.fromEntries(Object.keys(MARKETS).map(k=>[k,Object.fromEntries(['commission','fixed','tax',...(k==='ml'?['premiumCommission']:['easyReturnFee','officialEventRate','easyReturnEnabled','officialEventEnabled','policyId'])].filter(f=>data.fees[k][f]!==undefined).map(f=>[f,data.fees[k][f]]))]));
- return {...collectAdsArchives(data),...(data.adsHistory?{adsHistory:copyAdsHistory(data.adsHistory)}:{}),...(data.adsAccount?{adsAccount:copyAdsAccount(data.adsAccount)}:{}),...(data.adsReconciliations?{adsReconciliations:data.adsReconciliations.map(copyAdsReconciliation)}:{}),products,fees,kits:(data.kits??[]).map(k=>({id:k.id,name:k.name,margin:k.margin,extra:k.extra,mlShipping:k.mlShipping,...copyAds(k),...(k.mlContext?{mlContext:copyKitContext(k.mlContext)}:{}),...(k.mlPricing?{mlPricing:copyOfficialPricing(k.mlPricing)}:{}),...optionalOptions(k),...(k.feeSnapshot===undefined?{}:{feeSnapshot:copyFees(k.feeSnapshot)}),items:k.items.map(i=>({productId:i.productId,quantity:i.quantity}))}))};
+ return {...collectAdsArchives(data),...(data.pendingProducts===undefined?{}:{pendingProducts:data.pendingProducts.map(copyPendingProduct)}),...(data.adsHistory?{adsHistory:copyAdsHistory(data.adsHistory)}:{}),...(data.adsAccount?{adsAccount:copyAdsAccount(data.adsAccount)}:{}),...(data.adsReconciliations?{adsReconciliations:data.adsReconciliations.map(copyAdsReconciliation)}:{}),products,fees,kits:(data.kits??[]).map(k=>({id:k.id,name:k.name,margin:k.margin,extra:k.extra,mlShipping:k.mlShipping,...copyAds(k),...(k.mlContext?{mlContext:copyKitContext(k.mlContext)}:{}),...(k.mlPricing?{mlPricing:copyOfficialPricing(k.mlPricing)}:{}),...optionalOptions(k),...(k.feeSnapshot===undefined?{}:{feeSnapshot:copyFees(k.feeSnapshot)}),items:k.items.map(i=>({productId:i.productId,quantity:i.quantity}))}))};
 }
-function buildBackup(data){return JSON.stringify({format:'margem-backup',version:18,createdAt:new Date().toISOString(),data:backupData(data)},null,2);}
+function buildBackup(data){return JSON.stringify({format:'margem-backup',version:19,createdAt:new Date().toISOString(),data:backupData(data)},null,2);}
 function parseBackup(text){
  if(text.length>20*1024*1024)throw Error('O backup deve ter no máximo 20 MB.');
  let backup;try{backup=JSON.parse(text.replace(/^\uFEFF/,''));}catch{throw Error('Não foi possível ler o JSON. Selecione um arquivo gerado por “Baixar backup”.');}
- if(!backup||backup.format!=='margem-backup'||![1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18].includes(backup.version))throw Error('Formato ou versão de backup incompatível. Use um arquivo gerado por este painel.');
+ if(!backup||backup.format!=='margem-backup'||![1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19].includes(backup.version))throw Error('Formato ou versão de backup incompatível. Use um arquivo gerado por este painel.');
  return backupData(backup.data);
 }
 let state=defaults(),storageProblem='',feesMigrated=false;
@@ -540,11 +545,11 @@ function render(){
 }).join('')}<td role="cell" class="product-summary" data-label="Resumo">${healthBadge(pricingHealth(p,state.fees),true)}</td></tr>`).join('');
  $('empty').classList.toggle('hidden',products.length>0);$('empty').innerHTML=state.products.length?'Nenhum produto corresponde à busca.':'Seu catálogo começa aqui.<br>Cadastre seu primeiro produto.';$('table-count').textContent=`${products.length} de ${state.products.length} produtos`;$('export').disabled=products.length===0;
  $('mobile-sort').value=sort.key;$('sort-direction').textContent=sort.direction===1?'↑ Crescente':'↓ Decrescente';
- renderKitScreen();renderAdsDashboard();
+ renderKitScreen();renderAdsDashboard();globalThis.ConduzMlImport?.renderPending();
 }
 function openProduct(p){setProductPane('product');editing=p?.id??null;$('product-form').reset();$('product-error').textContent='';$('dialog-title').textContent=p?'Editar produto':'Novo produto';if(p)for(const key of ['name','category','cost','weight','margin','extra','mlShipping'])$('product-form').elements[key].value=p[key];for(const [name,market] of [['adsMl','ml'],['adsShopee','shopee']]){const input=$('product-form').elements[name];if(input)input.value=String(p?adsRate(p,market):0);}renderAdsRoas();prepareProductIntegration(p);$('product-dialog').showModal();}
 $('add').onclick=()=>openProduct();$('cancel').onclick=$('close-dialog').onclick=()=>{mlLookupVersion++;mlPricingVersion++;mlShippingVersion++;clearTimeout(mlPricingTimer);$('product-dialog').close();};$('product-dialog').oncancel=()=>{mlLookupVersion++;mlPricingVersion++;mlShippingVersion++;clearTimeout(mlPricingTimer);};
-$('product-form').onsubmit=async e=>{e.preventDefault();if(productSaving)return;const form=e.target;productSaving=true;try{if(mlShippingPending)await mlShippingPending;if($('ml-auto-fees').checked){const result=await requestOfficialPricing();if(!result||!pricingMatches(result,pricingInput())){$('product-error').textContent='Aguarde uma cotação oficial válida antes de salvar, ou desmarque a opção para usar taxas manuais.';return;}if(!$('product-dialog').open)return;}const p={id:editing??(globalThis.crypto?.randomUUID?.()??Date.now().toString(36)+Math.random().toString(36).slice(2)),name:form.elements.name.value.trim(),category:form.elements.category.value.trim(),...Object.fromEntries(['cost','weight','margin','extra','mlShipping','adsMl','adsShopee'].map(k=>[k,Number(form.elements[k]?.value??(k.startsWith('ads')?0:NaN))])),feeSnapshot:readProductFees(form,(editing?state.products.find(old=>old.id===editing)?.feeSnapshot:null)??state.fees),...(mlLinkedDraft?{mercadoLivre:copyMlLink(mlLinkedDraft)}:{}),...($('ml-auto-fees').checked&&mlPricingDraft?{mlPricing:copyOfficialPricing(mlPricingDraft)}:{})};if(!p.name||!p.category){$('product-error').textContent='Preencha nome e categoria.';return;}if(!validAds(p)){$('product-error').textContent='Informe Ads de 0 a 99,99%.';return;}if(!p.feeSnapshot){$('product-error').textContent='Confira as taxas deste produto: valores devem ser não negativos e cada comissão mais imposto deve ficar abaixo de 100%.';return;}if(Object.keys(SCENARIOS).some(k=>!calculate(p,state.fees[marketOf(k)],k))){$('product-error').textContent='A comissão, o imposto, Ads e a margem devem somar menos de 100% nos dois marketplaces.';return;}const old=state.products.find(old=>old.id===editing);if(old?.mlAds&&validProductAds({...p,mlAds:old.mlAds}))p.mlAds=copyProductAds(old.mlAds);if(editing)state.products=state.products.map(old=>old.id===editing?p:old);else state.products.push(p);persist();render();$('product-dialog').close();refreshRegisteredAds();}finally{productSaving=false;}};
+$('product-form').onsubmit=async e=>{e.preventDefault();if(productSaving)return;const form=e.target;productSaving=true;try{if(mlShippingPending)await mlShippingPending;if($('ml-auto-fees').checked){const result=await requestOfficialPricing();if(!result||!pricingMatches(result,pricingInput())){$('product-error').textContent='Aguarde uma cotação oficial válida antes de salvar, ou desmarque a opção para usar taxas manuais.';return;}if(!$('product-dialog').open)return;}const p={id:editing??(globalThis.crypto?.randomUUID?.()??Date.now().toString(36)+Math.random().toString(36).slice(2)),name:form.elements.name.value.trim(),category:form.elements.category.value.trim(),...Object.fromEntries(['cost','weight','margin','extra','mlShipping','adsMl','adsShopee'].map(k=>[k,Number(form.elements[k]?.value??(k.startsWith('ads')?0:NaN))])),feeSnapshot:readProductFees(form,(editing?state.products.find(old=>old.id===editing)?.feeSnapshot:null)??state.fees),...(mlLinkedDraft?{mercadoLivre:copyMlLink(mlLinkedDraft)}:{}),...($('ml-auto-fees').checked&&mlPricingDraft?{mlPricing:copyOfficialPricing(mlPricingDraft)}:{})};if(!p.name||!p.category){$('product-error').textContent='Preencha nome e categoria.';return;}if(!validAds(p)){$('product-error').textContent='Informe Ads de 0 a 99,99%.';return;}if(!p.feeSnapshot){$('product-error').textContent='Confira as taxas deste produto: valores devem ser não negativos e cada comissão mais imposto deve ficar abaixo de 100%.';return;}if(Object.keys(SCENARIOS).some(k=>!calculate(p,state.fees[marketOf(k)],k))){$('product-error').textContent='A comissão, o imposto, Ads e a margem devem somar menos de 100% nos dois marketplaces.';return;}const old=state.products.find(old=>old.id===editing);if(old?.mlAds&&validProductAds({...p,mlAds:old.mlAds}))p.mlAds=copyProductAds(old.mlAds);const previousState=state;state={...state,products:editing?state.products.map(old=>old.id===editing?p:old):[...state.products,p],...(state.pendingProducts?{pendingProducts:state.pendingProducts.filter(row=>row.item.sellerId!==p.mercadoLivre?.sellerId||row.item.itemId!==p.mercadoLivre?.itemId)}:{})};if(!validState(state)||!persist()){state=previousState;$('product-error').textContent='Não foi possível gravar o cadastro. A pendência e os dados anteriores foram preservados; confira o armazenamento do navegador.';render();return;}render();$('product-dialog').close();refreshRegisteredAds();}finally{productSaving=false;}};
 $('mobile-sort').onchange=e=>{sort={key:e.target.value,direction:sort.direction};render();};
 $('sort-direction').onclick=()=>{sort.direction*=-1;render();};
 $('search').oninput=render;
@@ -919,7 +924,7 @@ function currentLinkFromResponse(previous,response){
 }
 let currentPricesBusy=false;
 async function refreshRegisteredPrices(force=false){
- if(currentPricesBusy||!mlConnection.connected)return;
+ if(currentPricesBusy||!mlConnection.connected||globalThis.ConduzMlImport?.isOpen())return;
  const products=state.products.filter(p=>p.mercadoLivre&&(force||!p.mercadoLivre.currentFees||p.mlPricing&&!p.mercadoLivre.currentShipping));
  if(!products.length)return;
  currentPricesBusy=true;$('ml-refresh-current').disabled=true;let updated=0,failed=0;
@@ -928,7 +933,7 @@ async function refreshRegisteredPrices(force=false){
    if(!mlConnection.connected)break;
    $('ml-current-status').textContent=`Consultando preços e tarifas dos anúncios: ${updated+failed+1} de ${products.length}…`;
    try{const response=await mlRequest('item',{query:{id:product.mercadoLivre.itemId}}),current=state.products.find(p=>p.id===product.id);
-    if(!current||current.mercadoLivre?.itemId!==product.mercadoLivre.itemId)continue;
+    if(!current||current.mercadoLivre?.itemId!==product.mercadoLivre.itemId||globalThis.ConduzMlImport?.isOpen())continue;
     if(!(response.item?.price>0))throw Error('Preço atual indisponível; preservando o preço registrado.');
     current.mercadoLivre=currentLinkFromResponse(current.mercadoLivre,response);updated++;
    }catch{failed++;}
@@ -1145,7 +1150,7 @@ function applyProductAds(product,advertising,row){
 }
 async function refreshRegisteredAds(force=false){
  if(mlAdsBusy||!mlConnection.connected)return;
- if($('product-dialog').open){$('ml-ads-status').textContent='Salve ou feche o cadastro para atualizar Ads sem alterar o formulário em edição.';return;}
+ if($('product-dialog').open||globalThis.ConduzMlImport?.isOpen()){$('ml-ads-status').textContent='Salve ou feche o cadastro ou a revisão do catálogo para atualizar Ads.';return;}
  const sellerId=mlConnection.account?.id,epoch=mlAdsEpoch,now=Date.now();
  const ids=[...new Set(state.products.filter(p=>p.mercadoLivre?.sellerId===sellerId&&(force||!p.mlAds||p.mlAds.metricsVersion!==2||p.mlAds.dateTo!==adsCurrentPeriod(now).dateTo||now-Date.parse(p.mlAds.fetchedAt)>600000)).map(p=>p.mercadoLivre.itemId))];
  if(!ids.length)return;
@@ -1168,19 +1173,19 @@ async function refreshRegisteredAds(force=false){
    for(const row of advertising.items){
     const products=state.products.filter(p=>p.mercadoLivre?.sellerId===sellerId&&p.mercadoLivre.itemId===row.itemId);
     for(const p of products){
-     if($('product-dialog').open){skipped++;continue;}
+     if($('product-dialog').open||globalThis.ConduzMlImport?.isOpen()){skipped++;continue;}
      const oldRate=adsRate(p,'ml');applyProductAds(p,advertising,row);
      if(row.status==='ready'){updated++;if(p.mlPricing&&(oldRate!==adsRate(p,'ml')||!pricingMatches(p.mlPricing,savedAdsPricingInput(p))))repricing.push(p.id);}else unavailable++;
     }
    }
    persist();render();
    for(const id of repricing){
-    if(!active()||$('product-dialog').open)break;
+    if(!active()||$('product-dialog').open||globalThis.ConduzMlImport?.isOpen())break;
     const p=state.products.find(p=>p.id===id);if(!p||p.mercadoLivre?.sellerId!==sellerId)continue;
     const input=savedAdsPricingInput(p),key=JSON.stringify(input);
     try{
      const response=await mlRequest('pricing',{method:'POST',body:input});
-     if(!active()||$('product-dialog').open)break;
+     if(!active()||$('product-dialog').open||globalThis.ConduzMlImport?.isOpen())break;
      const current=state.products.find(p=>p.id===id);
      if(!current?.mercadoLivre||JSON.stringify(savedAdsPricingInput(current))!==key)continue;
      const expected={...input,...(input.autoShipping?{mlShipping:response.pricing?.inputs?.mlShipping}:{})};
@@ -1288,7 +1293,7 @@ function activateAccountCatalog(accountId,legacyId){
  if(validCatalogAccount(legacyId))legacyCatalogAccount=legacyId;
  if(activeCatalogAccount===sellerId)return false;
  const plan=planAccountCatalog(state,sellerId,activeCatalogAccount,legacyCatalogAccount,key=>localStorage.getItem(key));
- if(plan.changed&&(['product-dialog','restore-dialog','import-dialog','ads-reconcile-dialog','delete-dialog','kit-delete-dialog','ml-picker-dialog','cloud-review-dialog'].some(id=>$(id).open)||kitEditing||kitItems.size))throw Error('Conclua ou cancele a edição em andamento e recarregue a página para trocar de empresa. Seus dados foram preservados.');
+ if(plan.changed&&(['product-dialog','restore-dialog','import-dialog','ads-reconcile-dialog','delete-dialog','kit-delete-dialog','ml-picker-dialog','cloud-review-dialog'].some(id=>$(id).open)||globalThis.ConduzMlImport?.isOpen()||kitEditing||kitItems.size))throw Error('Conclua ou cancele a edição em andamento e recarregue a página para trocar de empresa. Seus dados foram preservados.');
  // Grava todas as cópias antes de trocar a chave usada por persist() e pela sincronização.
  for(const [key,value] of plan.writes)localStorage.setItem(key,value);
  localStorage.setItem(ACTIVE_CATALOG_ACCOUNT,sellerId);

@@ -44,7 +44,7 @@ test('cenários usam CPC e receitas agregadas; azul é monotônico pelo lucro, n
 });
 test('backup v18 preserva conciliação e separação de receitas; aceita v15 sem completar dados ausentes',()=>{
  const p=product(),r=record(p),data={products:[p],kits:[],fees:api.defaults().fees,adsReconciliations:[r]};
- assert.ok(api.validState(data));const text=api.buildBackup(data),restored=api.parseBackup(text);assert.equal(JSON.parse(text).version,18);assert.deepEqual(clone(restored),clone(data));
+ assert.ok(api.validState(data));const text=api.buildBackup(data),restored=api.parseBackup(text);assert.equal(JSON.parse(text).version,19);assert.deepEqual(clone(restored),clone(data));
  const old=clone(data);delete old.adsReconciliations;delete old.products[0].mlAds.metricsVersion;delete old.products[0].mlAds.breakdownComplete;for(const k of ['directRevenue','indirectRevenue','directUnits','indirectUnits','directSales','indirectSales'])delete old.products[0].mlAds[k];
  const legacy=api.parseBackup(JSON.stringify({format:'margem-backup',version:15,data:old}));assert.equal(legacy.products[0].mlAds.directRevenue,undefined);assert.equal(api.estimateProductAds(legacy.products[0],legacy.fees),null);
  const invalid={...data,adsReconciliations:[record(p,{goods:-1})]};assert.equal(api.validState(invalid),false);

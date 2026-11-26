@@ -75,6 +75,20 @@ test('catálogo usa scan e o endpoint bulk atual, retornando apenas itens da con
  const search=app.calls.find(c=>c.url.includes('/items/search'));assert.equal(new URL(search.url).searchParams.get('search_type'),'scan');assert.equal(new URL(search.url).searchParams.get('scroll_id'),'cursor:abc+/=');
  assert.ok(app.calls.some(c=>c.url.includes('/items/bulk?')));assert.equal(data.nextCursor,null);assert.equal(data.items[0].price,undefined);
 });
+
+test('conferência em lote enumera também IDs indisponíveis e recusa página cheia sem cursor', async () => {
+ const app = await setup(), auth = await authorize(app), { createHandler } = await modulePromise;
+ const missing = 'MLB9876543210', ids = [fixture.id, missing];
+ const handler = createHandler({ env, now: () => Date.parse('2026-11-11T12:00:00Z'), fetchImpl: async url => {
+  if (new URL(url).pathname.endsWith('/items/search')) return Response.json({ results: ids });
+  return Response.json([{ id: fixture.id, status_code: 200, body: fixture }, { id: missing, status_code: 403, body: {} }]);
+ } });
+ const data = await (await handler(request('catalog-items', { cookie: auth.cookie }))).json();
+ assert.deepEqual(data.itemIds, ids); assert.deepEqual(data.unavailableIds, [missing]); assert.equal(data.items.length, 1); assert.equal(data.nextCursor, null);
+ const broken = createHandler({ env, now: () => Date.parse('2026-11-11T12:00:00Z'), fetchImpl: async () => Response.json({ results: Array.from({ length: 20 }, (_, i) => 'MLB' + (9000000000 + i)) }) });
+ assert.equal((await broken(request('catalog-items', { cookie: auth.cookie }))).status, 502);
+ assert.equal((await handler(request('catalog-items'))).status, 401);
+});
 test('consulta importa dados do anúncio e preço de referência sem criar custo de compra',async()=>{
  const app=await setup(),auth=await authorize(app),response=await app.handler(request('item',{cookie:auth.cookie,query:{id:fixture.permalink}})),data=await response.json();
  assert.equal(response.status,200);assert.equal(data.item.title,fixture.title);assert.equal(data.item.categoryName,'Categoria teste');assert.equal(data.item.weight,.75);assert.equal(data.item.price,54.9);assert.equal(data.item.cost,undefined);assert.equal(data.item.sellerId,123);

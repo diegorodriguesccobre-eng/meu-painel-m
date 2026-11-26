@@ -50,7 +50,7 @@ function cookie() {
  return '__Host-conduz_ml_session=' + Buffer.concat([iv, cipher.getAuthTag(), payload]).toString('base64url');
 }
 
-async function startLab({ ports = [0, 0], seed = fixture() } = {}) {
+async function startLab({ ports = [0, 0], seed = fixture(), mlRequest = null } = {}) {
  const { createCatalogHandler } = await import('../../cloudflare/catalog.mjs');
  const db = database(), peers = [], requests = [];
  const env = { CATALOG_DB: db, CATALOG_SELLER_ID: '123', ML_CLIENT_ID: '1', ML_CLIENT_SECRET: 'TEST_ONLY', ML_SESSION_SECRET: 'ab'.repeat(32), ML_REDIRECT_URI: 'https://catalog-lab.example/api/ml/callback' };
@@ -83,11 +83,19 @@ async function startLab({ ports = [0, 0], seed = fixture() } = {}) {
      res.writeHead(response.status, Object.fromEntries(response.headers)); return res.end(Buffer.from(await response.arrayBuffer()));
     }
     if (url.pathname === '/api/ml/status') { res.setHeader('Content-Type', 'application/json'); return res.end(JSON.stringify({ configured: true, connected: true, account: { id: 123, nickname: 'EMPRESA FICTÍCIA · TESTE LOCAL' } })); }
+    if (mlRequest && url.pathname.startsWith('/api/ml/')) {
+     const bytes = []; for await (const part of req) bytes.push(part);
+     try {
+      const data = await mlRequest(url.pathname.split('/').pop(), { method: req.method, query: Object.fromEntries(url.searchParams), ...(bytes.length ? { body: JSON.parse(Buffer.concat(bytes).toString()) } : {}) });
+      res.writeHead(200, { 'Content-Type': 'application/json' }); return res.end(JSON.stringify(data));
+     } catch (error) { res.writeHead(error.status ?? 503, { 'Content-Type': 'application/json' }); return res.end(JSON.stringify({ message: error.message })); }
+    }
     if (url.pathname.startsWith('/api/')) { res.writeHead(503, { 'Content-Type': 'application/json' }); return res.end(JSON.stringify({ message: 'Laboratório: nenhuma consulta externa é realizada; dados fictícios preservados.' })); }
     if (url.pathname !== '/') { res.writeHead(404); return res.end(); }
     let html = fs.readFileSync(path.join(root, 'src/index.html'), 'utf8')
      .replace('/* __PANEL_STYLES__ */', () => fs.readFileSync(path.join(root, 'src/styles.css'), 'utf8'))
      .replace('/* __PANEL_SCRIPT__ */', () => fs.readFileSync(path.join(root, 'src/app.js'), 'utf8'))
+     .replace('/* __ML_IMPORT_SCRIPT__ */', () => fs.readFileSync(path.join(root, 'src/ml-catalog-import.js'), 'utf8'))
      .replace('/* __CATALOG_SCRIPT__ */', () => fs.readFileSync(path.join(root, 'src/catalog-sync.js'), 'utf8'))
      .replace('<body>', '<body><aside style="padding:8px;background:#633;color:white;text-align:center">TESTE LOCAL · DADOS FICTÍCIOS · SEM ACESSO À PRODUÇÃO</aside>');
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Content-Security-Policy': "default-src 'self' data:; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; form-action 'self'; base-uri 'none'", 'Cache-Control': 'no-store' });

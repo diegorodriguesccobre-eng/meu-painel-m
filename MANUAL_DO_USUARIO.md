@@ -23,6 +23,7 @@ O painel ajuda a definir preços no Mercado Livre e na Shopee, comparar o lucro 
   - [Ordenar produtos](#ordenar-produtos)
   - [Usar busca e ordenação no celular](#busca-ordenacao-celular)
 - [4. Conectar um anúncio do Mercado Livre](#mercado-livre)
+  - [Importar e conferir o catálogo completo](#importar-conferir-catalogo)
 - [5. Entender preços, lucros e cores](#precos)
 - [6. Entender tarifas, impostos e frete](#tarifas)
 - [7. Montar e manter kits](#kits)
@@ -370,6 +371,32 @@ O catálogo consultado é reaproveitado por até cinco minutos na mesma aba e co
 - **Consultar tarifas agora**, no cadastro, refaz a cotação para os parâmetros do formulário.
 
 Esses botões não publicam as sugestões de preço no Mercado Livre.
+
+<a id="importar-conferir-catalogo"></a>
+
+### Importar e conferir o catálogo completo
+
+Em **Meus produtos**, no bloco **Conexão com o Mercado Livre**, use **Importar e conferir catálogo**. A função consulta todos os anúncios que a API disponibiliza para a conta conectada, em lotes automáticos. A conferência fica separada do salvamento.
+
+1. Confira o nome da conta na janela de revisão e clique em **Buscar todos os anúncios**. Aguarde a listagem e a conferência dos dados e cálculos. Se outra consulta automática estiver em andamento, aguarde sua conclusão antes de abrir a revisão.
+2. Use **Pesquisar na revisão** por nome, MLB ou SKU e o filtro **Mostrar**. Os resultados são paginados; a busca considera o catálogo inteiro consultado, inclusive outras páginas.
+3. Nos **Produtos cadastrados**, compare nome, categoria, peso e preço registrado com os dados consultados. O vínculo pelo MLB identifica o cadastro; nomes iguais, sozinhos, não são usados para juntar produtos. Nome e categoria internos, custo, peso, margem, imposto, Ads e serviços existentes são preservados.
+4. Confira o lucro estimado no **preço atual** e as sugestões dos três canais. Para produtos que já usam tarifas oficiais, a consulta refaz as cotações do Mercado Livre com seus parâmetros preservados. No modo manual, as taxas e o modo salvos são mantidos. A rotina não atualiza o percentual de Ads; a automação já existente continua responsável por isso.
+5. Marque os resultados desejados ou use **Selecionar resultados disponíveis**. Esse botão seleciona todos os resultados disponíveis do filtro atual, inclusive outras páginas. **Desmarcar todos** limpa a seleção inteira. Confira o contador de selecionados antes de salvar.
+6. Clique em **Salvar selecionados**. Somente os resultados marcados são aplicados. Fechar a janela ou usar **Cancelar** descarta a revisão sem salvar. Anúncios novos são guardados como pendências, sem inventar custo ou lucro.
+7. Aguarde **Catálogo sincronizado com a empresa** para confirmar o envio à nuvem. Os kits, taxas gerais e conciliações não são editados por essa importação. Se outra pessoa mudar um cadastro durante a revisão, consulte novamente; conflitos posteriores continuam usando a revisão de alterações do catálogo compartilhado.
+
+No celular, abra **Meus produtos** pelo **Menu** e siga os mesmos comandos. Os resultados aparecem em cartões e os filtros se adaptam à largura da tela.
+
+**Anúncios sem custo:** depois de salvar a seleção, eles aparecem em **Anúncios pendentes de cadastro**. Essa lista é compartilhada com a empresa e incluída no backup v19. Pendências não entram no lucro médio, nos kits nem no CSV de produtos. Use a busca e a paginação da própria lista para encontrá-las.
+
+Para concluir uma pendência, clique em **Concluir cadastro**, informe o custo de compra e confira peso, margem, impostos e Ads no cadastro habitual. O custo começa vazio. A pendência só vira produto calculado após **Salvar produto** com dados válidos; cancelar mantém a pendência. Ao salvar, o painel remove a pendência correspondente e preserva os demais registros. Os custos e impostos da empresa não são deduzidos do preço anunciado pelo Mercado Livre.
+
+**Resultados indisponíveis e variações:** falhas de preço, frete ou cotação aparecem explicitamente e não podem ser selecionadas. Anúncios que não retornarem na listagem mantêm seus cadastros. Anúncios com variações podem ter preços e custos diferentes por unidade: os cadastros existentes exigem revisão individual e não são atualizados automaticamente em lote; anúncios novos permanecem pendentes para conferência. A rotina trabalha por anúncio, sem criar automaticamente um produto para cada variação.
+
+Uma falha durante a listagem impede salvar uma revisão incompleta; tente buscar novamente. Se a listagem terminar, mas algumas consultas individuais falharem, os resultados disponíveis podem ser selecionados e os demais permanecem preservados. Os limites desta versão são 10.000 anúncios por consulta, 5.000 produtos e 5.000 pendências salvas, além do limite de tamanho do catálogo. A conexão precisa continuar válida; trocar de conta invalida a revisão.
+
+Os valores do anúncio são referências consultadas, e os lucros apresentados são estimativas por venda com seus custos e impostos cadastrados. Essa função não substitui a conciliação dos resultados efetivamente cobrados nas vendas e não altera anúncios no Mercado Livre.
 
 <a id="precos"></a>
 
@@ -722,7 +749,7 @@ O backup pode conter informações financeiras da empresa; compartilhe-o apenas 
 4. Confira a quantidade de produtos, kits e o resumo apresentado.
 5. Clique em **Substituir dados e restaurar** para confirmar.
 
-**A restauração substitui o estado local atual.** Com o catálogo compartilhado ativo, a mudança também será sincronizada com a empresa e passará pela conferência de versão. A restauração não mescla cadastros. Arquivos inválidos não são aplicados. Backups antigos compatíveis são aceitos, mas não recebem métricas históricas que nunca foram registradas. Esta versão gera backup v18 e aceita backups das versões anteriores.
+**A restauração substitui o estado local atual.** Com o catálogo compartilhado ativo, a mudança também será sincronizada com a empresa e passará pela conferência de versão. A restauração não mescla cadastros. Arquivos inválidos não são aplicados. Backups antigos compatíveis são aceitos, mas não recebem métricas históricas que nunca foram registradas. Esta versão gera backup v19 e aceita backups das versões anteriores.
 
 Um CSV exportado não é um backup completo e não restaura todas as configurações. O próprio arquivo `index.html` também não contém os produtos salvos pelo seu navegador.
 
@@ -793,7 +820,7 @@ Use **Relatórios salvos**, no comparativo, para abrir um período já arquivado
 
 Conciliações de anúncios ou períodos diferentes são combinadas. Se dois funcionários alterarem a mesma conciliação com valores diferentes, o painel pede **Revisar alterações**, no bloco Catálogo da empresa, visível também na Gestão de Ads. Siga o [passo a passo de conflitos](#conflitos) e confira receita, despesas, escopo e fonte antes de escolher a versão. Esse botão resolve diferenças entre as cópias dos funcionários; **Revisar conciliação** abre a conferência financeira de um período. Compartilhar uma conciliação não elimina a necessidade de rever os valores quando a evidência de Ads mudar.
 
-Os backups v18 incluem os relatórios arquivados, resumos e conciliações. Backups anteriores continuam aceitos e não apagam os arquivos de Ads já compartilhados. Se uma aba antiga pedir atualização, recarregue a página para usar a sincronização atual.
+Os backups v19 incluem os relatórios arquivados, resumos e conciliações. Backups anteriores continuam aceitos e não apagam os arquivos de Ads já compartilhados. Se uma aba antiga pedir atualização, recarregue a página para usar a sincronização atual.
 
 SKU usa o identificador oficial disponibilizado pelo Mercado Livre. Se a API não informar SKU, use nome ou MLB. Consultas podem demorar conforme o número de anúncios e pedidos. Se forem interrompidas, resultados incompletos são identificados; as partes ausentes não viram zero.
 

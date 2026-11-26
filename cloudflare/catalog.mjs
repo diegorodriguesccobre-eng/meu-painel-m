@@ -33,7 +33,7 @@ async function readBody(request) {
 }
 
 export function validateCatalog(data, sellerId) {
-  if (!object(data) || Object.keys(data).some(k => !['products', 'kits', 'fees', 'adsReports', 'adsAccounts', 'adsReconciliations'].includes(k))) fail('Formato do catálogo inválido.');
+  if (!object(data) || Object.keys(data).some(k => !['products', 'kits', 'pendingProducts', 'fees', 'adsReports', 'adsAccounts', 'adsReconciliations'].includes(k))) fail('Formato do catálogo inválido.');
   if (!Array.isArray(data.products) || !Array.isArray(data.kits) || data.products.length > 5000 || data.kits.length > 5000) fail('O catálogo aceita até 5.000 produtos e 5.000 kits.');
   const checkFees = fees => {
     if (!object(fees) || !object(fees.ml) || !object(fees.shopee)) fail('Taxas inválidas.');
@@ -45,6 +45,15 @@ export function validateCatalog(data, sellerId) {
     }
   };
   checkFees(data.fees);
+  if (data.pendingProducts !== undefined) {
+    if (!Array.isArray(data.pendingProducts) || data.pendingProducts.length > 5000) fail('O catálogo aceita até 5.000 anúncios pendentes.');
+    const pendingIds = new Set(), pendingItems = new Set();
+    for (const p of data.pendingProducts) {
+      const item = p?.item, key = item?.sellerId + ':' + item?.itemId;
+      if (!object(p) || !text(p.id) || pendingIds.has(p.id) || pendingItems.has(key) || !object(item) || String(item.sellerId) !== sellerId || !/^MLB\d{5,15}$/.test(item.itemId ?? '') || !text(item.title, 256) || !number(p.margin, 0, 99.99) || typeof p.importedAt !== 'string' || !Number.isFinite(Date.parse(p.importedAt)) || 'cost' in p) fail('Anúncio pendente inválido, repetido ou de outra conta.');
+      checkFees(p.feeSnapshot); pendingIds.add(p.id); pendingItems.add(key);
+    }
+  }
   const ids = new Set();
   const common = row => {
     if (!object(row) || !text(row.id) || !text(row.name, 120) || !number(row.margin, 0, 99.99) || !number(row.extra)) fail('Cadastro inválido.');
@@ -113,7 +122,7 @@ export function createCatalogHandler({ env, now = Date.now }) {
     const path = new URL(request.url).pathname;
     const accounts = catalogAccounts(env), multipleAccounts = env.CATALOG_SELLER_IDS !== undefined;
     const configured = Boolean(env.CATALOG_DB && accounts.size);
-    if (path === '/api/catalog/status' && request.method === 'GET') return json({ configured, schemaVersion: 3, legacySellerId: accounts.has(env.CATALOG_SELLER_ID) ? env.CATALOG_SELLER_ID : null });
+    if (path === '/api/catalog/status' && request.method === 'GET') return json({ configured, schemaVersion: 4, legacySellerId: accounts.has(env.CATALOG_SELLER_ID) ? env.CATALOG_SELLER_ID : null });
     if (path !== '/api/catalog') return json({ error: 'NOT_FOUND' }, 404);
     if (!['GET', 'PUT'].includes(request.method)) return json({ error: 'METHOD_NOT_ALLOWED' }, 405, { Allow: 'GET, PUT' });
     if (!configured) return json({ error: 'NOT_CONFIGURED', message: 'O catálogo compartilhado ainda precisa ser configurado.' }, 503);
@@ -153,11 +162,18 @@ export function createCatalogHandler({ env, now = Date.now }) {
       const raw = await readBody(request);
       let body;
       try { body = JSON.parse(raw); } catch { return json({ message: 'Conteúdo inválido.' }, 400); }
-      if (body?.schemaVersion !== 3 && (multipleAccounts || body?.schemaVersion !== 2)) return json({ error: 'CLIENT_UPDATE_REQUIRED', message: 'Atualize a página para sincronizar o catálogo e os dados de Ads da conta correta. A cópia local foi mantida.' }, 426);
+      if (body?.schemaVersion !== 4 && body?.schemaVersion !== 3 && (multipleAccounts || body?.schemaVersion !== 2)) return json({ error: 'CLIENT_UPDATE_REQUIRED', message: 'Atualize a página para sincronizar o catálogo e os dados de Ads da conta correta. A cópia local foi mantida.' }, 426);
+      if (body.schemaVersion === 4 && !Array.isArray(body.data?.pendingProducts)) fail('Envie também os anúncios pendentes para preservar o catálogo completo.');
       if (!Number.isSafeInteger(body?.revision) || body.revision < 0 || !/^[a-f0-9-]{36}$/.test(body.mutationId ?? '')) fail('Versão de gravação inválida.');
       validateCatalog(body.data, sellerId);
       const content = JSON.stringify(body.data), digest = createHash('sha256').update(content).digest('hex');
       const previous = await db.prepare(HEAD).bind(sellerId).first();
+      if (previous?.revision && body.schemaVersion !== 4) {
+        const [chunks] = await db.batch([db.prepare('SELECT content FROM catalog_chunks WHERE seller_id = ? AND revision = ? ORDER BY position').bind(sellerId, previous.revision)]);
+        const stored = chunks.results.map(x => x.content).join('');
+        if (createHash('sha256').update(stored).digest('hex') !== previous.digest) throw Error('INCOMPLETE_CATALOG');
+        if (JSON.parse(stored).pendingProducts?.length) return json({ error: 'CLIENT_UPDATE_REQUIRED', message: 'Recarregue a página para preservar os anúncios pendentes de custo. A cópia local foi mantida.' }, 426);
+      }
       if (previous?.mutation_id === body.mutationId && previous.digest === digest) return json({ revision: previous.revision, updatedAt: previous.updated_at });
       const updatedAt = new Date(now()).toISOString(), revision = body.revision + 1;
       const statements = [

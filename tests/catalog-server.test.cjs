@@ -51,6 +51,29 @@ function request(method = 'GET', body, options = {}) {
 }
 const write = (data = catalog(), revision = 0, mutationId = randomUUID()) => ({ schemaVersion: 2, revision, mutationId, data });
 
+test('pendências sem custo são compartilhadas e uma página antiga não pode apagá-las', async t => {
+ const { createWorker } = await load, worker = createWorker(), { env } = setup(t);
+ const item = require('./support/ml-import-fixtures.cjs').response('MLB9000000001').item;
+ const pending = { id: 'pending-1', item, margin: 20, feeSnapshot: fees, importedAt: '2026-11-20T12:00:00Z' };
+ const data = { ...catalog(), pendingProducts: [pending] };
+ assert.equal((await worker.fetch(request('PUT', { ...write(data), schemaVersion: 4 }), env)).status, 200);
+ const saved = await (await worker.fetch(request(), env)).json(); assert.deepEqual(saved.data.pendingProducts, [pending]);
+ const old = await worker.fetch(request('PUT', { ...write(catalog(), 1), schemaVersion: 3 }), env);
+ assert.equal(old.status, 426); assert.equal((await old.json()).error, 'CLIENT_UPDATE_REQUIRED');
+ assert.equal((await worker.fetch(request('PUT', { ...write({ ...catalog(), pendingProducts: [] }, 1), schemaVersion: 4 }), env)).status, 200);
+ assert.deepEqual((await (await worker.fetch(request(), env)).json()).data.pendingProducts, []);
+});
+test('valida custo ausente, proprietário e duplicatas nas pendências antes de gravar', async t => {
+ const { createWorker } = await load, worker = createWorker(), { env } = setup(t);
+ const item = require('./support/ml-import-fixtures.cjs').response('MLB9000000001').item;
+ const pending = { id: 'pending-1', item, margin: 20, feeSnapshot: fees, importedAt: '2026-11-20T12:00:00Z' };
+ for (const rows of [[{ ...pending, cost: 0 }], [{ ...pending, item: { ...item, sellerId: 456 } }], [pending, { ...pending, id: 'outro' }]]) {
+  assert.equal((await worker.fetch(request('PUT', { ...write({ ...catalog(), pendingProducts: rows }), schemaVersion: 4 }), env)).status, 400);
+ }
+ assert.equal((await worker.fetch(request('PUT', { ...write(catalog()), schemaVersion: 4 }), env)).status, 400);
+ assert.equal((await (await worker.fetch(request(), env)).json()).revision, 0);
+});
+
 test('catálogo reutiliza sessão criptografada, exige conta da empresa e bloqueia origem externa', async t => {
  const { createWorker } = await load, worker = createWorker(), { env } = setup(t);
  assert.equal((await worker.fetch(request('GET', null, { Cookie: '' }), env)).status, 401);
@@ -168,7 +191,7 @@ test('abas antigas e uma sessão trocada não gravam nem leem o catálogo de out
  assert.equal((await worker.fetch(request('PUT', { ...write(foreign), schemaVersion: 3 }, headers), env)).status, 400);
  assert.equal((await (await worker.fetch(request('GET', null, headers), env)).json()).revision, 0);
  const configuration = await (await worker.fetch(new Request(origin + '/api/catalog/status'), env)).json();
- assert.equal(configuration.schemaVersion, 3); assert.equal(configuration.legacySellerId, '123');
+ assert.equal(configuration.schemaVersion, 4); assert.equal(configuration.legacySellerId, '123');
  for (const value of ['', '123,outro', '0', '123,,456']) {
   assert.equal((await worker.fetch(request(), { ...env, CATALOG_SELLER_IDS: value })).status, 503);
  }

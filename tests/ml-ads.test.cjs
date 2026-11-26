@@ -90,7 +90,7 @@ const product=()=>({id:'p',name:'Teste',category:'Teste',cost:100,weight:.3,extr
 test('ACOS atualiza só Ads ML, reserva é aplicada uma vez e backup v18 preserva métricas',async()=>{
  const data=await fixture().run(),p=product();app.applyProductAds(p,data,data.items[0]);assert.equal(p.adsMl,6);assert.equal(p.adsShopee,12);
  const fees=app.defaults().fees,c=app.calculate(p,fees.ml,'ml');assert.ok(Math.abs(c.adsAmount-c.price*.06)<1e-9);
- const backup=app.buildBackup({products:[p],kits:[],fees});assert.equal(JSON.parse(backup).version,18);
+ const backup=app.buildBackup({products:[p],kits:[],fees});assert.equal(JSON.parse(backup).version,19);
  const restored=app.parseBackup(backup).products[0];assert.equal(restored.mlAds.cost,60);assert.equal(restored.adsShopee,12);assert.ok(app.validProductAds(restored));
  const card=app.cardAdsHTML(p,'ml');assert.match(card,/ROAS real/);assert.match(card,/Investido/);assert.match(card,/14\/10\/2026 a 12\/11\/2026/);
  assert.doesNotMatch(app.cardAdsHTML(p,'mlPremium'),/ROAS real|Investido/);assert.doesNotMatch(app.cardAdsHTML(p,'shopee'),/ROAS real|Investido/);

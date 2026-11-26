@@ -17,9 +17,10 @@ function fixture(t) {
     fs.rmSync(temp, { recursive: true, force: true });
   });
   fs.mkdirSync(path.join(temp, 'src'));
-  fs.writeFileSync(path.join(temp, 'src/index.html'), '<html><style>/* __PANEL_STYLES__ */</style><body><script>/* __PANEL_SCRIPT__ */\n/* __CATALOG_SCRIPT__ */</script></body></html>');
+  fs.writeFileSync(path.join(temp, 'src/index.html'), '<html><style>/* __PANEL_STYLES__ */</style><body><script>/* __PANEL_SCRIPT__ */\n/* __ML_IMPORT_SCRIPT__ */\n/* __CATALOG_SCRIPT__ */</script></body></html>');
   fs.writeFileSync(path.join(temp, 'src/styles.css'), 'body { color: #abcdef; }');
   fs.writeFileSync(path.join(temp, 'src/app.js'), 'globalThis.value = "$& precificação";');
+  fs.writeFileSync(path.join(temp, 'src/ml-catalog-import.js'), 'globalThis.importReview = true;');
   fs.writeFileSync(path.join(temp, 'src/catalog-sync.js'), 'globalThis.sharing = true;');
   for (const filename of ['favicon.svg', 'favicon.png']) {
     fs.copyFileSync(path.join(root, filename), path.join(temp, filename));
@@ -31,7 +32,7 @@ test('HTML final incorpora integralmente os fontes e abre sem arquivos externos 
   const html = compilePage();
   const script = html.match(/<script>([\s\S]*?)<\/script>/)[1];
   const styles = html.match(/<style>([\s\S]*?)<\/style>/)[1];
-  assert.equal(script, fs.readFileSync(path.join(root, 'src/app.js'), 'utf8') + '\n' + fs.readFileSync(path.join(root, 'src/catalog-sync.js'), 'utf8'));
+  assert.equal(script, fs.readFileSync(path.join(root, 'src/app.js'), 'utf8') + '\n' + fs.readFileSync(path.join(root, 'src/ml-catalog-import.js'), 'utf8') + '\n' + fs.readFileSync(path.join(root, 'src/catalog-sync.js'), 'utf8'));
   assert.equal(styles, fs.readFileSync(path.join(root, 'src/styles.css'), 'utf8'));
   assert.doesNotMatch(html, /<script\b[^>]*\bsrc\s*=/i);
   assert.doesNotMatch(html, /<link\b[^>]*\brel\s*=\s*["']stylesheet["']/i);

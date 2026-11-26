@@ -111,7 +111,7 @@ export function createHandler({env=process.env,fetchImpl=globalThis.fetch,now=Da
    if(s&&expected&&expected!==String(s.userId))return json({error:'ACCOUNT_CHANGED',message:'A conta do Mercado Livre mudou em outra aba. Recarregue o painel antes de continuar.'},409);
    return json({connected:false},200,{'Set-Cookie':cookie(SESSION,'',0)});
   }
-  if(!['items','item','pricing','shipping','categories','kit-pricing','ads','ads-account','ads-history','sales'].includes(action))return json({error:'NOT_FOUND'},404);
+ if(!['items','catalog-items','item','pricing','shipping','categories','kit-pricing','ads','ads-account','ads-history','sales'].includes(action))return json({error:'NOT_FOUND'},404);
   if(req.method!==(['pricing','kit-pricing','ads','ads-account','ads-history'].includes(action)?'POST':'GET'))return json({error:'METHOD_NOT_ALLOWED'},405);
   if(['pricing','kit-pricing','ads','ads-account','ads-history'].includes(action)&&!sameOrigin())return json({error:'INVALID_ORIGIN'},403);
   if(req.headers.get('origin')&&req.headers.get('origin')!==cfg.origin)return json({error:'INVALID_ORIGIN'},403);
@@ -146,15 +146,17 @@ export function createHandler({env=process.env,fetchImpl=globalThis.fetch,now=Da
     const categories=(Array.isArray(rows)?rows:[]).filter(r=>/^MLB\d+$/.test(r.category_id)&&typeof r.category_name==='string').map(r=>({id:r.category_id,name:r.category_name.slice(0,80)}));
     return json({categories:[...new Map(categories.map(c=>[c.id,c])).values()]});
    }
-   if(action==='items'){
+   if(action==='items'||action==='catalog-items'){
     const cursor=query.get('cursor')??'';if(cursor.length>4096)return json({error:'INVALID_CURSOR'},400);
     const params=new URLSearchParams({search_type:'scan',limit:'20'});if(cursor)params.set('scroll_id',cursor);
     const list=await api(`/users/${s.userId}/items/search?${params}`,s.accessToken),ids=(list?.results??[]).filter(id=>itemId(id)===id).slice(0,20);
-    if(!ids.length)return json({items:[],nextCursor:null});
+    if(!Array.isArray(list?.results)||list.results.some(id=>itemId(id)!==id))throw Error('INVALID_RESPONSE');
+    if(!ids.length)return json({items:[],nextCursor:null,...(action==='catalog-items'?{itemIds:[],unavailableIds:[]}:{} )});
+    if(action==='catalog-items'&&ids.length===20&&(typeof list.scroll_id!=='string'||!list.scroll_id))throw Error('INVALID_RESPONSE');
     const bulk=await api('/items/bulk?'+new URLSearchParams({ids:ids.join(',')}),s.accessToken);
     if(!Array.isArray(bulk))throw Error('INVALID_RESPONSE');
     const items=bulk.filter(entry=>(entry.status_code??entry.code)===200&&Number(entry.body?.seller_id)===s.userId).map(entry=>normalizeItem(entry.body));
-    return json({items,nextCursor:ids.length===20&&typeof list.scroll_id==='string'?list.scroll_id:null});
+    return json({items,nextCursor:ids.length===20&&typeof list.scroll_id==='string'?list.scroll_id:null,...(action==='catalog-items'?{itemIds:ids,unavailableIds:ids.filter(id=>!items.some(item=>item.itemId===id))}:{} )});
    }
    const id=itemId(query.get('id'));if(!id)return json({error:'INVALID_ID',message:'Informe o ID MLB ou o link do anúncio da sua conta.'},400);
    const item=await api('/items/'+id,s.accessToken);if(Number(item.seller_id)!==s.userId)return json({error:'NOT_YOUR_ITEM',message:'Este anúncio não pertence à conta conectada.'},403);

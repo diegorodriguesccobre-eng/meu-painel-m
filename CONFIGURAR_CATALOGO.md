@@ -149,14 +149,20 @@ Uma conciliação em edição não recebe alterações externas enquanto o formu
 Mudanças na evidência de Ads continuam exigindo conferência antes de aceitar lucro apurado.
 
 Dados existentes no navegador são incorporados ao sincronizar, apenas para a conta
-autorizada. Dados de outra conta permanecem locais. O backup **v18** inclui os arquivos
+autorizada. Dados de outra conta permanecem locais. O backup **v19** inclui os arquivos
 de relatórios e resumos e continua aceitando versões anteriores. Restaurar um backup
 antigo não remove relatórios nem conciliações que já estão na base compartilhada.
 
-A API usa a versão 3 do protocolo de gravação e a conferência da conta da aba.
+A API usa a versão 4 do protocolo de gravação, incluindo `pendingProducts`, e a conferência da conta da aba.
 Com várias empresas configuradas, abas antigas recebem um aviso para atualizar a
 página, sem permissão para substituir a base de outra empresa. A versão 2 permanece
 compatível apenas na configuração antiga de uma única conta.
+As versões 2 e 3 só podem gravar enquanto a base não contém pendências de custo;
+havendo pendências, o servidor pede para recarregar e impede uma página antiga de
+apagá-las. Clientes da versão 4 sempre enviam a coleção, inclusive vazia. As
+pendências são isoladas pelo vendedor, compartilham o controle de revisão e ficam
+nos mesmos documentos do D1, sem nova migração SQL. Concluir um produto remove a
+pendência do mesmo MLB, inclusive em uma combinação de edições simultâneas.
 Não há nova tabela, credencial, permissão do Mercado Livre ou serviço pago.
 
 ## Plano gratuito e limites
@@ -169,7 +175,7 @@ Fontes: [preços D1](https://developers.cloudflare.com/d1/platform/pricing/) e
 [limites D1](https://developers.cloudflare.com/d1/platform/limits/), consultados
 em 24/11/2026.
 
-O painel limita cada envio do catálogo a **8 MB**, até 5.000 produtos e 5.000 kits.
+O painel limita cada envio do catálogo a **8 MB**, até 5.000 produtos, 5.000 kits e 5.000 pendências de custo.
 Os limites de tamanho e quantidade são independentes. As imagens não são enviadas
 como arquivos ao banco; os vínculos mantêm os dados já presentes no cadastro.
 Consultas usam os índices do vendedor e da revisão. O consumo real depende da

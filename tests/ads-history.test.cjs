@@ -56,7 +56,7 @@ test('consulta em lotes adia vendas sem alterar investimento, ACOS, ROAS ou rece
 test('backup v18 guarda comparativo/SKU e aceita conciliação semanal sem alterar Ads de precificação',async()=>{
  const h=await setup().run(),p=product(),a=h.items[0].periods[0],r={source:'manual-reconciliation',sellerId:123,itemId:id,dateFrom:a.dateFrom,dateTo:a.dateTo,scope:'direct',basis:core.adsEvidenceKey(a),savedAt:new Date(now()).toISOString(),notes:'Relatório semanal; todo gasto alocado às vendas diretas.',revenue:150,goods:50,fees:20,tax:9,shipping:10,other:1};
  const data={products:[p],kits:[],fees:core.defaults().fees,adsHistory:h,adsReconciliations:[r]};assert.ok(core.validState(data));
- const text=core.buildBackup(data),restored=core.parseBackup(text);assert.equal(JSON.parse(text).version,18);assert.equal(restored.products[0].adsMl,5);
+ const text=core.buildBackup(data),restored=core.parseBackup(text);assert.equal(JSON.parse(text).version,19);assert.equal(restored.products[0].adsMl,5);
  assert.equal(core.adsReconciled({...p,mlAds:a},[r]).profit,10);assert.equal(core.adsHistoryMetric(a,p,data.fees,[r],'actual'),10);
  assert.equal(restored.adsHistory.items[0].total.organicRevenue,400);
  assert.equal(restored.adsHistory.items[0].total.sales.revenue,2000);

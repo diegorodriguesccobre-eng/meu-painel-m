@@ -8,10 +8,10 @@
   return Object.fromEntries(Object.keys(x).sort().filter(k => !ignoreDates || k !== 'fetchedAt').map(k => [k, stable(x[k], ignoreDates)]));
  }
  const equal = (a, b, ignoreDates = false) => JSON.stringify(stable(a, ignoreDates)) === JSON.stringify(stable(b, ignoreDates));
- const normalize = data => ({ ...data, adsReports: data.adsReports ?? [], adsAccounts: data.adsAccounts ?? [], adsReconciliations: data.adsReconciliations ?? [] });
+ const normalize = data => ({ ...data, pendingProducts: data.pendingProducts ?? [], adsReports: data.adsReports ?? [], adsAccounts: data.adsAccounts ?? [], adsReconciliations: data.adsReconciliations ?? [] });
  function merge(base, local, remote, choices = {}) {
   base = normalize(base); local = normalize(local); remote = normalize(remote);
-  const conflicts = [], data = { products: [], kits: [], fees: null, adsReports: [], adsAccounts: [], adsReconciliations: [] };
+  const conflicts = [], data = { products: [], kits: [], pendingProducts: [], fees: null, adsReports: [], adsAccounts: [], adsReconciliations: [] };
   function choose(key, before, mine, theirs, label) {
    if (equal(mine, before)) return theirs;
    if (equal(theirs, before) || equal(mine, theirs)) return mine;
@@ -23,15 +23,19 @@
    return theirs;
   }
   data.fees = choose('fees', base.fees, local.fees, remote.fees, 'Configurações de taxas');
-  for (const type of ['products', 'kits']) {
+  for (const type of ['products', 'kits', 'pendingProducts']) {
    const maps = [base, local, remote].map(x => new Map(x[type].map(row => [row.id, row])));
    const ids = new Set([...maps[2].keys(), ...maps[1].keys(), ...maps[0].keys()]);
    for (const id of ids) {
     const [before, mine, theirs] = maps.map(m => m.get(id));
-    const row = choose(type + ':' + id, before, mine, theirs, (mine ?? theirs ?? before).name);
+    const row = choose(type + ':' + id, before, mine, theirs, (mine ?? theirs ?? before).name ?? (mine ?? theirs ?? before).item?.title);
     if (row !== undefined) data[type].push(row);
    }
   }
+  // Concluir um cadastro prevalece sobre uma pendência do mesmo anúncio.
+  const completed = new Set(data.products.filter(p => p.mercadoLivre).map(p => p.mercadoLivre.sellerId + ':' + p.mercadoLivre.itemId));
+  data.pendingProducts = data.pendingProducts.filter(p => !completed.has(p.item.sellerId + ':' + p.item.itemId));
+  for (let i = conflicts.length - 1; i >= 0; i--) if (conflicts[i].key.startsWith('pendingProducts:') && [conflicts[i].local, conflicts[i].remote].some(p => p && completed.has(p.item.sellerId + ':' + p.item.itemId))) conflicts.splice(i, 1);
   const reports = [...base.adsReports, ...local.adsReports, ...remote.adsReports], accounts = [...base.adsAccounts, ...local.adsAccounts, ...remote.adsAccounts];
   data.adsReports = reports.length ? mergeAdsReportList(reports) : [];
   data.adsAccounts = accounts.length ? mergeAdsAccountList(accounts) : [];
@@ -53,7 +57,7 @@
  const snapshot = () => {
   const data = backupData(state);
   const owned = rows => (rows ?? []).filter(r => String(r.sellerId) === seller);
-  return { products: data.products, kits: data.kits, fees: data.fees, adsReports: owned(data.adsReports), adsAccounts: owned(data.adsAccounts), adsReconciliations: owned(data.adsReconciliations) };
+  return { products: data.products, kits: data.kits, pendingProducts: data.pendingProducts ?? [], fees: data.fees, adsReports: owned(data.adsReports), adsAccounts: owned(data.adsAccounts), adsReconciliations: owned(data.adsReconciliations) };
  };
  function saveMeta() { try { localStorage.setItem(cacheKey(), JSON.stringify(meta)); } catch { /* A versão confirmada permanece na nuvem. */ } }
  function status(message, pending = false) {
@@ -84,7 +88,7 @@
   if (account) state.adsAccount = copyAdsAccount(account);
   if (localWrite() && typeof storageProblem !== 'undefined') storageProblem = ''; render();
  }
- function editingDraft() { return Boolean(ui('product-dialog').open || ui('restore-dialog').open || ui('import-dialog').open || ui('ads-reconcile-dialog').open || kitEditing || kitItems.size || (typeof adsHistoryUi !== 'undefined' && adsHistoryUi?.busy) || (typeof adsUi !== 'undefined' && adsUi?.busy)); }
+ function editingDraft() { return Boolean(ui('product-dialog').open || ui('restore-dialog').open || ui('import-dialog').open || ui('ads-reconcile-dialog').open || globalThis.ConduzMlImport?.isOpen() || kitEditing || kitItems.size || (typeof adsHistoryUi !== 'undefined' && adsHistoryUi?.busy) || (typeof adsUi !== 'undefined' && adsUi?.busy)); }
  async function request(method = 'GET', body, revision) {
   const response = await fetch('/api/catalog', {
    method, credentials: 'same-origin', cache: 'no-store',
@@ -109,7 +113,8 @@
   ui('cloud-review-intro').textContent = review.migration
    ? 'Neste navegador: ' + reviewSnapshot.products.length + ' produto(s), ' + reviewSnapshot.kits.length + ' kit(s), ' + reviewSnapshot.adsReports.length + ' relatório(s) e ' + reviewSnapshot.adsReconciliations.length + ' conciliação(ões). Na empresa: ' + review.remote.products.length + ' produto(s), ' + review.remote.kits.length + ' kit(s), ' + review.remote.adsReports.length + ' relatório(s) e ' + review.remote.adsReconciliations.length + ' conciliação(ões). Combinar mantém cadastros distintos; nomes iguais com identificadores diferentes podem gerar duplicatas.'
    : 'As alterações em cadastros diferentes são combinadas. Para cada cadastro abaixo, escolha a versão que deve permanecer.';
-  const describe = row => row === undefined ? 'Cadastro excluído' : row.source === 'manual-reconciliation' ? 'Receita ' + money(row.revenue) + ' · produtos ' + money(row.goods) + ' · tarifas ' + money(row.fees) + ' · imposto ' + money(row.tax) + ' · frete ' + money(row.shipping) + ' · outros ' + money(row.other) + ' · ' + (row.scope === 'direct' ? 'somente diretas' : 'diretas e indiretas') + ' · fonte: ' + row.notes : row.cost !== undefined ? row.name + ' · custo ' + money(row.cost) + ' · meta ' + number(row.margin) + '% · Ads ML ' + number(adsRate(row, 'ml')) + '% / Shopee ' + number(adsRate(row, 'shopee')) + '%' : row.items ? row.name + ' · ' + row.items.length + ' componente(s) · meta ' + number(row.margin) + '%' : 'Configurações de taxas preservadas';
+  ui('cloud-review-intro').textContent += ' Pendências sem custo: ' + (reviewSnapshot.pendingProducts?.length ?? 0) + ' neste navegador e ' + (review.remote.pendingProducts?.length ?? 0) + ' na empresa.';
+  const describe = row => row === undefined ? 'Cadastro excluído' : row.source === 'manual-reconciliation' ? 'Receita ' + money(row.revenue) + ' · produtos ' + money(row.goods) + ' · tarifas ' + money(row.fees) + ' · imposto ' + money(row.tax) + ' · frete ' + money(row.shipping) + ' · outros ' + money(row.other) + ' · ' + (row.scope === 'direct' ? 'somente diretas' : 'diretas e indiretas') + ' · fonte: ' + row.notes : row.item ? 'Custo pendente · ' + row.item.itemId + ' · ' + row.item.title + ' · meta ' + number(row.margin) + '%' : row.cost !== undefined ? row.name + ' · custo ' + money(row.cost) + ' · meta ' + number(row.margin) + '% · Ads ML ' + number(adsRate(row, 'ml')) + '% / Shopee ' + number(adsRate(row, 'shopee')) + '%' : row.items ? row.name + ' · ' + row.items.length + ' componente(s) · meta ' + number(row.margin) + '%' : 'Configurações de taxas preservadas';
   ui('cloud-review-options').innerHTML = result.conflicts.map((c, i) => '<fieldset class="cloud-conflict"><legend>' + escapeHTML(c.label) + '</legend><label><input type="radio" name="cloud-choice-' + i + '" value="local" required> Minha edição: ' + escapeHTML(describe(c.local)) + '</label><label><input type="radio" name="cloud-choice-' + i + '" value="remote" required> Versão da empresa: ' + escapeHTML(describe(c.remote)) + '</label></fieldset>').join('');
   ui('cloud-use-remote').textContent = 'Usar somente o catálogo da empresa';
   ui('cloud-use-remote').classList.remove('hidden');
@@ -141,7 +146,7 @@
     apply(combined.data); meta = { revision: result.revision, base: copy(remote) }; saveMeta(); status('Catálogo sincronizado com a empresa.'); return;
    }
    const beforeWrite = snapshot();
-   const saved = await request('PUT', { schemaVersion: 3, revision: result.revision, mutationId: crypto.randomUUID(), data: combined.data });
+   const saved = await request('PUT', { schemaVersion: 4, revision: result.revision, mutationId: crypto.randomUUID(), data: combined.data });
    if (account !== seller || generation !== epoch) return;
    meta = { revision: saved.revision, base: copy(combined.data) }; saveMeta();
    // Não substitui edições feitas enquanto a gravação estava em andamento.
@@ -187,7 +192,7 @@
     meta = { ...cached, base: normalize(cached.base) }; phase = 'ready'; await sync(); return;
    }
    const local = snapshot(), remote = result.data ?? normalize({ products: [], kits: [], fees: local.fees });
-   if (local.products.length || local.kits.length || local.adsReports.length || local.adsAccounts.length || local.adsReconciliations.length) {
+   if (local.products.length || local.kits.length || local.pendingProducts.length || local.adsReports.length || local.adsAccounts.length || local.adsReconciliations.length) {
     // Não envia nem substitui cadastros locais antes da escolha inicial.
     beginReview({ products: [], kits: [], fees: remote.fees }, remote, result.revision, true); return;
    }

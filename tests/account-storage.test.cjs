@@ -118,11 +118,11 @@ test('a sincronização troca a cópia local antes de enviar dados e mantém amb
  let signedIn = '123';
  Object.assign(c.context, { Response, AbortSignal, crypto: { randomUUID }, setTimeout: () => 1, clearTimeout() {}, setInterval() {}, addEventListener() {},
   fetch: async (url, options = {}) => {
-   if (url.endsWith('/status')) return Response.json({ configured: true, schemaVersion: 3, legacySellerId: '123' });
+   if (url.endsWith('/status')) return Response.json({ configured: true, schemaVersion: 4, legacySellerId: '123' });
    assert.equal(options.headers['X-Conduz-Catalog-Account'], signedIn);
    const db = databases.get(signedIn);
    if (options.method === 'PUT') {
-    const body = JSON.parse(options.body); assert.equal(body.schemaVersion, 3); assert.equal(body.revision, db.revision);
+    const body = JSON.parse(options.body); assert.equal(body.schemaVersion, 4); assert.equal(body.revision, db.revision);
     db.data = clone(body.data); db.revision++; return Response.json({ revision: db.revision });
    }
    if (options.headers['If-None-Match'] === '"' + db.revision + '"') return new Response(null, { status: 304 });

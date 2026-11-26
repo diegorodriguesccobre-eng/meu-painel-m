@@ -278,3 +278,24 @@ fieldset{min-width:0;margin:0}legend{max-width:100%;white-space:normal}.option-q
  .app-sidebar .sidebar-link{min-height:48px;font-size:15px}
 }
 @media(prefers-reduced-motion:reduce){.app-sidebar{transition:none}}
+/* Conferência do catálogo: leitura antes de salvar, sem cores de lucro nas pendências. */
+.ml-import-dialog{width:min(1120px,96vw);max-width:1120px;max-height:92dvh;overflow:auto}
+.ml-import-filters{display:grid;grid-template-columns:minmax(0,2fr) minmax(180px,1fr);gap:12px;margin:16px 0}
+.ml-import-rows{display:grid;gap:12px;margin:14px 0}
+.ml-import-row,.ml-pending-card{min-width:0;border:1px solid #424750;border-radius:14px;padding:16px;background:#1c2027;overflow-wrap:anywhere}
+.ml-import-row-title{display:flex;justify-content:space-between;gap:12px;align-items:flex-start}
+.ml-import-row-title label{display:flex;flex:1;gap:10px;align-items:flex-start;min-width:0;font-size:16px}
+.ml-import-row-title input{width:19px;height:19px;flex:none;margin:1px 0}
+.ml-import-badge{display:inline-block;flex:none;border:1px solid #8a744f;background:#3b3325;color:#e4cfa9;border-radius:8px;padding:4px 8px;font-size:12px}
+.ml-import-differences{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:14px 0}
+.ml-import-differences>div{min-width:0}
+.ml-import-differences dt{color:var(--muted);font-size:12px}
+.ml-import-differences dd{margin:3px 0 0;font-size:14px;overflow-wrap:anywhere}
+.ml-import-current{display:grid;gap:4px;border-top:1px solid #424750;padding-top:12px;font-size:14px}
+.ml-import-prices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:10px}
+.ml-import-prices>div{display:grid;gap:5px;background:#252b34;border-radius:9px;padding:10px;font-size:13px}
+.ml-import-pagination{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;margin-top:12px;font-size:13px;color:var(--muted)}
+.ml-pending-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,260px),1fr));gap:12px;margin-top:14px}
+.ml-pending-card h3{margin:10px 0;font-size:17px;overflow-wrap:anywhere}
+.ml-pending-card p{font-size:14px}
+@media(max-width:600px){.ml-import-dialog{padding:16px;width:96vw}.ml-import-filters,.ml-import-differences,.ml-import-prices{grid-template-columns:1fr}.ml-import-row-title{flex-direction:column}.ml-import-row{padding:12px}.ml-import-dialog .actions{justify-content:flex-start;flex-wrap:wrap}.ml-import-badge{flex-shrink:1}.ml-import-dialog .dialog-actions{flex-wrap:wrap}}
