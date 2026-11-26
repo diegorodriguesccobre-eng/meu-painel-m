@@ -108,6 +108,7 @@ async function startLab({ ports = [0, 0], seed = fixture(), mlRequest = null, lo
      .replace('/* __PANEL_SCRIPT__ */', () => fs.readFileSync(path.join(root, 'src/app.js'), 'utf8'))
      .replace('/* __ACCESS_SCRIPT__ */', () => fs.readFileSync(path.join(root, 'src/panel-access.js'), 'utf8'))
      .replace('/* __ML_IMPORT_SCRIPT__ */', () => fs.readFileSync(path.join(root, 'src/ml-catalog-import.js'), 'utf8'))
+     .replace('/* __PENDING_COSTS_SCRIPT__ */', () => fs.readFileSync(path.join(root, 'src/pending-costs.js'), 'utf8'))
      .replace('/* __CATALOG_SCRIPT__ */', () => fs.readFileSync(path.join(root, 'src/catalog-sync.js'), 'utf8'))
      .replace('<body>', '<body><aside style="padding:8px;background:#633;color:white;text-align:center">TESTE LOCAL · DADOS FICTÍCIOS · SEM ACESSO À PRODUÇÃO</aside>');
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Content-Security-Policy': "default-src 'self' data:; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; form-action 'self'; base-uri 'none'", 'Cache-Control': 'no-store' });

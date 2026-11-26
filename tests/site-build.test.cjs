@@ -17,11 +17,12 @@ function fixture(t) {
     fs.rmSync(temp, { recursive: true, force: true });
   });
   fs.mkdirSync(path.join(temp, 'src'));
-  fs.writeFileSync(path.join(temp, 'src/index.html'), '<html><style>/* __PANEL_STYLES__ */</style><body><script>/* __PANEL_SCRIPT__ */\n/* __ACCESS_SCRIPT__ */\n/* __ML_IMPORT_SCRIPT__ */\n/* __CATALOG_SCRIPT__ */</script></body></html>');
+  fs.writeFileSync(path.join(temp, 'src/index.html'), '<html><style>/* __PANEL_STYLES__ */</style><body><script>/* __PANEL_SCRIPT__ */\n/* __ACCESS_SCRIPT__ */\n/* __ML_IMPORT_SCRIPT__ */\n/* __PENDING_COSTS_SCRIPT__ */\n/* __CATALOG_SCRIPT__ */</script></body></html>');
   fs.writeFileSync(path.join(temp, 'src/styles.css'), 'body { color: #abcdef; }');
   fs.writeFileSync(path.join(temp, 'src/app.js'), 'globalThis.value = "$& precificação";');
   fs.writeFileSync(path.join(temp, 'src/panel-access.js'), 'globalThis.access = true;');
   fs.writeFileSync(path.join(temp, 'src/ml-catalog-import.js'), 'globalThis.importReview = true;');
+  fs.writeFileSync(path.join(temp, 'src/pending-costs.js'), 'globalThis.pendingCosts = true;');
   fs.writeFileSync(path.join(temp, 'src/catalog-sync.js'), 'globalThis.sharing = true;');
   for (const filename of ['favicon.svg', 'favicon.png']) {
     fs.copyFileSync(path.join(root, filename), path.join(temp, filename));
@@ -34,7 +35,7 @@ test('HTML final incorpora integralmente os fontes e abre sem arquivos externos 
   const html = compilePage();
   const script = html.match(/<script>([\s\S]*?)<\/script>/)[1];
   const styles = html.match(/<style>([\s\S]*?)<\/style>/)[1];
-  assert.equal(script, ['app.js','panel-access.js','ml-catalog-import.js','catalog-sync.js'].map(file=>fs.readFileSync(path.join(root,'src',file),'utf8')).join('\n'));
+  assert.equal(script, ['app.js','panel-access.js','ml-catalog-import.js','pending-costs.js','catalog-sync.js'].map(file=>fs.readFileSync(path.join(root,'src',file),'utf8')).join('\n'));
   assert.equal(styles, fs.readFileSync(path.join(root, 'src/styles.css'), 'utf8'));
   assert.doesNotMatch(html, /<script\b[^>]*\bsrc\s*=/i);
   assert.doesNotMatch(html, /<link\b[^>]*\brel\s*=\s*["']stylesheet["']/i);

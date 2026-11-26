@@ -230,7 +230,7 @@ function importNumber(value,precision){
  if(!new RegExp('^\\d+(?:[.,]\\d{1,'+precision+'})?$').test(s))return NaN;
  return Number(s.replace(',','.'));
 }
-function parseImportCSV(text,options){
+function readCSVRecords(text){
  if(text.length>2*1024*1024)throw Error('O CSV deve ter no máximo 2 MB.');
  text=text.replace(/^\uFEFF/,'');
  let delimiter,first='',quoted=false;
@@ -243,6 +243,10 @@ function parseImportCSV(text,options){
  }
  const records=splitCSV(text,delimiter);
  if(!records.length)throw Error('O arquivo está vazio.');
+ return records;
+}
+function parseImportCSV(text,options){
+ const records=readCSVRecords(text);
  const normalize=s=>s.trim().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'');
  const headers=records.shift().cells.map(normalize);
  const aliases={name:['nome','produto'],cost:['custo','custo (r$)'],weight:['peso','peso (kg)']};

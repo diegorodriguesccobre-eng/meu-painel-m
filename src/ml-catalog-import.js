@@ -157,10 +157,10 @@
  const ui = id => document.getElementById(id);
  let version = 0, busy = false, seller = null, rows = [], selected = new Set(), page = 0, complete = false, pendingPage = 0;
  const isOpen = () => ui('ml-import-dialog').open;
- api.isOpen = isOpen;
+ api.isOpen = () => isOpen() || Boolean(globalThis.ConduzPendingCosts?.isOpen());
  let autoOwner = null, autoVersion = 0, autoBusy = false, autoDone = false, autoTimer = null, autoResult = null, autoAttempts = 0;
  const autoStatus = text => { ui('ml-catalog-auto-status').textContent = text; };
- const canImport = () => globalThis.ConduzCatalog?.readyForImport(autoOwner) && !isOpen() && !kitEditing && !kitItems.size && !['product-dialog', 'restore-dialog', 'import-dialog', 'ads-reconcile-dialog', 'cloud-review-dialog', 'delete-dialog', 'kit-delete-dialog'].some(id => ui(id).open);
+ const canImport = () => globalThis.ConduzCatalog?.readyForImport(autoOwner) && !api.isOpen() && !kitEditing && !kitItems.size && !['product-dialog', 'restore-dialog', 'import-dialog', 'ads-reconcile-dialog', 'cloud-review-dialog', 'delete-dialog', 'kit-delete-dialog'].some(id => ui(id).open);
  function queueAuto(delay = 300) {
   if (autoTimer !== null || autoDone || !autoOwner || autoAttempts >= 3 && !autoResult) return;
   autoTimer = setTimeout(() => { autoTimer = null; syncNewProducts(); }, delay);

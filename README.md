@@ -55,6 +55,7 @@ A configuração anterior do Netlify continua disponível durante a migração.
 - Resumo com contagem de produtos por faixa, lucro médio estimado por venda e médias/classificações incluídas no CSV. Não representa faturamento real nem considera quantidades vendidas.
 - Busca, ordenação e cartões responsivos no computador e no celular.
 - Importação de produtos por CSV e exportação dos preços calculados.
+- Importação de custos por SKU para anúncios pendentes, com revisão, cotações oficiais e seleção antes de concluir. Preserva custos existentes e margens; códigos repetidos, variações e dados insuficientes exigem conferência individual. Veja [o formato e o procedimento](MANUAL_DO_USUARIO.md#custos-por-sku).
 - Montagem de kits com produtos e quantidades, usando os custos atuais do catálogo.
 - Backup completo em JSON, com validação e confirmação antes da restauração.
 

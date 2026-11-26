@@ -6,6 +6,7 @@ const SOURCES = [
   { marker: '/* __PANEL_SCRIPT__ */', filename: 'app.js' },
   { marker: '/* __ACCESS_SCRIPT__ */', filename: 'panel-access.js' },
   { marker: '/* __ML_IMPORT_SCRIPT__ */', filename: 'ml-catalog-import.js' },
+  { marker: '/* __PENDING_COSTS_SCRIPT__ */', filename: 'pending-costs.js' },
   { marker: '/* __CATALOG_SCRIPT__ */', filename: 'catalog-sync.js' }
 ];
 const ICONS = ['favicon.svg', 'favicon.png'];
