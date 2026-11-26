@@ -6,7 +6,7 @@
  const copy = x => JSON.parse(JSON.stringify(x));
  const fresh = (item, now = Date.now()) => Boolean(item && item.availability !== 'unavailable' && !['closed','inactive'].includes(item.status) && Number.isFinite(Date.parse(item.fetchedAt)) && now - Date.parse(item.fetchedAt) < TTL && Date.parse(item.fetchedAt) <= now + 60000);
  function unavailable(item, now = Date.now()) {
-  return { itemId:item.itemId, sellerId:item.sellerId, title:'Anúncio indisponível no Mercado Livre', categoryId:null, categoryName:null, catalogProductId:null, listingType:item.listingType, permalink:'https://produto.mercadolivre.com.br/MLB-'+item.itemId.slice(3)+'-_JM', price:null, weight:null, thumbnail:null, variationCount:0, fetchedAt:new Date(now).toISOString(), availability:'unavailable' };
+  return { ...(['closed','inactive'].includes(item.status)?{status:item.status}:{}),itemId:item.itemId, sellerId:item.sellerId, title:item.status==='closed'?'Anúncio encerrado':'Anúncio indisponível no Mercado Livre', categoryId:null, categoryName:null, catalogProductId:null, listingType:item.listingType, permalink:'https://produto.mercadolivre.com.br/MLB-'+item.itemId.slice(3)+'-_JM', price:null, weight:null, thumbnail:null, variationCount:0, fetchedAt:new Date(now).toISOString(), availability:'unavailable' };
  }
  function sanitize(data, purgedAt, all = false) {
   const result = copy(data), cutoff = Date.parse(purgedAt);

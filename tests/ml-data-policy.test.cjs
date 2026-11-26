@@ -7,6 +7,22 @@ const fixtures=require('./support/ml-import-fixtures.cjs');
 const clone=x=>JSON.parse(JSON.stringify(x)),time=Date.parse(fixtures.stamp);
 function app(){const s=fs.readFileSync('src/app.js','utf8'),c=vm.createContext({URL,Date:class extends Date{static now(){return time;}},ConduzMlDataRules:rules});vm.runInContext(s.slice(0,s.indexOf('let state=defaults()'))+'\n'+['savedAdsPricingInput','pricingMatches'].map(n=>s.match(new RegExp('^function '+n+'.*$','m'))[0]).join('\n'),c);vm.runInContext(fs.readFileSync('src/ml-catalog-import.js','utf8'),c);return c;}
 test('dados de anúncio vencem em seis horas e indisponibilidade não vira lucro atual',()=>{const item=fixtures.response().item;assert.equal(rules.fresh(item,time+rules.TTL-1),true);assert.equal(rules.fresh(item,time+rules.TTL),false);assert.equal(rules.fresh({...item,fetchedAt:'inválido'},time),false);assert.equal(rules.fresh(rules.unavailable(item,time),time),false);});
+test('closed é preservado no vínculo e no backup e aparece como anúncio encerrado sem alterar custos ou cálculos',async()=>{
+ const c=app(),data=fixtures.data(),before=clone(data),loader=fixtures.requests();
+ const result=await c.ConduzMlImport.refreshCatalog({data,sellerId:123,now:()=>time,request:async(action,options)=>{const response=await loader.request(action,options);if(action==='item')response.item.status='closed';return response;}});
+ const saved=c.ConduzMlImport.applyRefresh(data,result,123).data,p=saved.products[0];
+ assert.equal(p.mercadoLivre.status,'closed');assert.equal(p.mercadoLivre.title,'Anúncio encerrado');assert.equal(p.mercadoLivre.availability,'unavailable');
+ for(const field of ['cost','weight','margin','extra','adsMl','adsShopee','mlShipping','feeSnapshot'])assert.deepEqual(clone(p[field]),before.products[0][field]);assert.deepEqual(clone(saved.kits),before.kits);
+ c.product=p;c.fees=data.fees;assert.equal(vm.runInContext('saleResult(product,fees.ml,"ml")',c),null);assert.match(vm.runInContext('saleCardHTML(product,fees.ml,"ml")',c),/Anúncio encerrado\. Custos e margens preservados\./);
+ assert.equal(vm.runInContext('backupData({products:[product],kits:[],fees}).products[0].mercadoLivre.status',c),'closed');
+ assert.deepEqual(clone(vm.runInContext('calculate(product,fees.shopee,"shopee")',c)),clone(vm.runInContext('calculate({...product,mercadoLivre:undefined},fees.shopee,"shopee")',c)));
+});
+test('consulta atual recupera closed de um vínculo antigo genérico e não rotula inactive ou 404 como encerrado',()=>{
+ const c=app(),source=fs.readFileSync('src/app.js','utf8');vm.runInContext(source.slice(source.indexOf('function currentLinkFromResponse'),source.indexOf('let currentPricesBusy')),c);
+ c.previous=rules.unavailable(fixtures.response().item,time);c.response=fixtures.response();c.response.item.status='closed';
+ const updated=vm.runInContext('currentLinkFromResponse(previous,response)',c);assert.equal(updated.status,'closed');assert.equal(c.previous.status,undefined);
+ for(const item of [fixtures.response().item,{...fixtures.response().item,status:'inactive'}]){const result=rules.unavailable(item,time);assert.notEqual(result.status,'closed');assert.equal(result.title,'Anúncio indisponível no Mercado Livre');}
+});
 test('renovação completa preserva cadastros internos, margens e automações de precificação e Ads',async()=>{
  const c=app(),data=fixtures.data(),before=clone(data),loader=fixtures.requests();data.pendingProducts=[c.ConduzMlImport.pendingProduct(fixtures.response('MLB9000000001').item,data.fees)];const pendingMargin=data.pendingProducts[0].margin=28;
  const result=await c.ConduzMlImport.refreshCatalog({data,sellerId:123,request:loader.request,now:()=>time}),saved=c.ConduzMlImport.applyRefresh(data,result,123).data;
