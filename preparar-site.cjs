@@ -4,10 +4,12 @@ const path = require('node:path');
 const SOURCES = [
   { marker: '/* __PANEL_STYLES__ */', filename: 'styles.css' },
   { marker: '/* __PANEL_SCRIPT__ */', filename: 'app.js' },
+  { marker: '/* __ACCESS_SCRIPT__ */', filename: 'panel-access.js' },
   { marker: '/* __ML_IMPORT_SCRIPT__ */', filename: 'ml-catalog-import.js' },
   { marker: '/* __CATALOG_SCRIPT__ */', filename: 'catalog-sync.js' }
 ];
 const ICONS = ['favicon.svg', 'favicon.png'];
+const PAGES = ['termos.html', 'privacidade.html'];
 const HEADERS = '/\n  Cache-Control: public, max-age=0, must-revalidate\n/index.html\n  Cache-Control: public, max-age=0, must-revalidate\n';
 
 function compilePage(rootDir = __dirname) {
@@ -36,6 +38,7 @@ function buildSite({ rootDir = __dirname, outputDir = path.join(rootDir, 'dist')
   for (const icon of ICONS) {
     fs.copyFileSync(path.join(rootDir, icon), path.join(outputDir, icon));
   }
+  for (const page of PAGES) fs.copyFileSync(path.join(rootDir, 'src', page), path.join(outputDir, page));
   fs.writeFileSync(path.join(outputDir, '_headers'), HEADERS);
 }
 

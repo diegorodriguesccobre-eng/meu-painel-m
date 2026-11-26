@@ -10,8 +10,8 @@ const clone = x => JSON.parse(JSON.stringify(x));
 function app(ui = false, request) {
  const nodes = new Map(), saved = [], notices = [], opened = [];
  const get = id => { if (!nodes.has(id)) nodes.set(id, { value: '', textContent: '', innerHTML: '', disabled: false, open: false, classList: { toggle() {} }, showModal() { this.open = true; }, close() { this.open = false; } }); return nodes.get(id); };
- const c = vm.createContext({ URL, ...(ui ? { document: { getElementById: get } } : {}), mlRequest: request, render() {}, toast: s => notices.push(s), openProduct: p => opened.push(clone(p)), importMlItem() {}, renderAutoPricing() {}, scheduleOfficialPricing() {}, persist: () => { if (c.failStorage) return false; saved.push(clone(vm.runInContext('state', c))); return true; } });
- vm.runInContext(core + '\n' + helpers + '\nlet state=' + JSON.stringify(fixtures.data()) + ';let mlConnection={connected:true,account:{id:123,nickname:"FICTÍCIA"}},currentPricesBusy=false,mlAdsBusy=false,adsUi={busy:false},adsHistoryUi={busy:false};', c);
+ const c = vm.createContext({ URL, setTimeout: () => 1, clearTimeout() {}, ConduzCatalog: { readyForImport: () => !c.cloudUnavailable }, ...(ui ? { document: { getElementById: get } } : {}), mlRequest: request, render() {}, toast: s => notices.push(s), openProduct: p => opened.push(clone(p)), importMlItem() {}, renderAutoPricing() {}, scheduleOfficialPricing() {}, persist: () => { if (c.failStorage) return false; saved.push(clone(vm.runInContext('state', c))); return true; } });
+ vm.runInContext(core + '\n' + helpers + '\nlet state=' + JSON.stringify(fixtures.data()) + ';let mlConnection={connected:true,account:{id:123,nickname:"FICTÍCIA"}},currentPricesBusy=false,mlAdsBusy=false,kitEditing=null,kitItems=new Map(),adsUi={busy:false},adsHistoryUi={busy:false};', c);
  vm.runInContext(moduleSource, c);
  return { api: c.ConduzMlImport, get, saved, notices, opened, c, run: s => vm.runInContext(s, c), data: () => clone(vm.runInContext('state', c)) };
 }
@@ -86,20 +86,20 @@ test('variações exigem revisão individual e não substituem automaticamente o
 });
 test('controlador não grava ao consultar ou cancelar; salva apenas resultados selecionados após revisão', async () => {
  const loader = fixtures.requests(), a = app(true, loader.request), before = a.data();
- a.get('ml-import-open').onclick(); await a.get('ml-import-load').onclick();
+ await a.get('ml-import-open').onclick();
  assert.deepEqual(a.data(), before); assert.equal(a.saved.length, 0); assert.equal(a.get('ml-import-save').disabled, true);
  a.get('ml-import-filter').value = 'pending'; a.get('ml-import-select').onclick(); assert.equal(a.get('ml-import-save').disabled, false);
  a.get('ml-import-save').onclick(); assert.equal(a.saved.length, 1); assert.equal(a.data().pendingProducts.length, 1); assert.deepEqual(a.data().products, before.products); assert.deepEqual(a.data().kits, before.kits);
- a.get('ml-import-open').onclick(); await a.get('ml-import-load').onclick(); a.get('ml-import-cancel').onclick(); assert.equal(a.saved.length, 1);
+ await a.get('ml-import-open').onclick(); a.get('ml-import-cancel').onclick(); assert.equal(a.saved.length, 1);
 });
 test('falha de armazenamento preserva os dados anteriores e mantém a revisão aberta para recuperar', async () => {
- const loader = fixtures.requests(), a = app(true, loader.request), before = a.data(); a.get('ml-import-open').onclick(); await a.get('ml-import-load').onclick(); a.get('ml-import-select').onclick();
+ const loader = fixtures.requests(), a = app(true, loader.request), before = a.data(); await a.get('ml-import-open').onclick(); a.get('ml-import-select').onclick();
  a.c.failStorage = true; a.get('ml-import-save').onclick();
  assert.deepEqual(a.data(), before); assert.equal(a.saved.length, 0); assert.equal(a.get('ml-import-dialog').open, true); assert.match(a.get('ml-import-error').textContent, /armazenamento/);
 });
 test('controlador salva conferência de existentes e pendências sem perder campos após copiar a revisão', async () => {
  const loader = fixtures.requests(), a = app(true, loader.request), before = a.data();
- a.get('ml-import-open').onclick(); await a.get('ml-import-load').onclick(); a.get('ml-import-select').onclick(); a.get('ml-import-save').onclick();
+ await a.get('ml-import-open').onclick(); a.get('ml-import-select').onclick(); a.get('ml-import-save').onclick();
  assert.equal(a.saved.length, 1); const after = a.data(); assert.equal(after.products[0].mercadoLivre.price, 55); assert.equal(after.pendingProducts.length, 1);
  for (const key of ['cost', 'margin', 'adsMl', 'adsShopee', 'weight', 'name', 'feeSnapshot']) assert.deepEqual(after.products[0][key], before.products[0][key]);
  assert.deepEqual(after.products[1], before.products[1]); assert.deepEqual(after.kits, before.kits); assert.deepEqual(after.adsReconciliations, before.adsReconciliations);
@@ -113,4 +113,54 @@ test('pendências sobrevivem ao backup v19; custo ausente não entra nos produto
  assert.equal(a.run('validPendingProducts([{...savedFixture.pendingProducts[0],cost:0}])'), false);
  a.c.seedPending = saved.pendingProducts; a.run('state.pendingProducts=seedPending'); a.get('ml-pending-list').onclick({ target: { closest: () => ({ dataset: { completePending: p.proposal.id } }) } });
  assert.equal(a.opened[0].cost, ''); assert.equal(a.data().pendingProducts.length, 1); assert.equal(a.saved.length, 0);
+});
+
+test('ao conectar, importa automaticamente todo o catálogo em lotes sem exigir botão e sem consultar preços dos existentes', async () => {
+ const loader = fixtures.requests(['MLB1234567890', ...Array.from({ length: 40 }, (_, i) => 'MLB' + (9000000000 + i))]);
+ const a = app(true, loader.request), before = a.data();
+ a.api.onCatalogReady(123); await a.api.syncNewProducts();
+ assert.equal(a.saved.length, 1); assert.equal(a.data().pendingProducts.length, 40);
+ assert.deepEqual(a.data().products, before.products); assert.deepEqual(a.data().kits, before.kits); assert.deepEqual(a.data().fees, before.fees); assert.deepEqual(a.data().adsReconciliations, before.adsReconciliations);
+ assert.equal(loader.calls.length, 3); assert.ok(loader.calls.every(c => c.action === 'catalog-items'));
+ assert.equal(a.get('ml-import-dialog').open, false); assert.match(a.get('ml-catalog-auto-status').textContent, /40 novo/);
+ a.api.onCatalogReady(123); await a.api.syncNewProducts(); assert.equal(a.saved.length, 1); assert.equal(loader.calls.length, 3);
+ assert.ok(a.data().pendingProducts.every(p => !Object.hasOwn(p, 'cost')));
+});
+
+test('importação automática aguarda catálogo autorizado e edição aberta e ignora anúncios concluídos durante a consulta', async () => {
+ const loader = fixtures.requests(); let release;
+ const a = app(true, async (action, options) => { const r = await loader.request(action, options); if (action === 'catalog-items') await new Promise(resolve => { release = resolve; }); return r; });
+ a.c.cloudUnavailable = true; a.api.onCatalogReady(123); await a.api.syncNewProducts(); assert.equal(loader.calls.length, 0);
+ a.c.cloudUnavailable = false; a.get('product-dialog').open = true; await a.api.syncNewProducts(); assert.equal(loader.calls.length, 0);
+ a.get('product-dialog').open = false; const loading = a.api.syncNewProducts(); await new Promise(resolve => setImmediate(resolve));
+ a.c.completed = { ...a.data().products[1], id: 'concluido', mercadoLivre: fixtures.response('MLB9000000001').item };
+ a.run('state.products.push(completed)'); release(); await loading;
+ assert.equal(a.data().products.length, 3); assert.equal(a.data().pendingProducts?.length ?? 0, 0); assert.equal(a.saved.length, 0);
+});
+
+test('não duplica nem sobrescreve pendências existentes e retenta consulta indisponível explicitamente', async () => {
+ const a = app(), data = fixtures.data(), item = fixtures.response('MLB9000000001').item;
+ const first = a.api.addDiscovered(data, [item, item], 123); first.pendingProducts[0].margin = 29;
+ const second = a.api.addDiscovered(first, [{ ...item, price: 999 }], 123);
+ assert.strictEqual(second, first); assert.equal(second.pendingProducts[0].margin, 29); assert.equal(second.pendingProducts[0].item.price, 55);
+ const loader = fixtures.requests(), unavailable = await a.api.discoverCatalog({ sellerId: 123, request: async (action, options) => {
+  if (action === 'item') throw Error('Anúncio indisponível'); const r = await loader.request(action, options); r.items = r.items.filter(i => i.itemId !== 'MLB9000000001'); r.unavailableIds = ['MLB9000000001']; return r;
+ } });
+ assert.deepEqual(clone(unavailable.unavailable), ['MLB9000000001']); assert.equal(unavailable.total, 2); assert.equal(unavailable.items.length, 1);
+});
+
+test('falha de listagem ou armazenamento não aplica importação automática parcialmente', async () => {
+ const loader = fixtures.requests(Array.from({ length: 21 }, (_, i) => 'MLB' + (9000000000 + i)));
+ const a = app(true, (action, options) => options.query?.cursor ? Promise.reject(Error('Sem conexão')) : loader.request(action, options)), before = a.data();
+ a.api.onCatalogReady(123); await a.api.syncNewProducts(); assert.deepEqual(a.data(), before); assert.equal(a.saved.length, 0); assert.match(a.get('ml-catalog-auto-status').textContent, /Sem conexão/);
+ const b = app(true, fixtures.requests().request), old = b.data(); b.c.failStorage = true; b.api.onCatalogReady(123); await b.api.syncNewProducts();
+ assert.deepEqual(b.data(), old); assert.equal(b.saved.length, 0); assert.match(b.get('ml-catalog-auto-status').textContent, /gravar/);
+});
+
+test('desconectar ou trocar de conta descarta uma importação automática em andamento', async () => {
+ let release; const loader = fixtures.requests(), a = app(true, async (action, options) => { const r = await loader.request(action, options); await new Promise(resolve => { release = resolve; }); return r; }), before = a.data();
+ a.api.onCatalogReady(123); const task = a.api.syncNewProducts(); await new Promise(resolve => setImmediate(resolve));
+ a.api.onDisconnect(); a.run('mlConnection={connected:true,account:{id:456}}'); release(); await task;
+ assert.deepEqual(a.data(), before); assert.equal(a.saved.length, 0);
+ assert.throws(() => a.api.addDiscovered(before, [fixtures.response().item], 456), /outra conta/);
 });

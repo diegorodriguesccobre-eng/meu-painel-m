@@ -50,10 +50,11 @@ function cookie() {
  return '__Host-conduz_ml_session=' + Buffer.concat([iv, cipher.getAuthTag(), payload]).toString('base64url');
 }
 
-async function startLab({ ports = [0, 0], seed = fixture(), mlRequest = null } = {}) {
+async function startLab({ ports = [0, 0], seed = fixture(), mlRequest = null, loginRequired = false } = {}) {
  const { createCatalogHandler } = await import('../../cloudflare/catalog.mjs');
+ const { createHandler } = await import('../../netlify/functions/mercadolivre.mjs');
  const db = database(), peers = [], requests = [];
- const env = { CATALOG_DB: db, CATALOG_SELLER_ID: '123', ML_CLIENT_ID: '1', ML_CLIENT_SECRET: 'TEST_ONLY', ML_SESSION_SECRET: 'ab'.repeat(32), ML_REDIRECT_URI: 'https://catalog-lab.example/api/ml/callback' };
+ const env = { CATALOG_DB: db, CATALOG_SELLER_ID: '123', PANEL_LOGIN_REQUIRED:'false',ML_CLIENT_ID: '1', ML_CLIENT_SECRET: 'TEST_ONLY', ML_SESSION_SECRET: 'ab'.repeat(32), ML_REDIRECT_URI: 'https://catalog-lab.example/api/ml/callback' };
  async function backend(url, options = {}) {
   const headers = { Cookie: cookie(), ...options.headers };
   if (options.method === 'PUT') Object.assign(headers, { Origin: 'https://catalog-lab.example', 'X-Conduz-Action': 'catalog', 'Content-Type': 'application/json' });
@@ -61,8 +62,9 @@ async function startLab({ ports = [0, 0], seed = fixture(), mlRequest = null } =
  }
  const initial = await backend('http://127.0.0.1/api/catalog', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ schemaVersion: 2, revision: 0, mutationId: randomUUID(), data: seed }) });
  if (!initial.ok) throw Error('Fixture inválida: ' + await initial.text());
+ if (loginRequired) delete env.PANEL_LOGIN_REQUIRED;
  for (const port of ports) {
-  const peer = { offline: false, dropNextWrite: false, failNextWrite: false, hold: null };
+  const peer = { offline: false, dropNextWrite: false, failNextWrite: false, hold: null, sessionCookie: cookie() };
   const server = http.createServer(async (req, res) => {
    try {
     const url = new URL(req.url, peer.origin);
@@ -77,12 +79,18 @@ async function startLab({ ports = [0, 0], seed = fixture(), mlRequest = null } =
      if (peer.offline) return req.socket.destroy();
      if (peer.failNextWrite && req.method === 'PUT') { peer.failNextWrite = false; res.writeHead(503, { 'Content-Type': 'application/json' }); return res.end(JSON.stringify({ message: 'Falha temporária simulada' })); }
      const bytes = []; for await (const part of req) bytes.push(part);
-     const response = await backend(url.href, { method: req.method, headers: { ...(req.headers['if-none-match'] ? { 'If-None-Match': req.headers['if-none-match'] } : {}) }, ...(bytes.length ? { body: Buffer.concat(bytes) } : {}) });
+     const response = await backend(url.href, { method: req.method, headers: { Cookie: peer.sessionCookie, ...(req.headers['if-none-match'] ? { 'If-None-Match': req.headers['if-none-match'] } : {}) }, ...(bytes.length ? { body: Buffer.concat(bytes) } : {}) });
      if (peer.dropNextWrite && req.method === 'PUT') { peer.dropNextWrite = false; return req.socket.destroy(); }
      if (peer.hold && req.method === 'PUT') { const held = peer.hold; peer.hold = null; await held; }
      res.writeHead(response.status, Object.fromEntries(response.headers)); return res.end(Buffer.from(await response.arrayBuffer()));
     }
-    if (url.pathname === '/api/ml/status') { res.setHeader('Content-Type', 'application/json'); return res.end(JSON.stringify({ configured: true, connected: true, account: { id: 123, nickname: 'EMPRESA FICTÍCIA · TESTE LOCAL' } })); }
+    if (loginRequired && ['/api/ml/status', '/api/ml/access', '/api/ml/disconnect'].includes(url.pathname)) {
+     const bytes=[];for await(const part of req)bytes.push(part);
+     const response=await createHandler({env})(new Request('https://catalog-lab.example'+url.pathname,{method:req.method,headers:{Cookie:peer.sessionCookie,Origin:'https://catalog-lab.example','X-Conduz-Action':'mercadolivre','X-Conduz-Account':'123','Content-Type':'application/json'},...(bytes.length?{body:Buffer.concat(bytes)}:{})}));
+     const saved=response.headers.get('set-cookie');if(saved)peer.sessionCookie=saved.split(';')[0];
+     res.writeHead(response.status,{'Content-Type':'application/json'});return res.end(await response.text());
+    }
+    if (url.pathname === '/api/ml/status') { res.setHeader('Content-Type', 'application/json'); return res.end(JSON.stringify({ configured: true, connected: true, accessRequired: false, account: { id: 123, nickname: 'EMPRESA FICTÍCIA · TESTE LOCAL' } })); }
     if (mlRequest && url.pathname.startsWith('/api/ml/')) {
      const bytes = []; for await (const part of req) bytes.push(part);
      try {
@@ -91,10 +99,14 @@ async function startLab({ ports = [0, 0], seed = fixture(), mlRequest = null } =
      } catch (error) { res.writeHead(error.status ?? 503, { 'Content-Type': 'application/json' }); return res.end(JSON.stringify({ message: error.message })); }
     }
     if (url.pathname.startsWith('/api/')) { res.writeHead(503, { 'Content-Type': 'application/json' }); return res.end(JSON.stringify({ message: 'Laboratório: nenhuma consulta externa é realizada; dados fictícios preservados.' })); }
+    if (['/termos.html','/privacidade.html','/favicon.svg','/favicon.png'].includes(url.pathname)) {
+     const file=url.pathname.slice(1),isPage=file.endsWith('.html');res.writeHead(200,{'Content-Type':isPage?'text/html; charset=utf-8':file.endsWith('.svg')?'image/svg+xml':'image/png'});return res.end(fs.readFileSync(path.join(root,isPage?'src':'',file)));
+    }
     if (url.pathname !== '/') { res.writeHead(404); return res.end(); }
     let html = fs.readFileSync(path.join(root, 'src/index.html'), 'utf8')
      .replace('/* __PANEL_STYLES__ */', () => fs.readFileSync(path.join(root, 'src/styles.css'), 'utf8'))
      .replace('/* __PANEL_SCRIPT__ */', () => fs.readFileSync(path.join(root, 'src/app.js'), 'utf8'))
+     .replace('/* __ACCESS_SCRIPT__ */', () => fs.readFileSync(path.join(root, 'src/panel-access.js'), 'utf8'))
      .replace('/* __ML_IMPORT_SCRIPT__ */', () => fs.readFileSync(path.join(root, 'src/ml-catalog-import.js'), 'utf8'))
      .replace('/* __CATALOG_SCRIPT__ */', () => fs.readFileSync(path.join(root, 'src/catalog-sync.js'), 'utf8'))
      .replace('<body>', '<body><aside style="padding:8px;background:#633;color:white;text-align:center">TESTE LOCAL · DADOS FICTÍCIOS · SEM ACESSO À PRODUÇÃO</aside>');

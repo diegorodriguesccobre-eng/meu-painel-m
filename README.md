@@ -6,20 +6,18 @@ Contas autorizadas de empresas diferentes podem usar o mesmo endereço com catá
 separados. Produtos, kits, taxas, relatórios e conciliações de Ads são isolados por
 conta do Mercado Livre, inclusive na cópia local do navegador. Veja a
 [configuração de acesso por empresa](CONFIGURAR_CATALOGO.md).
-Funciona no computador e no celular, sem cadastro de usuário do painel, com cópia no navegador
-e catálogo compartilhado opcional no Cloudflare D1, protegido pela conexão com o Mercado Livre.
-O uso manual funciona localmente; as consultas opcionais ao Mercado Livre usam a integração hospedada.
+Funciona no computador e no celular, com entrada pela conta do Mercado Livre da empresa, apelido e função autodeclarados e aceite dos termos/privacidade. A identificação não altera permissões. O catálogo compartilhado no Cloudflare D1 e as consultas exigem sessão válida; não há senha própria do painel.
 
 ## Manual do usuário
 
 Veja o **[Manual do usuário — Conduz Cobre](MANUAL_DO_USUARIO.md)** para começar,
 cadastrar produtos, montar kits, entender preços e cores, usar CSV e backups e
 acompanhar a Gestão de Ads. O manual descreve as funções disponíveis, suas bases de
-cálculo e limitações, com referências oficiais. Edição: 25/11/2026.
+cálculo e limitações, com referências oficiais. Edição: 26/11/2026.
 
 ## Usar no computador
 
-Abra `index.html` no Chrome, Edge ou outro navegador moderno. Não é necessário instalar nada.
+Abra o [site publicado](https://precificacaoconduz.conduz-cobre.workers.dev/) no Chrome, Edge ou outro navegador moderno e conclua a tela de entrada. O HTML isolado não autentica a versão atual. Não é necessário instalar nada.
 A logo fornecida da Conduz Cobre está incorporada no HTML, sem depender de outro arquivo ou de internet.
 As instruções atuais de uso estão no [Manual do usuário](MANUAL_DO_USUARIO.md).
 
@@ -35,7 +33,8 @@ A configuração anterior do Netlify continua disponível durante a migração.
 
 ## Recursos
 
-- **Importar e conferir catálogo** consulta os anúncios da conta conectada e apresenta uma revisão antes de salvar a seleção. Produtos vinculados preservam custos, margens, peso, taxas e Ads; os que usam cotações oficiais recebem novas consultas com esses parâmetros. Novos anúncios ficam em pendências de custo, fora dos lucros, kits e CSV, até concluir um cadastro válido. As pendências são compartilhadas e incluídas no backup v19. Variações exigem conferência individual. Veja o [passo a passo](MANUAL_DO_USUARIO.md#importar-conferir-catalogo).
+- **Importação automática do catálogo** após a entrada e a confirmação da empresa: busca os anúncios em lotes e adiciona os novos como pendências de custo, sem duplicar ou alterar produtos já cadastrados. Pendências são compartilhadas e incluídas no backup v19; não entram nos lucros, kits ou CSV até concluir o cadastro. **Conferir catálogo** consulta atualizações e cotações dos existentes e apresenta revisão antes de salvar a seleção. Variações exigem conferência individual. Veja o [passo a passo](MANUAL_DO_USUARIO.md#importar-conferir-catalogo).
+- **Tela de entrada** com OAuth do Mercado Livre, apelido, função e dois aceites lado a lado. O servidor valida perfil, versões e conta antes de liberar APIs e D1. Perfil e aceite ficam na sessão criptografada, sem ampliar permissões. [Termos](src/termos.html) · [Privacidade](src/privacidade.html).
 - Catálogo compartilhado de produtos, kits e taxas, usando a conta autorizada da empresa no Mercado Livre. A ativação exige binding D1 e ID do vendedor; sem configuração, o armazenamento continua local. Sincroniza cadastros diferentes e pede revisão em conflitos no mesmo registro. Relatórios por período, resumos do anunciante e conciliações da Gestão de Ads também são compartilhados. Conciliações divergentes no mesmo anúncio e período exigem revisão; relatórios distintos são preservados. Veja [configuração e limites](CONFIGURAR_CATALOGO.md).
 - Cadastro de produtos com custo, peso, categoria, margem, outros custos e frete.
 - Ads por marketplace em produtos e kits: Ads Mercado Livre (%) vale para Clássico e Premium; Ads Shopee (%) vale somente para a Shopee. Cada percentual entra uma vez no preço, no lucro e no mínimo para 10%. Anúncios vinculados mantêm o preço atual. Kits usam seus próprios percentuais, sem herdar Ads dos componentes. O Ads único de cadastros anteriores é preservado nos dois campos, sem mudar resultados ou cotações. Alterar somente Ads Shopee não dispara consultas do ML. CSV e backup v19 preservam os valores separados, com leitura de backups antigos.

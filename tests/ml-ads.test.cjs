@@ -68,7 +68,7 @@ test('rota Ads exige sessão, origem própria e repassa versões sem mudar escop
  const bytes=Buffer.concat([cipher.update(JSON.stringify({type:'session',exp:now()+60000,userId:123,accessToken:'TEST_ONLY'})),cipher.final()]);
  const cookie='__Host-conduz_ml_session='+Buffer.concat([iv,cipher.getAuthTag(),bytes]).toString('base64url');
  const origin='https://example.test',f=fixture();
- const handler=createHandler({now,env:{ML_CLIENT_ID:'123',ML_CLIENT_SECRET:'TEST_ONLY',ML_SESSION_SECRET:key.toString('hex'),ML_REDIRECT_URI:origin+'/api/ml/callback'},fetchImpl:async(url,init)=>{
+ const handler=createHandler({now,env:{PANEL_LOGIN_REQUIRED:'false',ML_CLIENT_ID:'123',ML_CLIENT_SECRET:'TEST_ONLY',ML_SESSION_SECRET:key.toString('hex'),ML_REDIRECT_URI:origin+'/api/ml/callback'},fetchImpl:async(url,init)=>{
   assert.equal(init.method,undefined);assert.equal(init.headers.Authorization,'Bearer TEST_ONLY');assert.equal(init.redirect,'manual');
   const u=new URL(url);return Response.json(await (async()=>{
    if(u.pathname==='/items/bulk')return [{code:200,body:{id:item,seller_id:123}}];

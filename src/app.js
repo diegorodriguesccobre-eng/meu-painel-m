@@ -907,6 +907,10 @@ function prepareProductIntegration(product){
  renderProductRates(productInitialFees(product,state.fees));renderMlLink();mlPricingVersion++;clearTimeout(mlPricingTimer);mlPricingDraft=product?.mlPricing?copyOfficialPricing(product.mlPricing):null;$('ml-auto-fees').checked=Boolean(mlPricingDraft);mlShippingVersion++;mlShippingPending=null;renderAutomaticShipping();renderAutoPricing();if(mlLinkedDraft&&!mlLinkedDraft.shippingQuote)loadAutomaticShipping();compactStatusTitles();
 }
 function renderMlConnection(message){
+ globalThis.ConduzAccess?.acceptConnection(mlConnection);
+ globalThis.ConduzAccess?.enterPanel(mlConnection);
+ if(message)globalThis.ConduzAccess?.showError(message);
+ if(!mlConnection.connected)globalThis.ConduzMlImport?.onDisconnect();
  $('ml-connection-status').textContent=message??(mlConnection.connected?`Conta conectada: ${mlConnection.account.nickname}. Escolha o anúncio no cadastro de produto.`:mlConnection.configured?'Conta desconectada. Conecte para consultar seu catálogo.':'Conexão aguardando configuração. O restante do painel funciona normalmente.');
  $('ml-connect').disabled=!mlConnection.configured;$('ml-connect').classList.toggle('hidden',mlConnection.connected);
  $('ml-disconnect').classList.toggle('hidden',!mlConnection.connected);$('ml-setup-help').classList.toggle('hidden',mlConnection.configured);
@@ -1202,10 +1206,10 @@ async function refreshRegisteredAds(force=false){
 $('ml-refresh-ads').onclick=()=>refreshRegisteredAds(true);
 async function mlRequest(action,{query={},method='GET',body}={}){
  const params=new URLSearchParams(query),url='/api/ml/'+action+(params.size?'?'+params:'');
- const owner=activeCatalogAccount??mlConnection.account?.id;
+ const owner=action==='access'?mlConnection.account?.id:activeCatalogAccount??mlConnection.account?.id;
  const response=await fetch(url,{method,credentials:'same-origin',headers:{...(method==='POST'?{'X-Conduz-Action':'mercadolivre',...(body?{'Content-Type':'application/json'}:{})}:{}),...(!['status','connect'].includes(action)&&owner?{'X-Conduz-Account':String(owner)}:{})},...(body?{body:JSON.stringify(body)}:{})});
  let data;try{data=await response.json();}catch{throw Error('A conexão não está disponível neste endereço. Abra a versão publicada do painel.');}
- if(!response.ok){if(data.error==='ACCOUNT_CHANGED'){globalThis.ConduzCatalog?.disconnect();mlConnection.connected=false;renderMlConnection(data.message);}else if(response.status===401){mlConnection.connected=false;renderMlConnection('A conexão expirou. Conecte a conta novamente.');$('ml-ads-status').textContent='Conecte a conta para atualizar Ads. Os valores anteriores foram preservados.';}throw Object.assign(Error(data.message??'Não foi possível acessar o Mercado Livre agora.'),{status:response.status});}return data;
+ if(!response.ok){if(data.error==='PANEL_ACCESS_REQUIRED'){mlConnection.accessGranted=false;globalThis.ConduzCatalog?.disconnect();renderMlConnection(data.message);}else if(data.error==='ACCOUNT_CHANGED'){globalThis.ConduzCatalog?.disconnect();mlConnection.connected=false;renderMlConnection(data.message);}else if(response.status===401){mlConnection.connected=false;renderMlConnection('A conexão expirou. Conecte a conta novamente.');$('ml-ads-status').textContent='Conecte a conta para atualizar Ads. Os valores anteriores foram preservados.';}throw Object.assign(Error(data.message??'Não foi possível acessar o Mercado Livre agora.'),{status:response.status});}return data;
 }
 function saveProductDraftBeforeConnect(){
  if(!$('product-dialog').open)return true;
@@ -1328,7 +1332,7 @@ async function initializeMercadoLivre(){
   const clean=new URL(location.href);clean.searchParams.delete('ml');history.replaceState(null,'',clean.href);
  }
  mlInitializationBusy=true;
- try{mlConnection=await mlRequest('status');mlInitializationRetry=false;await globalThis.ConduzCatalog?.connect(mlConnection);renderMlConnection(callback==='error'?'A autorização não foi concluída. Tente conectar novamente.':undefined);if(callback&&mlConnection.connected)restoreProductDraftAfterConnect();if(mlConnection.connected){$('ml-product-status').textContent='Conta conectada. Busque o anúncio ou escolha do catálogo.';if(!kitEditing&&!kitItems.size)$('kit-auto-fees').checked=true;renderKitPreview();await refreshRegisteredPrices();await refreshRegisteredAds();}}
+ try{mlConnection=await mlRequest('status');mlInitializationRetry=false;if(globalThis.ConduzAccess&&!globalThis.ConduzAccess.acceptConnection(mlConnection)){globalThis.ConduzCatalog?.disconnect();renderMlConnection(callback==='error'?'A autorização não foi concluída. Tente novamente.':undefined);return;}await globalThis.ConduzCatalog?.connect(mlConnection);renderMlConnection(callback==='error'?'A autorização não foi concluída. Tente conectar novamente.':undefined);if(callback&&mlConnection.connected)restoreProductDraftAfterConnect();if(mlConnection.connected){$('ml-product-status').textContent='Conta conectada. Busque o anúncio ou escolha do catálogo.';if(!kitEditing&&!kitItems.size)$('kit-auto-fees').checked=true;renderKitPreview();await refreshRegisteredPrices();await refreshRegisteredAds();}}
  catch(error){mlInitializationRetry=!error.status||error.status>=500;renderMlConnection(error.name==='TypeError'?'Sem conexão no momento. Os cadastros locais foram mantidos; tentaremos novamente quando a conexão voltar.':error.message);}
  finally{mlInitializationBusy=false;}
 }

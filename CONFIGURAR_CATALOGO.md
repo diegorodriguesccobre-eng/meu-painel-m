@@ -224,3 +224,9 @@ retomada verifica a sessão existente e continua respeitando sua expiração.
 Testes locais não comprovam que a sessão real do navegador tenha sido conectada,
 nem substituem a primeira associação e a conferência dos produtos no endereço publicado.
 Referência técnica: [API de banco e transações D1](https://developers.cloudflare.com/d1/worker-api/d1-database/).
+
+## Entrada e importação automática
+
+A versão atual exige OAuth válido, apelido/função autodeclarados e aceite das versões atuais dos termos de uso e privacidade. A identificação e os aceites ficam dentro do cookie de sessão criptografado, com a mesma expiração do token (até seis horas), sem permissões diferentes por função. `POST /api/ml/access` valida origem, conta liberada, campos e aceites antes de emitir a sessão atualizada. As APIs de anúncios e catálogo bloqueiam sessões que ainda não concluíram a entrada. O parâmetro `PANEL_LOGIN_REQUIRED=false` é usado somente em fixtures de testes; não deve ser definido em produção.
+
+Após Prosseguir e a confirmação do catálogo da empresa, os anúncios novos são carregados em lotes e adicionados como pendências sem custo. A rotina não substitui produtos, kits, taxas ou Ads existentes. Deduplicação usa conta e MLB; pendências usam IDs estáveis e são compartilhadas pelo protocolo 4. O aviso registra falhas e tentativas; a conferência de atualizações existentes continua separada do salvamento. Nenhum novo banco, recurso pago ou escopo de OAuth é necessário.

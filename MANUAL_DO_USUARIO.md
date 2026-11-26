@@ -10,6 +10,7 @@ O painel ajuda a definir preços no Mercado Livre e na Shopee, comparar o lucro 
 ## Índice
 
 - [1. Começar e cuidar dos dados](#comecar)
+  - [Entrar, identificar-se e aceitar os documentos](#entrada-painel)
   - [Acessar o catálogo compartilhado](#catalogo-compartilhado)
   - [Trocar de empresa com catálogos separados](#empresas-separadas)
   - [Entender os avisos de sincronização](#sincronizacao)
@@ -49,9 +50,23 @@ O painel ajuda a definir preços no Mercado Livre e na Shopee, comparar o lucro 
 
 ### Abrir o painel
 
-No computador ou celular, abra o [endereço publicado](https://precificacaoconduz.conduz-cobre.workers.dev/) em um navegador atualizado. Não há cadastro de usuário do painel.
+No computador ou celular, abra o [endereço publicado](https://precificacaoconduz.conduz-cobre.workers.dev/) em um navegador atualizado. A versão atual exige entrada pela conta do Mercado Livre da empresa, sem criar uma senha própria do painel.
 
-Para usar a versão em arquivo no computador, abra `index.html` com duplo clique. O arquivo incorpora os estilos, o programa e a logo. O cadastro manual e os cálculos locais funcionam sem conexão com os marketplaces. Consultar catálogo, tarifas, frete e Product Ads exige internet e a integração configurada no endereço publicado.
+<a id="entrada-painel"></a>
+
+### Entrar, identificar-se e aceitar os documentos
+
+1. Clique em **Entrar com Mercado Livre** e conclua a autenticação e a autorização no próprio marketplace. Se a conta já estiver conectada, confira seu nome ou use **Usar outra conta**.
+2. Informe **Seu apelido** e escolha **Sua função**: Colaborador, ADM, Dono ou Analista. A função é identificação autodeclarada; não altera permissões nem comprova vínculo com a empresa.
+3. Abra e leia os **Termos de uso** e a **Política de privacidade** nos links próprios. Os controles ficam lado a lado, com caixas independentes e inicialmente vazias. Marque os dois para continuar. Esse aceite não é autorização genérica para publicidade ou novos usos dos dados.
+4. Clique em **Prosseguir**. O painel só aparece com sessão válida, identificação e aceite da versão atual e carrega os dados da empresa correspondente.
+5. Após a confirmação do catálogo compartilhado, a busca dos anúncios começa automaticamente. Anúncios novos são adicionados como pendências de custo. Se houver primeira associação ou conflito, conclua essa revisão antes da importação.
+
+O apelido, a função e as versões/data do aceite ficam na sessão criptografada, que dura até seis horas ou o prazo menor do token. Recarregar mantém uma sessão válida. Nova autenticação, expiração ou mudança de versão dos documentos exige nova confirmação. O apelido e a função aparecem no menu; ainda não há auditoria individual da autoria de cada edição.
+
+Use **Sair** no menu para encerrar a sessão neste navegador; no celular, abra **Menu → Sair**. As caixas de aceite ficam vazias novamente. Sair não apaga os produtos, kits, pendências, relatórios e conciliações da empresa, nem cópias locais ou arquivos exportados. O contato informado para dúvidas de privacidade é **diego.rodriguesccobre@gmail.com**.
+
+O HTML isolado não realiza o login da versão atual. Para uso normal, utilize o site publicado. A autenticação, a sincronização e as consultas precisam de internet.
 
 ### Onde ficam os dados
 
@@ -70,12 +85,12 @@ O indicador **Salvo neste navegador** confirma a gravação local. Com o catálo
 ### Acessar o catálogo compartilhado — passo a passo para os funcionários
 
 1. No computador ou celular, abra o [endereço oficial do painel](https://precificacaoconduz.conduz-cobre.workers.dev/).
-2. Clique em **Conectar Mercado Livre** quando a conta estiver desconectada. Use a conta autorizada da empresa, seguindo o procedimento de acesso combinado com o responsável. Conclua a identificação e a autorização no próprio Mercado Livre se forem solicitadas.
+2. Na tela de entrada, clique em **Entrar com Mercado Livre**. Use a conta autorizada da empresa e conclua o acesso no próprio marketplace. Depois, informe apelido e função, leia e marque os dois documentos e clique em **Prosseguir**. Veja o [fluxo de entrada](#entrada-painel).
 3. Confira o nome da conta conectada em **Meus produtos**. Uma conta pessoal ou outra loja não dá acesso ao catálogo da Conduz Cobre.
 4. No bloco **Catálogo da empresa**, aguarde **Catálogo compartilhado carregado** ou **Catálogo sincronizado com a empresa**. Esse bloco aparece acima do conteúdo em **Meus produtos**, **Montar kits** e **Gestão de Ads**.
 5. Confira os produtos e kits. Na Gestão de Ads, use **Relatórios salvos** para abrir um comparativo já guardado. Não é necessário importar arquivos para receber os dados confirmados na nuvem.
 
-O painel usa a conexão existente com o Mercado Livre, sem uma senha própria. Cada navegador precisa ter uma sessão válida da conta autorizada. Esta versão não possui convites por e-mail, perfis individuais ou permissões diferentes por funcionário, nem identifica qual pessoa fez cada edição.
+O painel usa a conexão existente com o Mercado Livre, sem uma senha própria. Cada navegador precisa ter uma sessão válida da conta autorizada. Esta versão registra apelido e função na sessão, mas não possui convites por e-mail, contas individuais independentes, permissões diferentes por funcionário nem auditoria de autoria de cada edição.
 
 **Navegador sem cadastros locais:** carrega a base compartilhada ao conectar. **Navegador que já tem produtos, kits ou dados de Ads:** pode pedir uma primeira associação antes de enviar ou substituir esses dados.
 
@@ -89,9 +104,9 @@ funcionário conecta a conta do Mercado Livre da empresa em que vai trabalhar.
 
 1. Conclua ou cancele formulários abertos e aguarde a confirmação de sincronização
    da empresa atual.
-2. Em **Conexão com o Mercado Livre**, use **Desconectar** para encerrar a conexão
+2. No menu, use **Sair** (ou **Desconectar** em **Conexão com o Mercado Livre**) para encerrar a conexão
    deste navegador. As cópias dos catálogos permanecem guardadas.
-3. Clique em **Conectar Mercado Livre** e entre com a conta da empresa desejada.
+3. Na tela de entrada, clique em **Entrar com Mercado Livre** e entre com a conta da empresa desejada.
    Se o Mercado Livre mostrar outra conta, troque a conta no próprio marketplace
    e reinicie a conexão. A identificação e a autorização são feitas no Mercado Livre.
 4. Confira **Conta conectada**, o nome da empresa e o aviso em **Catálogo da empresa**
@@ -376,19 +391,25 @@ Esses botões não publicam as sugestões de preço no Mercado Livre.
 
 ### Importar e conferir o catálogo completo
 
-Em **Meus produtos**, no bloco **Conexão com o Mercado Livre**, use **Importar e conferir catálogo**. A função consulta todos os anúncios que a API disponibiliza para a conta conectada, em lotes automáticos. A conferência fica separada do salvamento.
+Depois de entrar e clicar em **Prosseguir**, o painel carrega o catálogo compartilhado e busca automaticamente todos os anúncios que a API disponibiliza para a conta conectada. Não há botão de buscar anúncios para iniciar essa importação.
 
-1. Confira o nome da conta na janela de revisão e clique em **Buscar todos os anúncios**. Aguarde a listagem e a conferência dos dados e cálculos. Se outra consulta automática estiver em andamento, aguarde sua conclusão antes de abrir a revisão.
-2. Use **Pesquisar na revisão** por nome, MLB ou SKU e o filtro **Mostrar**. Os resultados são paginados; a busca considera o catálogo inteiro consultado, inclusive outras páginas.
-3. Nos **Produtos cadastrados**, compare nome, categoria, peso e preço registrado com os dados consultados. O vínculo pelo MLB identifica o cadastro; nomes iguais, sozinhos, não são usados para juntar produtos. Nome e categoria internos, custo, peso, margem, imposto, Ads e serviços existentes são preservados.
-4. Confira o lucro estimado no **preço atual** e as sugestões dos três canais. Para produtos que já usam tarifas oficiais, a consulta refaz as cotações do Mercado Livre com seus parâmetros preservados. No modo manual, as taxas e o modo salvos são mantidos. A rotina não atualiza o percentual de Ads; a automação já existente continua responsável por isso.
-5. Marque os resultados desejados ou use **Selecionar resultados disponíveis**. Esse botão seleciona todos os resultados disponíveis do filtro atual, inclusive outras páginas. **Desmarcar todos** limpa a seleção inteira. Confira o contador de selecionados antes de salvar.
-6. Clique em **Salvar selecionados**. Somente os resultados marcados são aplicados. Fechar a janela ou usar **Cancelar** descarta a revisão sem salvar. Anúncios novos são guardados como pendências, sem inventar custo ou lucro.
-7. Aguarde **Catálogo sincronizado com a empresa** para confirmar o envio à nuvem. Os kits, taxas gerais e conciliações não são editados por essa importação. Se outra pessoa mudar um cadastro durante a revisão, consulte novamente; conflitos posteriores continuam usando a revisão de alterações do catálogo compartilhado.
+**Importação automática:** acompanhe o aviso em **Conexão com o Mercado Livre**. A rotina percorre os lotes até o fim, consulta o preço oficial disponível e adiciona somente anúncios ainda não vinculados a um produto nem presentes nas pendências. Não usa nomes iguais para juntar produtos. Novos anúncios ficam em **Anúncios pendentes de cadastro**, sem custo inventado. Custos, margens, nomes internos, pesos, impostos, taxas, serviços, Ads, kits e conciliações existentes são preservados.
+
+A busca acontece uma vez por abertura autenticada da página; recarregar inicia uma nova conferência de anúncios novos, sem duplicar as pendências existentes. A rotina aguarda a confirmação do catálogo da empresa e o fim de formulários em edição antes de aplicar inclusões. Falhas são mostradas no aviso e têm novas tentativas limitadas; os dados anteriores são preservados. Aguarde a sincronização para os colegas receberem as pendências na nuvem.
+
+**Conferir atualizações dos produtos já cadastrados:**
+
+1. Em **Meus produtos → Conexão com o Mercado Livre**, use **Conferir catálogo**. A consulta da revisão começa ao abrir, sem outro botão de busca. Se uma consulta automática estiver em andamento, aguarde sua conclusão.
+2. Use **Pesquisar na revisão** por nome, MLB ou SKU e o filtro **Mostrar**. A busca considera todas as páginas consultadas.
+3. Nos produtos cadastrados, compare nome, categoria, peso e preço registrado com os dados consultados. O vínculo pelo MLB e conta identifica o cadastro. Nome e categoria internos, custo, peso, margem, imposto, Ads e serviços existentes são preservados.
+4. Confira o lucro estimado no preço atual e as sugestões dos três canais. Para produtos que já usam tarifas oficiais, a consulta refaz as cotações com os parâmetros preservados. No modo manual, as taxas e o modo salvos são mantidos. A automação existente de Ads continua responsável por atualizar o percentual quando houver histórico aplicável.
+5. Marque os resultados desejados ou use **Selecionar resultados disponíveis**. Esse comando inclui todas as páginas do filtro atual; **Desmarcar todos** limpa a seleção inteira. Nenhum resultado começa marcado.
+6. Use **Salvar selecionados** para aplicar somente a revisão marcada. Fechar ou cancelar descarta as propostas da revisão; não desfaz pendências que já foram incluídas pela importação automática.
+7. Aguarde **Catálogo sincronizado com a empresa**. Alterações simultâneas continuam usando a revisão de conflitos do catálogo compartilhado.
 
 No celular, abra **Meus produtos** pelo **Menu** e siga os mesmos comandos. Os resultados aparecem em cartões e os filtros se adaptam à largura da tela.
 
-**Anúncios sem custo:** depois de salvar a seleção, eles aparecem em **Anúncios pendentes de cadastro**. Essa lista é compartilhada com a empresa e incluída no backup v19. Pendências não entram no lucro médio, nos kits nem no CSV de produtos. Use a busca e a paginação da própria lista para encontrá-las.
+**Anúncios sem custo:** são adicionados automaticamente em **Anúncios pendentes de cadastro**. Essa lista é compartilhada com a empresa e incluída no backup v19. Pendências não entram no lucro médio, nos kits nem no CSV de produtos. Use a busca e a paginação da própria lista para encontrá-las.
 
 Para concluir uma pendência, clique em **Concluir cadastro**, informe o custo de compra e confira peso, margem, impostos e Ads no cadastro habitual. O custo começa vazio. A pendência só vira produto calculado após **Salvar produto** com dados válidos; cancelar mantém a pendência. Ao salvar, o painel remove a pendência correspondente e preserva os demais registros. Os custos e impostos da empresa não são deduzidos do preço anunciado pelo Mercado Livre.
 

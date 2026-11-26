@@ -73,7 +73,7 @@ test('resumo do anunciante também é preservado no backup e validado contra mis
 });
 test('consulta de totais da conta exige sessão e mesma origem e não vira proxy público',async()=>{
  const {createHandler}=await import('../netlify/functions/mercadolivre.mjs');let calls=0;
- const origin='https://example.test',handler=createHandler({env:{ML_CLIENT_ID:'123',ML_CLIENT_SECRET:'TEST_ONLY',ML_SESSION_SECRET:'ab'.repeat(32),ML_REDIRECT_URI:origin+'/api/ml/callback'},fetchImpl:async()=>{calls++;throw Error('Não deveria consultar');}});
+ const origin='https://example.test',handler=createHandler({env:{PANEL_LOGIN_REQUIRED:'false',ML_CLIENT_ID:'123',ML_CLIENT_SECRET:'TEST_ONLY',ML_SESSION_SECRET:'ab'.repeat(32),ML_REDIRECT_URI:origin+'/api/ml/callback'},fetchImpl:async()=>{calls++;throw Error('Não deveria consultar');}});
  const req=(method,headers={})=>new Request(origin+'/api/ml/ads-account',{method,headers,...(method==='POST'?{body:'{}'}:{})});
  assert.equal((await handler(req('GET'))).status,405);
  assert.equal((await handler(req('POST',{Origin:'https://foreign.test','X-Conduz-Action':'mercadolivre'}))).status,403);

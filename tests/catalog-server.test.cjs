@@ -41,7 +41,7 @@ function session(userId = 123, exp = Date.now() + 60000) {
 }
 function setup(t) {
  const db = database(t);
- return { db, env: { CATALOG_DB: db, CATALOG_SELLER_ID: '123', ML_CLIENT_ID: '1', ML_CLIENT_SECRET: 'TEST_ONLY', ML_SESSION_SECRET: 'ab'.repeat(32), ML_REDIRECT_URI: origin + '/api/ml/callback' } };
+ return { db, env: { CATALOG_DB: db, CATALOG_SELLER_ID: '123', PANEL_LOGIN_REQUIRED:'false',ML_CLIENT_ID: '1', ML_CLIENT_SECRET: 'TEST_ONLY', ML_SESSION_SECRET: 'ab'.repeat(32), ML_REDIRECT_URI: origin + '/api/ml/callback' } };
 }
 const fees = { ml: { commission: 11, premiumCommission: 14, fixed: 0, tax: 6 }, shopee: { commission: 20, fixed: 4.5, tax: 6 } };
 const product = (id = 'p1') => ({ id, name: 'Produto ' + id, category: 'Teste', cost: 10, weight: .2, margin: 20, extra: 0 });

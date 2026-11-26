@@ -65,6 +65,9 @@
   ui('cloud-sync').disabled = (!seller && phase !== 'retry') || ['off', 'review'].includes(phase) || busy;
   ui('cloud-review').classList.toggle('hidden', phase !== 'review');
   if ((seller || retryConnection) && phase !== 'off') ui('save-status').textContent = pending ? '● Alterações aguardando sincronização' : '● Catálogo compartilhado';
+  if (seller && phase === 'ready' && !pending) globalThis.ConduzMlImport?.onCatalogReady(Number(seller));
+  if (seller && phase !== 'off') globalThis.ConduzAccess?.enterPanel(mlConnection);
+  if (phase === 'retry') globalThis.ConduzAccess?.showError(message);
  }
  function localWrite() {
   try { localStorage.setItem(KEY, JSON.stringify(state)); localProblem = false; return true; }
@@ -231,8 +234,9 @@
  ui('cloud-review-form').onsubmit = e => { e.preventDefault(); confirmReview(); };
  globalThis.ConduzCatalog = {
   connect,
+  readyForImport(id) { return phase === 'ready' && !busy && seller === String(id); },
   onLocalChange() { if (['ready', 'retry'].includes(phase)) { status('Alteração salva neste navegador; aguardando sincronização.', true); queue(); } },
-  disconnect() { epoch++; seller = null; phase = 'off'; meta = null; review = null; busy = false; activeSync = null; retryConnection = null; clearTimeout(timer); ui('cloud-review-dialog').close(); status('Conexão encerrada. A cópia local foi mantida.'); },
+  disconnect() { epoch++; seller = null; phase = 'off'; meta = null; review = null; busy = false; activeSync = null; retryConnection = null; clearTimeout(timer); globalThis.ConduzMlImport?.onDisconnect(); ui('cloud-review-dialog').close(); status('Conexão encerrada. A cópia local foi mantida.'); },
   sync
  };
  globalThis.addEventListener?.('online', () => sync());

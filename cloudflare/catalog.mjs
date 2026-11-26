@@ -137,6 +137,7 @@ export function createCatalogHandler({ env, now = Date.now }) {
     const status = await createHandler({ env, now })(sessionRequest, { params: { action: 'status' } });
     const identity = await status.json();
     if (!identity.connected) return json({ error: 'CONNECT_REQUIRED', message: 'Conecte a conta da empresa no Mercado Livre para acessar o catálogo.' }, 401);
+    if (identity.accessRequired && !identity.accessGranted) return json({ error: 'PANEL_ACCESS_REQUIRED', message: 'Conclua a identificação e o aceite na tela de entrada para acessar o catálogo.' }, 403);
     const sellerId = String(identity.account.id);
     if (!accounts.has(sellerId)) return json({ error: 'ACCOUNT_FORBIDDEN', message: 'Esta conta do Mercado Livre ainda não foi liberada para o catálogo compartilhado.' }, 403);
     const expectedAccount = request.headers.get('x-conduz-catalog-account');

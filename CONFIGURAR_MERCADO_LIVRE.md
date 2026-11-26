@@ -1,5 +1,7 @@
 # Ativar a conexão com o Mercado Livre
 
+A produção atual utiliza [Cloudflare Workers e D1](CONFIGURAR_CLOUDFLARE.md). As instruções de Netlify abaixo documentam a implantação anterior da integração; a tela atual também exige catálogo por empresa, identificação e aceite antes de liberar o painel.
+
 O fluxo está implementado para o painel em **https://SEU_SITE.netlify.app/**.
 Ele precisa das credenciais de um aplicativo do Mercado Livre antes de poder consultar sua conta.
 Não envie essas credenciais pelo chat nem coloque valores reais no GitHub.
@@ -54,9 +56,9 @@ e [Functions do Netlify](https://docs.netlify.com/build/functions/overview/).
 
 ## 3. Conectar a conta e vincular um anúncio
 
-1. Abra o painel no endereço publicado e clique em **Conectar Mercado Livre**.
-2. Confira a conta e autorize a leitura no próprio Mercado Livre.
-3. No painel, clique em **Novo produto**.
+1. Abra o painel publicado e clique em **Entrar com Mercado Livre** na tela de entrada.
+2. Confira a conta e conclua a autorização no próprio Mercado Livre. Depois, informe apelido/função, leia e marque os termos e a política e clique em **Prosseguir**. A conta precisa estar na lista de vendedores liberados do catálogo.
+3. Após confirmar o catálogo compartilhado, anúncios novos são adicionados automaticamente como pendências de custo. Use **Concluir cadastro** na pendência ou **Novo produto** para cadastrar manualmente.
 4. Use **Meu catálogo** ou informe o ID `MLB...`/link do seu anúncio e clique em **Vincular**.
    O catálogo carrega todos os lotes automaticamente. Você pode pesquisar por nome ou ID
    durante a consulta; novos resultados aparecem conforme as páginas chegam. “Catálogo

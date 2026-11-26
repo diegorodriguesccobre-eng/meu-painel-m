@@ -2,7 +2,7 @@ const {test}=require('node:test');
 const assert=require('node:assert/strict');
 const {createHash}=require('node:crypto');
 const origin='https://precificacaoprodutos.netlify.app';
-const env={ML_CLIENT_ID:'123456',ML_CLIENT_SECRET:'TEST_SECRET_NOT_REAL',ML_SESSION_SECRET:'ab'.repeat(32),ML_REDIRECT_URI:origin+'/api/ml/callback'};
+const env={PANEL_LOGIN_REQUIRED:'false',ML_CLIENT_ID:'123456',ML_CLIENT_SECRET:'TEST_SECRET_NOT_REAL',ML_SESSION_SECRET:'ab'.repeat(32),ML_REDIRECT_URI:origin+'/api/ml/callback'};
 const fixture={id:'MLB1234567890',title:'Produto de teste',condition:'new',shipping:{mode:'me2',logistic_type:'cross_docking',free_shipping:false},site_id:'MLB',seller_id:123,category_id:'MLB1234',catalog_product_id:'MLB56789',listing_type_id:'gold_special',permalink:'https://produto.mercadolivre.com.br/MLB-1234567890-_JM',secure_thumbnail:'https://http2.mlstatic.com/foto.png',attributes:[{id:'PACKAGE_WEIGHT',value_struct:{number:750,unit:'g'}}],variations:[],price:999999};
 const modulePromise=import('../netlify/functions/mercadolivre.mjs');
 function request(action,{method='GET',cookie,query={},ownOrigin=origin,header=true,body}={}){
@@ -81,10 +81,12 @@ test('conferência em lote enumera também IDs indisponíveis e recusa página c
  const missing = 'MLB9876543210', ids = [fixture.id, missing];
  const handler = createHandler({ env, now: () => Date.parse('2026-11-11T12:00:00Z'), fetchImpl: async url => {
   if (new URL(url).pathname.endsWith('/items/search')) return Response.json({ results: ids });
+  if (new URL(url).pathname.endsWith('/sale_price')) return Response.json({ amount: 54.9, currency_id: 'BRL' });
   return Response.json([{ id: fixture.id, status_code: 200, body: fixture }, { id: missing, status_code: 403, body: {} }]);
  } });
  const data = await (await handler(request('catalog-items', { cookie: auth.cookie }))).json();
  assert.deepEqual(data.itemIds, ids); assert.deepEqual(data.unavailableIds, [missing]); assert.equal(data.items.length, 1); assert.equal(data.nextCursor, null);
+ assert.equal(data.items[0].sellerId, 123); assert.equal(data.items[0].price, 54.9); assert.notEqual(data.items[0].price, fixture.price);
  const broken = createHandler({ env, now: () => Date.parse('2026-11-11T12:00:00Z'), fetchImpl: async () => Response.json({ results: Array.from({ length: 20 }, (_, i) => 'MLB' + (9000000000 + i)) }) });
  assert.equal((await broken(request('catalog-items', { cookie: auth.cookie }))).status, 502);
  assert.equal((await handler(request('catalog-items'))).status, 401);

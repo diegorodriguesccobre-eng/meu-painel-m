@@ -55,8 +55,8 @@
   if (!validState(next) || [...catalogOwners(next)].some(id => id !== String(sellerId))) throw Error('A revisão produziria um catálogo inválido ou com dados de outra empresa. Nada foi salvo.');
   return next;
  }
- async function inspectCatalog({ data, sellerId, request, active = () => true, progress = () => {} }) {
-  const ids = new Set(), pages = new Set(); let cursor = null;
+ async function readCatalog({ sellerId, request, active = () => true, progress = () => {} }) {
+  const ids = new Set(), pages = new Set(), items = new Map(); let cursor = null;
   do {
    if (!active()) return null;
    progress('Buscando todos os anúncios… ' + ids.size + ' identificado(s).');
@@ -67,9 +67,50 @@
    if (page.nextCursor !== null && (!fingerprint || pages.has(fingerprint))) throw Error('A listagem deixou de avançar. Refaça a consulta; nada foi salvo.');
    if (fingerprint) pages.add(fingerprint);
    for (const id of page.itemIds) ids.add(id);
+   for (const item of page.items) {
+    if (!validMlLink(item) || item.sellerId !== sellerId || items.has(item.itemId)) throw Error('A listagem retornou um anúncio inválido, repetido ou de outra conta. Nada foi salvo.');
+    items.set(item.itemId, copyMlLink(item));
+   }
    if (ids.size > MAX_ITEMS) throw Error('A conta excede 10.000 anúncios nesta consulta. Nada foi salvo.');
    cursor = page.nextCursor;
   } while (cursor !== null);
+  return { ids, items };
+ }
+ async function discoverCatalog(options) {
+  const { request, sellerId, active = () => true } = options, listed = await readCatalog(options);
+  if (!listed || !active()) return null;
+  const unavailable = [];
+  for (const id of listed.ids) if (!listed.items.has(id)) {
+   if (!active()) return null;
+   try {
+    const item = importedLink(await request('item', { query: { id } }), sellerId);
+    if (!active()) return null;
+    if (item.itemId !== id) throw Error('O anúncio retornado não corresponde à consulta.');
+    listed.items.set(id, item);
+   } catch (error) {
+    if ([401, 409, 429].includes(error.status)) throw error;
+    unavailable.push(id);
+   }
+  }
+  return { items: [...listed.items.values()], total: listed.ids.size, unavailable };
+ }
+ function addDiscovered(data, items, sellerId) {
+  const known = new Set([...(data.pendingProducts ?? []).map(p => itemKey(p.item)), ...data.products.filter(p => p.mercadoLivre).map(p => itemKey(p.mercadoLivre))]);
+  const added = [];
+  for (const item of items) {
+   if (!validMlLink(item) || item.sellerId !== sellerId) throw Error('Um anúncio retornou dados inválidos ou pertence a outra conta.');
+   if (!known.has(itemKey(item))) { added.push(pendingProduct(item, data.fees)); known.add(itemKey(item)); }
+  }
+  if (!added.length) return data;
+  const next = { ...data, pendingProducts: [...(data.pendingProducts ?? []), ...added] };
+  if (next.pendingProducts.length > 5000) throw Error('O catálogo atingiu o limite de 5.000 pendências. Conclua os cadastros antes de tentar novamente.');
+  if (!validState(next) || [...catalogOwners(next)].some(id => id !== String(sellerId))) throw Error('Não foi possível adicionar os anúncios à empresa correta. Os cadastros foram preservados.');
+  return next;
+ }
+ async function inspectCatalog({ data, sellerId, request, active = () => true, progress = () => {} }) {
+  const listed = await readCatalog({ sellerId, request, active, progress });
+  if (!listed || !active()) return null;
+  const { ids } = listed;
   const rows = [], allIds = [...ids]; let index = 0, finished = 0, stopped = '';
   async function worker() {
    while (active() && !stopped && index < allIds.length) {
@@ -109,7 +150,7 @@
   for (const product of data.products) if (product.mercadoLivre?.sellerId === sellerId && !ids.has(product.mercadoLivre.itemId)) rows.push({ id: 'product:' + product.id, kind: 'existing', ready: false, item: copyMlLink(product.mercadoLivre), base: clone(product), note: 'Este anúncio não apareceu na listagem da conta. O cadastro será preservado; confira sua situação no Mercado Livre.' });
   return { rows: rows.sort((a, b) => a.item.itemId.localeCompare(b.item.itemId) || a.id.localeCompare(b.id)), total: ids.size, stopped };
  }
- const api = { inspectCatalog, applyReview, importedLink, proposedProduct, pendingProduct };
+ const api = { inspectCatalog, applyReview, importedLink, proposedProduct, pendingProduct, discoverCatalog, addDiscovered };
  globalThis.ConduzMlImport = api;
  if (typeof document === 'undefined' || !document.getElementById('ml-import-dialog')) return;
 
@@ -117,6 +158,58 @@
  let version = 0, busy = false, seller = null, rows = [], selected = new Set(), page = 0, complete = false, pendingPage = 0;
  const isOpen = () => ui('ml-import-dialog').open;
  api.isOpen = isOpen;
+ let autoOwner = null, autoVersion = 0, autoBusy = false, autoDone = false, autoTimer = null, autoResult = null, autoAttempts = 0;
+ const autoStatus = text => { ui('ml-catalog-auto-status').textContent = text; };
+ const canImport = () => globalThis.ConduzCatalog?.readyForImport(autoOwner) && !isOpen() && !kitEditing && !kitItems.size && !['product-dialog', 'restore-dialog', 'import-dialog', 'ads-reconcile-dialog', 'cloud-review-dialog', 'delete-dialog', 'kit-delete-dialog'].some(id => ui(id).open);
+ function queueAuto(delay = 300) {
+  if (autoTimer !== null || autoDone || !autoOwner || autoAttempts >= 3 && !autoResult) return;
+  autoTimer = setTimeout(() => { autoTimer = null; syncNewProducts(); }, delay);
+ }
+ async function syncNewProducts() {
+  if (autoBusy || autoDone || !autoOwner || !mlConnection.connected || mlConnection.account?.id !== autoOwner) return;
+  if (!canImport()) { queueAuto(1500); return; }
+  const generation = autoVersion, owner = autoOwner;
+  const active = () => generation === autoVersion && mlConnection.connected && mlConnection.account?.id === owner;
+  autoBusy = true;
+  try {
+   if (!autoResult) {
+    autoAttempts++;
+    const result = await discoverCatalog({ sellerId: owner, request: mlRequest, active, progress: text => { if (active()) autoStatus(text); } });
+    if (!active()) return;
+    autoResult = result;
+   }
+   if (!active() || !autoResult) return;
+   if (!canImport()) { autoStatus('Catálogo consultado. Aguardando concluir a edição para adicionar os anúncios novos.'); queueAuto(1500); return; }
+   const previous = state, next = addDiscovered(state, autoResult.items, owner), count = (next.pendingProducts?.length ?? 0) - (state.pendingProducts?.length ?? 0);
+   if (next !== state) {
+    state = next;
+    if (!persist()) { state = previous; throw Error('Não foi possível gravar as pendências neste navegador. Os cadastros anteriores foram preservados.'); }
+    render();
+   }
+   const unavailable = autoResult.unavailable.length, total = autoResult.total;
+   autoStatus(total + ' anúncio(s) encontrado(s) · ' + count + ' novo(s) adicionado(s) como pendente(s) de custo. Cadastros existentes preservados.' + (unavailable ? ' ' + unavailable + ' anúncio(s) indisponível(is). ' + (autoAttempts < 3 ? 'Tentaremos novamente.' : 'Recarregue a página para tentar novamente.') : ' Confira a sincronização da empresa.'));
+   autoDone = !unavailable;
+   autoResult = null;
+   if (unavailable) queueAuto(60000);
+  } catch (error) {
+   if (active()) {
+    autoResult = null;
+    autoStatus(error.message + (autoAttempts < 3 ? ' A importação automática tentará novamente.' : ' Recarregue a página para tentar novamente.') + ' Os cadastros existentes foram preservados.');
+    queueAuto(60000);
+   }
+  } finally { if (generation === autoVersion) autoBusy = false; }
+ }
+ api.syncNewProducts = syncNewProducts;
+ api.onCatalogReady = id => {
+  if (!mlConnection.connected || mlConnection.account?.id !== id) return;
+  if (autoOwner !== id) { api.onDisconnect(); autoOwner = id; }
+  queueAuto();
+ };
+ api.onDisconnect = () => {
+  autoVersion++; clearTimeout(autoTimer); autoTimer = null; autoOwner = null; autoBusy = false; autoDone = false; autoResult = null; autoAttempts = 0;
+  autoStatus('Os anúncios serão carregados automaticamente após concluir a entrada e confirmar o catálogo da empresa.');
+ };
+ globalThis.addEventListener?.('online', () => { autoAttempts = 0; queueAuto(); });
  const filtered = () => rows.filter(row => {
   const mode = ui('ml-import-filter').value, query = normalizeQuery(ui('ml-import-search').value.trim());
   return (mode === 'all' || mode === 'error' ? mode === 'all' || !row.ready : row.kind === mode) && normalizeQuery(row.item.title + ' ' + row.item.itemId + ' ' + (row.item.skus ?? []).join(' ') + ' ' + (row.base?.name ?? '')).includes(query);
@@ -139,21 +232,21 @@
   ui('ml-import-rows').innerHTML = result.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE).map(rowHTML).join('') || '<p class="help">' + (busy ? 'Aguarde a consulta.' : 'Nenhum resultado neste filtro.') + '</p>';
   ui('ml-import-page').textContent = result.length ? (page * PAGE_SIZE + 1) + '–' + Math.min((page + 1) * PAGE_SIZE, result.length) + ' de ' + result.length + ' · ' + selected.size + ' selecionado(s)' : '0 resultados';
   ui('ml-import-prev').disabled = page === 0; ui('ml-import-next').disabled = (page + 1) * PAGE_SIZE >= result.length;
-  ui('ml-import-load').disabled = busy; ui('ml-import-select').disabled = busy || !complete; ui('ml-import-clear').disabled = busy || !selected.size;
+  ui('ml-import-select').disabled = busy || !complete; ui('ml-import-clear').disabled = busy || !selected.size;
   ui('ml-import-save').disabled = busy || !complete || !selected.size || !mlConnection.connected || mlConnection.account?.id !== seller;
   ui('ml-import-save').textContent = 'Salvar selecionados' + (selected.size ? ' (' + selected.size + ')' : '');
  }
  function cancel() { version++; busy = false; complete = false; rows = []; selected.clear(); ui('ml-import-dialog').close(); }
- ui('ml-import-open').onclick = () => {
+ ui('ml-import-open').onclick = async () => {
   if (!mlConnection.connected) { toast('Conecte a conta da empresa no Mercado Livre para consultar o catálogo.'); return; }
-  if (currentPricesBusy || mlAdsBusy || adsUi.busy || adsHistoryUi.busy) { toast('Aguarde a consulta automática em andamento e abra a revisão novamente.'); return; }
+  if (autoBusy || currentPricesBusy || mlAdsBusy || adsUi.busy || adsHistoryUi.busy) { toast('Aguarde a consulta automática em andamento e abra a revisão novamente.'); return; }
   version++; seller = mlConnection.account.id; rows = []; selected = new Set(); complete = false; busy = false; page = 0;
   ui('ml-import-search').value = ''; ui('ml-import-filter').value = 'all'; ui('ml-import-error').textContent = '';
-  ui('ml-import-status').textContent = 'Clique em Buscar todos os anúncios. A revisão será apresentada antes de salvar.';
+  ui('ml-import-status').textContent = 'Consultando as atualizações para conferência. Os cadastros existentes só mudam após salvar a seleção.';
   ui('ml-import-account').textContent = 'Conta: ' + mlConnection.account.nickname + ' · ' + seller;
-  renderReview(); ui('ml-import-dialog').showModal();
+  renderReview(); ui('ml-import-dialog').showModal(); await loadReview();
  };
- ui('ml-import-load').onclick = async () => {
+ async function loadReview() {
   if (busy || !mlConnection.connected || mlConnection.account?.id !== seller) return;
   const generation = ++version, baseline = clone(state), owner = seller;
   const active = () => generation === version && isOpen() && mlConnection.connected && mlConnection.account?.id === owner;
@@ -165,9 +258,9 @@
    const available = rows.filter(row => row.ready).length, pending = rows.filter(row => row.ready && row.kind === 'pending').length;
    ui('ml-import-status').textContent = result.total + ' anúncio(s) listado(s) · ' + available + ' resultado(s) disponível(is) · ' + pending + ' pendente(s) de custo · ' + rows.filter(row => !row.ready).length + ' indisponível(is). Marque os resultados que deseja salvar.';
    if (result.stopped) ui('ml-import-error').textContent = result.stopped + ' Os resultados sem consulta foram preservados e não podem ser selecionados.';
-  } catch (error) { if (active()) ui('ml-import-error').textContent = error.message + ' Nenhuma alteração foi salva. Tente buscar novamente.'; }
+  } catch (error) { if (active()) ui('ml-import-error').textContent = error.message + ' Nenhuma alteração foi salva. Feche e abra a conferência para tentar novamente.'; }
   finally { if (generation === version) { busy = false; renderReview(); } }
- };
+ }
  ui('ml-import-save').onclick = () => {
   if (busy || !complete || !mlConnection.connected || mlConnection.account?.id !== seller) return;
   try {

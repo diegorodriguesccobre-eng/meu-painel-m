@@ -20,7 +20,7 @@ test('Cloudflare mantém diagnóstico e bloqueia integração sem sessão/config
   assert.deepEqual(await status.json(), { configured: false, connected: false, account: null, expiresAt: null });
   assert.equal(status.headers.get('Cache-Control'), 'no-store');
   assert.equal((await worker.fetch(new Request('https://painel.example/api/ml/items'), {})).status, 503);
-  const env = { ML_CLIENT_ID: '123456', ML_CLIENT_SECRET: 'TEST_ONLY', ML_SESSION_SECRET: 'ab'.repeat(32), ML_REDIRECT_URI: 'https://painel.example/api/ml/callback' };
+  const env = { PANEL_LOGIN_REQUIRED:'false',ML_CLIENT_ID: '123456', ML_CLIENT_SECRET: 'TEST_ONLY', ML_SESSION_SECRET: 'ab'.repeat(32), ML_REDIRECT_URI: 'https://painel.example/api/ml/callback' };
   assert.equal((await worker.fetch(new Request('https://painel.example/api/ml/items'), env)).status, 401);
   assert.equal((await worker.fetch(new Request('https://painel.example/api/ml/connect', { method: 'POST', headers: { Origin: 'https://outra.example', 'X-Conduz-Action': 'mercadolivre' } }), env)).status, 403);
 });
@@ -39,7 +39,7 @@ test('orçamento de chamadas encerra a operação antes da cota Free e reinicia 
 test('Worker completa OAuth e calcula os dois anúncios com frete dentro do orçamento Free', async () => {
   const { createWorker } = await load;
   const origin = 'https://painel.example', calls = [];
-  const env = { ML_CLIENT_ID: '123456', ML_CLIENT_SECRET: 'TEST_ONLY', ML_SESSION_SECRET: 'ab'.repeat(32), ML_REDIRECT_URI: origin + '/api/ml/callback' };
+  const env = { PANEL_LOGIN_REQUIRED:'false',ML_CLIENT_ID: '123456', ML_CLIENT_SECRET: 'TEST_ONLY', ML_SESSION_SECRET: 'ab'.repeat(32), ML_REDIRECT_URI: origin + '/api/ml/callback' };
   const worker = createWorker({ fetchImpl: async (url, init) => {
     assert.equal(init.redirect, 'manual'); const u = new URL(url); calls.push({ path: u.pathname, method: init.method ?? 'GET' });
     if (u.pathname === '/oauth/token') return Response.json({ access_token: 'TEST_ONLY', expires_in: 21600 });
@@ -72,7 +72,7 @@ test('Worker completa OAuth e calcula os dois anúncios com frete dentro do orç
 
 test('fetch padrão preserva o contexto global exigido pelo runtime',async()=>{
  const {createWorker}=await load,original=globalThis.fetch,origin='https://painel.example';
- const env={ML_CLIENT_ID:'123456',ML_CLIENT_SECRET:'TEST_ONLY',ML_SESSION_SECRET:'ab'.repeat(32),ML_REDIRECT_URI:origin+'/api/ml/callback'};
+ const env={PANEL_LOGIN_REQUIRED:'false',ML_CLIENT_ID:'123456',ML_CLIENT_SECRET:'TEST_ONLY',ML_SESSION_SECRET:'ab'.repeat(32),ML_REDIRECT_URI:origin+'/api/ml/callback'};
  let calls=0;globalThis.fetch=function(url,init){assert.equal(this,globalThis);assert.equal(init.redirect,'manual');calls++;return Promise.resolve(Response.json(String(url).endsWith('/oauth/token')?{access_token:'TEST_ONLY',expires_in:21600}:{id:123,nickname:'TESTE'}));};
  try{const worker=createWorker(),start=await worker.fetch(new Request(origin+'/api/ml/connect',{method:'POST',headers:{Origin:origin,'X-Conduz-Action':'mercadolivre'}}),env),auth=new URL((await start.json()).authorizationUrl),cookie=start.headers.get('set-cookie').split(';')[0];
  const response=await worker.fetch(new Request(origin+'/api/ml/callback?'+new URLSearchParams({state:auth.searchParams.get('state'),code:'TEST_ONLY'}),{headers:{Cookie:cookie}}),env);
