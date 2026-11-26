@@ -11,16 +11,17 @@ const core = app.slice(0, app.indexOf('let state=defaults()'));
 const clone = x => JSON.parse(JSON.stringify(x));
 function product(id, cost = 10) { return { id, name: id, category: 'Teste', cost, weight: .2, margin: 20, extra: 0 }; }
 function server() {
- const s = { data: null, revision: 0, writes: 0, hold: null, offline: false };
+ const s = { data: null, revision: 0, writes: 0, hold: null, offline: false, accountChanged: false };
  s.fetch = async (url, options = {}) => {
   if (s.offline) throw Error('Sem internet');
   if (url.endsWith('/status')) return Response.json({ configured: true });
+  if (s.accountChanged) return Response.json({ error: 'ACCOUNT_CHANGED', message: 'A conta mudou em outra aba. Recarregue a página.' }, { status: 409 });
   if (options.method !== 'PUT') {
    if (options.headers?.['If-None-Match'] === '"' + s.revision + '"') return new Response(null, { status: 304 });
    return Response.json({ revision: s.revision, data: clone(s.data) });
   }
   const body = JSON.parse(options.body);
-  assert.equal(body.schemaVersion, 2);
+  assert.equal(body.schemaVersion, 3);
   if (body.revision !== s.revision) return Response.json({ message: 'Conflito' }, { status: 409 });
   s.data = clone(body.data); s.revision++; s.writes++;
   const response = Response.json({ revision: s.revision });
@@ -41,6 +42,15 @@ function client(s) {
  return { context, get, storage, run: code => vm.runInContext(code, context), api: context.ConduzCatalog, add(p) { context.state.products.push(clone(p)); context.ConduzCatalog.onLocalChange(); }, data() { return clone(context.state); } };
 }
 const connection = { connected: true, account: { id: 123 } };
+
+test('troca de sessão em outra aba interrompe a sincronização sem enviar a edição para a outra empresa', async () => {
+ const s = server(), c = client(s); await c.api.connect(connection);
+ c.add(product('cobre')); await c.api.sync(); const writes = s.writes;
+ c.context.state.products[0].cost = 19; s.accountChanged = true;
+ await c.api.sync(); await c.api.sync();
+ assert.equal(s.writes, writes); assert.equal(s.data.products[0].cost, 10); assert.equal(c.data().products[0].cost, 19);
+ assert.ok(c.get('cloud-catalog-status').textContent.includes('Recarregue'));
+});
 
 test('dois funcionários adicionam produtos diferentes e recebem o catálogo combinado, preservando taxas', async () => {
  const s = server(), a = client(s), b = client(s);

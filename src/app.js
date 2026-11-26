@@ -1,6 +1,26 @@
 
 'use strict';
-const KEY='margem.painel.v1';
+const LEGACY_CATALOG_KEY='margem.painel.v1',ACTIVE_CATALOG_ACCOUNT='conduz.catalog.active-account.v1';
+let KEY=LEGACY_CATALOG_KEY,activeCatalogAccount=null,legacyCatalogAccount=null;
+const validCatalogAccount=id=>typeof id==='string'&&/^[1-9]\d{0,15}$/.test(id);
+function accountCatalogKey(id){if(!validCatalogAccount(id))throw Error('Conta do catálogo inválida.');return LEGACY_CATALOG_KEY+'.account.'+id;}
+function catalogOwners(data){
+ const ids=[...(data.products??[]).flatMap(p=>[p.mercadoLivre?.sellerId,p.mlAds?.sellerId]),...(data.adsReports??[]).map(r=>r.sellerId),...(data.adsAccounts??[]).map(r=>r.sellerId),...(data.adsReconciliations??[]).map(r=>r.sellerId),data.adsHistory?.sellerId,data.adsAccount?.sellerId];
+ return new Set(ids.filter(id=>id!==undefined&&id!==null).map(String));
+}
+function planAccountCatalog(data,sellerId,previousId,legacyId,read){
+ const key=accountCatalogKey(sellerId),owners=catalogOwners(data);
+ const previous=previousId??(validCatalogAccount(legacyId)?legacyId:owners.size===1?[...owners][0]:null);
+ if(previous&&[...owners].some(id=>id!==previous))throw Error('A cópia local contém dados de outra conta. Faça um backup e confira a associação antes de trocar de empresa.');
+ const raw=read(key);let next;
+ if(raw!==null){try{next=JSON.parse(raw);}catch{throw Error('Não foi possível ler o catálogo local desta conta. A cópia anterior foi preservada.');}if(!validState(next)||[...catalogOwners(next)].some(id=>id!==sellerId))throw Error('O catálogo local não corresponde à conta conectada. A cópia anterior foi preservada.');next=preserveCatalogFees(next);}
+ else next=previous===sellerId?preserveCatalogFees(data):defaults();
+ const writes=new Map();
+ if(previousId)writes.set(accountCatalogKey(previousId),JSON.stringify(data));
+ else if(previous&&read(accountCatalogKey(previous))===null)writes.set(accountCatalogKey(previous),JSON.stringify(data));
+ writes.set(key,JSON.stringify(next));
+ return {key,data:next,writes:[...writes],changed:previous!==sellerId};
+}
 const MARKETS={ml:'Mercado Livre',shopee:'Shopee'};
 const SCENARIOS={ml:'Mercado Livre Clássico',mlPremium:'Mercado Livre Premium',shopee:'Shopee'};
 // Política CNPJ verificada na Central do Vendedor em 13/11/2026. Cada cadastro guarda a versão.
@@ -477,7 +497,7 @@ function parseBackup(text){
  return backupData(backup.data);
 }
 let state=defaults(),storageProblem='',feesMigrated=false;
-try{const saved=localStorage.getItem(KEY);if(saved){const parsed=JSON.parse(saved);if(!validState(parsed))throw Error('Dados inválidos');feesMigrated=parsed.products.some(p=>p.feeSnapshot===undefined)||(parsed.kits??[]).some(k=>k.feeSnapshot===undefined);state=preserveCatalogFees(parsed);}}catch{storageProblem='Não foi possível ler os dados salvos. Esta sessão começa vazia; confira seu backup antes de salvar novos dados.';}
+try{const account=localStorage.getItem(ACTIVE_CATALOG_ACCOUNT);if(account!==null){KEY=accountCatalogKey(account);activeCatalogAccount=account;}const saved=localStorage.getItem(KEY);if(saved){const parsed=JSON.parse(saved);if(!validState(parsed))throw Error('Dados inválidos');if(activeCatalogAccount&&[...catalogOwners(parsed)].some(id=>id!==activeCatalogAccount))throw Error('Conta inválida');feesMigrated=parsed.products.some(p=>p.feeSnapshot===undefined)||(parsed.kits??[]).some(k=>k.feeSnapshot===undefined);state=preserveCatalogFees(parsed);}}catch{storageProblem='Não foi possível ler os dados salvos. Esta sessão começa vazia; confira seu backup antes de salvar novos dados.';}
 let sort={key:'name',direction:1},editing=null,deleting=null,toastTimer;
 const $=id=>document.getElementById(id);
 function setProductPane(pane){
@@ -1177,13 +1197,14 @@ async function refreshRegisteredAds(force=false){
 $('ml-refresh-ads').onclick=()=>refreshRegisteredAds(true);
 async function mlRequest(action,{query={},method='GET',body}={}){
  const params=new URLSearchParams(query),url='/api/ml/'+action+(params.size?'?'+params:'');
- const response=await fetch(url,{method,credentials:'same-origin',headers:method==='POST'?{'X-Conduz-Action':'mercadolivre',...(body?{'Content-Type':'application/json'}:{})}:{},...(body?{body:JSON.stringify(body)}:{})});
+ const owner=activeCatalogAccount??mlConnection.account?.id;
+ const response=await fetch(url,{method,credentials:'same-origin',headers:{...(method==='POST'?{'X-Conduz-Action':'mercadolivre',...(body?{'Content-Type':'application/json'}:{})}:{}),...(!['status','connect'].includes(action)&&owner?{'X-Conduz-Account':String(owner)}:{})},...(body?{body:JSON.stringify(body)}:{})});
  let data;try{data=await response.json();}catch{throw Error('A conexão não está disponível neste endereço. Abra a versão publicada do painel.');}
- if(!response.ok){if(response.status===401){mlConnection.connected=false;renderMlConnection('A conexão expirou. Conecte a conta novamente.');$('ml-ads-status').textContent='Conecte a conta para atualizar Ads. Os valores anteriores foram preservados.';}throw Object.assign(Error(data.message??'Não foi possível acessar o Mercado Livre agora.'),{status:response.status});}return data;
+ if(!response.ok){if(data.error==='ACCOUNT_CHANGED'){globalThis.ConduzCatalog?.disconnect();mlConnection.connected=false;renderMlConnection(data.message);}else if(response.status===401){mlConnection.connected=false;renderMlConnection('A conexão expirou. Conecte a conta novamente.');$('ml-ads-status').textContent='Conecte a conta para atualizar Ads. Os valores anteriores foram preservados.';}throw Object.assign(Error(data.message??'Não foi possível acessar o Mercado Livre agora.'),{status:response.status});}return data;
 }
 function saveProductDraftBeforeConnect(){
  if(!$('product-dialog').open)return true;
- try{const fields=Array.from($('product-form').elements).filter(el=>el.name&&['INPUT','SELECT'].includes(el.tagName)).map(el=>({name:el.name,value:el.type==='checkbox'?el.checked:el.value}));sessionStorage.setItem('conduz.mlProductDraft',JSON.stringify({editing,fields,linked:mlLinkedDraft}));return true;}
+ try{const fields=Array.from($('product-form').elements).filter(el=>el.name&&['INPUT','SELECT'].includes(el.tagName)).map(el=>({name:el.name,value:el.type==='checkbox'?el.checked:el.value}));sessionStorage.setItem('conduz.mlProductDraft.'+(activeCatalogAccount??'unassigned'),JSON.stringify({catalogKey:KEY,editing,fields,linked:mlLinkedDraft}));return true;}
  catch{$('ml-product-status').textContent='Não foi possível guardar o formulário temporariamente. Salve o produto antes de conectar.';return false;}
 }
 async function connectMercadoLivre(){
@@ -1262,15 +1283,47 @@ $('ml-disconnect').onclick=async()=>{try{await mlRequest('disconnect',{method:'P
 $('ml-find-item').onclick=()=>importMlItem($('ml-item-query').value.trim());
 $('ml-unlink').onclick=()=>{mlLookupVersion++;mlLinkedDraft=null;mlPricingDraft=null;mlPricingVersion++;mlShippingVersion++;$('ml-auto-fees').checked=false;renderAutomaticShipping();renderAutoPricing();$('ml-item-query').value='';renderMlLink();$('ml-product-status').textContent='Vínculo removido do formulário. Salve o produto para confirmar.';};
 let mlInitializationBusy=false,mlInitializationRetry=false;
+function activateAccountCatalog(accountId,legacyId){
+ const sellerId=String(accountId);accountCatalogKey(sellerId);
+ if(validCatalogAccount(legacyId))legacyCatalogAccount=legacyId;
+ if(activeCatalogAccount===sellerId)return false;
+ const plan=planAccountCatalog(state,sellerId,activeCatalogAccount,legacyCatalogAccount,key=>localStorage.getItem(key));
+ if(plan.changed&&(['product-dialog','restore-dialog','import-dialog','ads-reconcile-dialog','delete-dialog','kit-delete-dialog','ml-picker-dialog','cloud-review-dialog'].some(id=>$(id).open)||kitEditing||kitItems.size))throw Error('Conclua ou cancele a edição em andamento e recarregue a página para trocar de empresa. Seus dados foram preservados.');
+ // Grava todas as cópias antes de trocar a chave usada por persist() e pela sincronização.
+ for(const [key,value] of plan.writes)localStorage.setItem(key,value);
+ localStorage.setItem(ACTIVE_CATALOG_ACCOUNT,sellerId);
+ KEY=plan.key;activeCatalogAccount=sellerId;state=plan.data;
+ if(plan.changed){
+  mlLookupVersion++;mlAdsEpoch++;mlPricingVersion++;mlShippingVersion++;resetMlCatalog(sellerId);
+  importReadVersion++;restoreReadVersion++;
+  editing=null;deleting=null;sort={key:'name',direction:1};$('search').value='';
+  adsHistoryUi.epoch++;adsUi.advertisers=[];adsUi.selectedAdvertiser=null;adsUi.accountError='';adsUi.budgetTouched=false;adsUi.reconcileProduct=null;adsUi.reconcileBasis=null;
+  $('ads-history-query').value='';$('ads-saved-report').value='';resetKitEditor();
+ }
+ storageProblem='';render();return plan.changed;
+}
+function restoreProductDraftAfterConnect(){
+ try{
+  const key=['conduz.mlProductDraft.'+(activeCatalogAccount??'unassigned'),'conduz.mlProductDraft.unassigned','conduz.mlProductDraft'].find(key=>sessionStorage.getItem(key)!==null);
+  if(!key)return;const raw=sessionStorage.getItem(key);
+  const draft=JSON.parse(raw),draftKey=draft.catalogKey??LEGACY_CATALOG_KEY;
+  if(draftKey!==KEY&&!(draftKey===LEGACY_CATALOG_KEY&&activeCatalogAccount===legacyCatalogAccount)){toast('O formulário anterior pertence a outra empresa e foi mantido separado.');return;}
+  const product=draft.editing?state.products.find(p=>p.id===draft.editing):null;
+  if(draft.editing&&!product)return;
+  openProduct(product);for(const field of draft.fields??[])for(const name of field.name==='ads'?['adsMl','adsShopee']:[field.name]){const input=$('product-form').elements[name];if(input&&['INPUT','SELECT'].includes(input.tagName)){if(input.type==='checkbox')input.checked=Boolean(field.value);else input.value=String(field.value);}}
+  renderAdsRoas();if(validMlLink(draft.linked)&&String(draft.linked.sellerId)===activeCatalogAccount){mlLinkedDraft=copyMlLink(draft.linked);renderMlLink();}
+  sessionStorage.removeItem(key);
+ }catch{}
+}
 async function initializeMercadoLivre(){
  if(!['https:','http:'].includes(globalThis.location?.protocol)){renderMlConnection('Para conectar o Mercado Livre, abra o painel no endereço publicado. O cadastro manual funciona neste arquivo.');return;}
  if(mlInitializationBusy)return;
  const query=new URL(location.href).searchParams,callback=query.get('ml');
- if(callback){try{const raw=sessionStorage.getItem('conduz.mlProductDraft');sessionStorage.removeItem('conduz.mlProductDraft');if(raw){const draft=JSON.parse(raw),product=draft.editing?state.products.find(p=>p.id===draft.editing):null;if(!draft.editing||product){openProduct(product);for(const field of draft.fields??[])for(const name of field.name==='ads'?['adsMl','adsShopee']:[field.name]){const input=$('product-form').elements[name];if(input&&['INPUT','SELECT'].includes(input.tagName)){if(input.type==='checkbox')input.checked=Boolean(field.value);else input.value=String(field.value);}}renderAdsRoas();if(validMlLink(draft.linked)){mlLinkedDraft=copyMlLink(draft.linked);renderMlLink();}}}}catch{}
+ if(callback){
   const clean=new URL(location.href);clean.searchParams.delete('ml');history.replaceState(null,'',clean.href);
  }
  mlInitializationBusy=true;
- try{mlConnection=await mlRequest('status');mlInitializationRetry=false;await globalThis.ConduzCatalog?.connect(mlConnection);renderMlConnection(callback==='error'?'A autorização não foi concluída. Tente conectar novamente.':undefined);if(mlConnection.connected){$('ml-product-status').textContent='Conta conectada. Busque o anúncio ou escolha do catálogo.';if(!kitEditing&&!kitItems.size)$('kit-auto-fees').checked=true;renderKitPreview();await refreshRegisteredPrices();await refreshRegisteredAds();}}
+ try{mlConnection=await mlRequest('status');mlInitializationRetry=false;await globalThis.ConduzCatalog?.connect(mlConnection);renderMlConnection(callback==='error'?'A autorização não foi concluída. Tente conectar novamente.':undefined);if(callback&&mlConnection.connected)restoreProductDraftAfterConnect();if(mlConnection.connected){$('ml-product-status').textContent='Conta conectada. Busque o anúncio ou escolha do catálogo.';if(!kitEditing&&!kitItems.size)$('kit-auto-fees').checked=true;renderKitPreview();await refreshRegisteredPrices();await refreshRegisteredAds();}}
  catch(error){mlInitializationRetry=!error.status||error.status>=500;renderMlConnection(error.name==='TypeError'?'Sem conexão no momento. Os cadastros locais foram mantidos; tentaremos novamente quando a conexão voltar.':error.message);}
  finally{mlInitializationBusy=false;}
 }

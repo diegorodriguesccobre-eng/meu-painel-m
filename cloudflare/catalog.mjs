@@ -10,6 +10,11 @@ const fail = message => { throw Object.assign(new Error(message), { catalogValid
 const object = x => x !== null && typeof x === 'object' && !Array.isArray(x);
 const number = (x, min = 0, max = 1e12) => typeof x === 'number' && Number.isFinite(x) && x >= min && x <= max;
 const text = (x, max = 200) => typeof x === 'string' && x.trim().length > 0 && x.length <= max;
+export function catalogAccounts(env) {
+  const values = env.CATALOG_SELLER_IDS === undefined ? [env.CATALOG_SELLER_ID] : String(env.CATALOG_SELLER_IDS).split(',').map(x => x.trim());
+  if (!values.length || values.some(id => !/^[1-9]\d{0,15}$/.test(id ?? ''))) return new Set();
+  return new Set(values);
+}
 async function readBody(request) {
   const reader = request.body?.getReader();
   if (!reader) return '';
@@ -106,8 +111,9 @@ export function validateCatalog(data, sellerId) {
 export function createCatalogHandler({ env, now = Date.now }) {
   return async request => {
     const path = new URL(request.url).pathname;
-    const configured = Boolean(env.CATALOG_DB && /^\d{1,16}$/.test(env.CATALOG_SELLER_ID ?? ''));
-    if (path === '/api/catalog/status' && request.method === 'GET') return json({ configured, schemaVersion: 2 });
+    const accounts = catalogAccounts(env), multipleAccounts = env.CATALOG_SELLER_IDS !== undefined;
+    const configured = Boolean(env.CATALOG_DB && accounts.size);
+    if (path === '/api/catalog/status' && request.method === 'GET') return json({ configured, schemaVersion: 3, legacySellerId: accounts.has(env.CATALOG_SELLER_ID) ? env.CATALOG_SELLER_ID : null });
     if (path !== '/api/catalog') return json({ error: 'NOT_FOUND' }, 404);
     if (!['GET', 'PUT'].includes(request.method)) return json({ error: 'METHOD_NOT_ALLOWED' }, 405, { Allow: 'GET, PUT' });
     if (!configured) return json({ error: 'NOT_CONFIGURED', message: 'O catálogo compartilhado ainda precisa ser configurado.' }, 503);
@@ -123,7 +129,10 @@ export function createCatalogHandler({ env, now = Date.now }) {
     const identity = await status.json();
     if (!identity.connected) return json({ error: 'CONNECT_REQUIRED', message: 'Conecte a conta da empresa no Mercado Livre para acessar o catálogo.' }, 401);
     const sellerId = String(identity.account.id);
-    if (sellerId !== env.CATALOG_SELLER_ID) return json({ error: 'ACCOUNT_FORBIDDEN', message: 'Esta conta do Mercado Livre não tem acesso ao catálogo da empresa.' }, 403);
+    if (!accounts.has(sellerId)) return json({ error: 'ACCOUNT_FORBIDDEN', message: 'Esta conta do Mercado Livre ainda não foi liberada para o catálogo compartilhado.' }, 403);
+    const expectedAccount = request.headers.get('x-conduz-catalog-account');
+    if (multipleAccounts && !expectedAccount) return json({ error: 'CLIENT_UPDATE_REQUIRED', message: 'Atualize a página para usar o catálogo separado de cada empresa. Os dados foram preservados.' }, 426);
+    if (expectedAccount && expectedAccount !== sellerId) return json({ error: 'ACCOUNT_CHANGED', message: 'A conta do Mercado Livre mudou em outra aba. Recarregue a página para abrir o catálogo correto; sua cópia local foi preservada.' }, 409);
     const db = env.CATALOG_DB.withSession ? env.CATALOG_DB.withSession('first-primary') : env.CATALOG_DB;
     try {
       if (request.method === 'GET') {
@@ -144,7 +153,7 @@ export function createCatalogHandler({ env, now = Date.now }) {
       const raw = await readBody(request);
       let body;
       try { body = JSON.parse(raw); } catch { return json({ message: 'Conteúdo inválido.' }, 400); }
-      if (body?.schemaVersion !== 2) return json({ error: 'CLIENT_UPDATE_REQUIRED', message: 'Atualize a página para sincronizar também os relatórios e as conciliações de Ads. A cópia local foi mantida.' }, 426);
+      if (body?.schemaVersion !== 3 && (multipleAccounts || body?.schemaVersion !== 2)) return json({ error: 'CLIENT_UPDATE_REQUIRED', message: 'Atualize a página para sincronizar o catálogo e os dados de Ads da conta correta. A cópia local foi mantida.' }, 426);
       if (!Number.isSafeInteger(body?.revision) || body.revision < 0 || !/^[a-f0-9-]{36}$/.test(body.mutationId ?? '')) fail('Versão de gravação inválida.');
       validateCatalog(body.data, sellerId);
       const content = JSON.stringify(body.data), digest = createHash('sha256').update(content).digest('hex');

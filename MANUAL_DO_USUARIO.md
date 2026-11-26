@@ -1,7 +1,7 @@
 # Manual do usuário — Conduz Cobre
 
 **Painel de precificação, kits e Gestão de Ads**  
-Edição de **25/11/2026**, baseada nas funções disponíveis nesta versão.
+Edição de **26/11/2026**, baseada nas funções disponíveis nesta versão.
 
 [Abrir o painel](https://precificacaoconduz.conduz-cobre.workers.dev/) · [Página do projeto](README.md)
 
@@ -11,6 +11,7 @@ O painel ajuda a definir preços no Mercado Livre e na Shopee, comparar o lucro 
 
 - [1. Começar e cuidar dos dados](#comecar)
   - [Acessar o catálogo compartilhado](#catalogo-compartilhado)
+  - [Trocar de empresa com catálogos separados](#empresas-separadas)
   - [Entender os avisos de sincronização](#sincronizacao)
   - [Resolver conflitos de edição](#conflitos)
 - [2. Conhecer as telas](#telas)
@@ -75,6 +76,36 @@ O indicador **Salvo neste navegador** confirma a gravação local. Com o catálo
 O painel usa a conexão existente com o Mercado Livre, sem uma senha própria. Cada navegador precisa ter uma sessão válida da conta autorizada. Esta versão não possui convites por e-mail, perfis individuais ou permissões diferentes por funcionário, nem identifica qual pessoa fez cada edição.
 
 **Navegador sem cadastros locais:** carrega a base compartilhada ao conectar. **Navegador que já tem produtos, kits ou dados de Ads:** pode pedir uma primeira associação antes de enviar ou substituir esses dados.
+
+<a id="empresas-separadas"></a>
+
+### Trocar de empresa com catálogos separados
+
+Empresas autorizadas, como **Conduz Cobre** e **Conduz Energia**, usam o mesmo endereço
+com seus próprios produtos, kits, taxas, relatórios e conciliações de Ads. Cada
+funcionário conecta a conta do Mercado Livre da empresa em que vai trabalhar.
+
+1. Conclua ou cancele formulários abertos e aguarde a confirmação de sincronização
+   da empresa atual.
+2. Em **Conexão com o Mercado Livre**, use **Desconectar** para encerrar a conexão
+   deste navegador. As cópias dos catálogos permanecem guardadas.
+3. Clique em **Conectar Mercado Livre** e entre com a conta da empresa desejada.
+   Se o Mercado Livre mostrar outra conta, troque a conta no próprio marketplace
+   e reinicie a conexão. A identificação e a autorização são feitas no Mercado Livre.
+4. Confira **Conta conectada**, o nome da empresa e o aviso em **Catálogo da empresa**
+   antes de cadastrar ou editar. Uma conta nova precisa ser liberada pelo responsável
+   pela implantação antes de acessar o catálogo compartilhado.
+
+Ao trocar de empresa, o painel carrega a cópia correspondente à conta conectada.
+A Conduz Energia começa com um catálogo próprio; conectar essa conta não transfere
+os cadastros da Conduz Cobre. Ao voltar à conta anterior, seus dados voltam a aparecer.
+O backup baixado pertence ao catálogo aberto naquele momento; confira a empresa
+antes de restaurar um arquivo.
+
+**Abas do mesmo perfil compartilham a sessão do Mercado Livre.** Se você trocar a
+conta em uma aba, as outras podem pedir para recarregar antes de sincronizar ou
+consultar anúncios. A cópia local é preservada. Para trabalhar nas duas empresas
+ao mesmo tempo, utilize perfis diferentes do navegador.
 
 ### Primeira associação de um navegador que já possui dados
 

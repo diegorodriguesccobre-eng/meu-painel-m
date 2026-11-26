@@ -66,7 +66,7 @@
   try { localStorage.setItem(KEY, JSON.stringify(state)); localProblem = false; return true; }
   catch { localProblem = true; return false; }
  }
- function valid(data) { return data && validState({ ...state, ...data }); }
+ function valid(data) { return data && validState({ ...state, ...data }) && (typeof catalogOwners !== 'function' || [...catalogOwners(data)].every(id => id === seller)); }
  function apply(data) {
   if (!valid(data)) throw Error('O catálogo contém uma combinação inválida de produtos e kits. Confira as dependências antes de combinar.');
   const incoming = normalize(copy(data)), previousHistory = state.adsHistory, previousAccount = state.adsAccount, localArchives = collectAdsArchives(state);
@@ -82,18 +82,18 @@
   const preferredAdvertiser = (typeof adsUi !== 'undefined' ? adsUi?.selectedAdvertiser : null) ?? previousAccount?.advertiserId, currentPeriod = adsCurrentPeriod();
   const account = accounts.find(a => (!preferredAdvertiser || a.advertiserId === preferredAdvertiser) && a.dateFrom === currentPeriod.dateFrom && a.dateTo === currentPeriod.dateTo) ?? accounts.find(a => previousAccount && adsAccountKey(a) === adsAccountKey(previousAccount)) ?? accounts[0];
   if (account) state.adsAccount = copyAdsAccount(account);
-  localWrite(); render();
+  if (localWrite() && typeof storageProblem !== 'undefined') storageProblem = ''; render();
  }
  function editingDraft() { return Boolean(ui('product-dialog').open || ui('restore-dialog').open || ui('import-dialog').open || ui('ads-reconcile-dialog').open || kitEditing || kitItems.size || (typeof adsHistoryUi !== 'undefined' && adsHistoryUi?.busy) || (typeof adsUi !== 'undefined' && adsUi?.busy)); }
  async function request(method = 'GET', body, revision) {
   const response = await fetch('/api/catalog', {
    method, credentials: 'same-origin', cache: 'no-store',
-   headers: { ...(method === 'PUT' ? { 'Content-Type': 'application/json', 'X-Conduz-Action': 'catalog' } : {}), ...(revision > 0 ? { 'If-None-Match': '"' + revision + '"' } : {}) },
+   headers: { 'X-Conduz-Catalog-Account': seller, ...(method === 'PUT' ? { 'Content-Type': 'application/json', 'X-Conduz-Action': 'catalog' } : {}), ...(revision > 0 ? { 'If-None-Match': '"' + revision + '"' } : {}) },
    ...(body ? { body: JSON.stringify(body) } : {}), signal: AbortSignal.timeout(30000)
   });
   if (response.status === 304) return null;
   const value = await response.json();
-  if (!response.ok) throw Object.assign(new Error(value.message || 'Não foi possível sincronizar o catálogo.'), { status: response.status });
+  if (!response.ok) throw Object.assign(new Error(value.message || 'Não foi possível sincronizar o catálogo.'), { status: response.status, code: value.error });
   if (method === 'GET' && (value.data !== null && !valid(value.data) || !Number.isSafeInteger(value.revision) || value.revision < 0)) throw Error('O catálogo compartilhado retornou dados incompatíveis. A cópia local foi preservada.');
   if (method === 'GET' && value.data) value.data = normalize(value.data);
   return value;
@@ -141,7 +141,7 @@
     apply(combined.data); meta = { revision: result.revision, base: copy(remote) }; saveMeta(); status('Catálogo sincronizado com a empresa.'); return;
    }
    const beforeWrite = snapshot();
-   const saved = await request('PUT', { schemaVersion: 2, revision: result.revision, mutationId: crypto.randomUUID(), data: combined.data });
+   const saved = await request('PUT', { schemaVersion: 3, revision: result.revision, mutationId: crypto.randomUUID(), data: combined.data });
    if (account !== seller || generation !== epoch) return;
    meta = { revision: saved.revision, base: copy(combined.data) }; saveMeta();
    // Não substitui edições feitas enquanto a gravação estava em andamento.
@@ -152,7 +152,7 @@
    status(pending ? 'Primeira gravação confirmada; salvando as alterações seguintes…' : 'Catálogo sincronizado com a empresa.', pending);
   } catch (error) {
    if (account !== seller || generation !== epoch) return;
-   if (error.status === 401 || error.status === 403) { phase = 'off'; status(error.message + ' A cópia local foi mantida.', true); }
+   if (error.status === 401 || error.status === 403 || error.status === 426 || error.code === 'ACCOUNT_CHANGED') { phase = 'off'; retryConnection = null; status(error.message + ' A cópia local foi mantida.', true); }
    else status(error.status === 409 ? 'Outro funcionário salvou uma alteração. Vamos conferir a nova versão.' : error.message + ' Alterações locais aguardam nova tentativa.', true);
   } finally {
    if (activeSync === task) busy = false;
@@ -173,11 +173,15 @@
    const configuration = await response.json();
    if (generation !== epoch) return;
    if (!configuration?.configured) { retryConnection = null; status('Catálogo compartilhado aguardando configuração. Seus dados continuam salvos neste navegador.'); return; }
+   if (typeof activateAccountCatalog === 'function') {
+    try { activateAccountCatalog(connection.account.id, configuration.legacySellerId); }
+    catch (error) { error.accountStorage = true; throw error; }
+   }
    seller = String(connection.account.id); const account = seller;
    const result = await request();
    if (seller !== account || generation !== epoch) return;
    let cached, localSourceValid = false;
-   try { cached = JSON.parse(localStorage.getItem(cacheKey())); localSourceValid = validState(JSON.parse(localStorage.getItem(KEY))); } catch {}
+   try { cached = JSON.parse(localStorage.getItem(cacheKey())); localSourceValid = !(typeof storageProblem !== 'undefined' && storageProblem) && valid(JSON.parse(localStorage.getItem(KEY))); } catch {}
    // Uma cópia local ausente ou corrompida não representa exclusão de toda a empresa.
    if (localSourceValid && cached && Number.isSafeInteger(cached.revision) && cached.revision <= result.revision && valid(cached.base)) {
     meta = { ...cached, base: normalize(cached.base) }; phase = 'ready'; await sync(); return;
@@ -190,10 +194,11 @@
    apply(remote); meta = { revision: result.revision, base: copy(remote) }; saveMeta(); phase = 'ready'; status('Catálogo compartilhado carregado.');
   } catch (error) {
    if (generation === epoch) {
-    const retryable = !error.status || error.status >= 500;
+    const retryable = !error.accountStorage && (!error.status || error.status >= 500);
     phase = retryable ? 'retry' : 'off'; if (!retryable) retryConnection = null;
     status((error.name === 'TypeError' ? 'Não foi possível acessar o catálogo da empresa.' : error.message) + ' A cópia local foi mantida.' + (retryable ? ' Vamos tentar novamente quando a conexão voltar; você também pode clicar em Sincronizar agora.' : ''), retryable);
    }
+   if (error.accountStorage) throw error;
   }
  }
  function confirmReview(remoteOnly = false) {

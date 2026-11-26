@@ -1,6 +1,11 @@
 # Conduz Cobre — Painel de precificação
 
 Painel da Conduz Cobre, em português, para precificar produtos e kits no Mercado Livre e na Shopee.
+
+Contas autorizadas de empresas diferentes podem usar o mesmo endereço com catálogos
+separados. Produtos, kits, taxas, relatórios e conciliações de Ads são isolados por
+conta do Mercado Livre, inclusive na cópia local do navegador. Veja a
+[configuração de acesso por empresa](CONFIGURAR_CATALOGO.md).
 Funciona no computador e no celular, sem cadastro de usuário do painel, com cópia no navegador
 e catálogo compartilhado opcional no Cloudflare D1, protegido pela conexão com o Mercado Livre.
 O uso manual funciona localmente; as consultas opcionais ao Mercado Livre usam a integração hospedada.

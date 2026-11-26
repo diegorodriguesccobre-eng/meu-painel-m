@@ -130,3 +130,58 @@ test('recusa outra conta nos relatórios, nas métricas internas e nas concilia�
  for(const extra of cases)assert.equal((await worker.fetch(request('PUT',write({...catalog(),...extra})),env)).status,400);
  assert.equal((await (await worker.fetch(request(),env)).json()).revision,0);
 });
+
+test('duas empresas autorizadas têm catálogos, kits, Ads e revisões independentes no mesmo banco', async t => {
+ const { createWorker } = await load, worker = createWorker(), { env } = setup(t);
+ env.CATALOG_SELLER_IDS = '123,456';
+ const headers = id => ({ Cookie: session(id), 'X-Conduz-Catalog-Account': String(id) });
+ const a = catalog(), b = catalog();
+ a.products[0].name = 'Cobre'; b.products[0].name = 'Energia'; b.products[0].cost = 28;
+ for (const [id, data] of [[123, a], [456, b]]) {
+  data.kits = [{ id: 'kit', name: 'Kit ' + data.products[0].name, margin: 20, extra: 0, items: [{ productId: 'p1', quantity: 2 }] }];
+  data.adsReports = [report({ sellerId: id })]; data.adsAccounts = [account({ sellerId: id })];
+  data.adsReconciliations = [reconciliation(undefined, { sellerId: id })];
+  const body = { ...write(data), schemaVersion: 3 };
+  assert.equal((await worker.fetch(request('PUT', body, headers(id)), env)).status, 200);
+ }
+ for (const [id, data] of [[123, a], [456, b]]) {
+  const result = await (await worker.fetch(request('GET', null, headers(id)), env)).json();
+  assert.equal(result.revision, 1); assert.deepEqual(result.data, data);
+ }
+ b.products[0].cost = 30;
+ assert.equal((await worker.fetch(request('PUT', { ...write(b, 1), schemaVersion: 3 }, headers(456)), env)).status, 200);
+ const unchanged = await (await worker.fetch(request('GET', null, headers(123)), env)).json();
+ assert.equal(unchanged.revision, 1); assert.deepEqual(unchanged.data, a);
+ const forged = await worker.fetch(request('GET', null, { ...headers(123), 'X-Conduz-Catalog-Account': '456' }), env);
+ assert.equal(forged.status, 409); assert.equal((await forged.json()).error, 'ACCOUNT_CHANGED');
+ assert.equal((await worker.fetch(request('GET', null, headers(789)), env)).status, 403);
+});
+
+test('abas antigas e uma sessão trocada não gravam nem leem o catálogo de outra empresa', async t => {
+ const { createWorker } = await load, worker = createWorker(), { env } = setup(t); env.CATALOG_SELLER_IDS = '123,456';
+ const headers = { Cookie: session(456), 'X-Conduz-Catalog-Account': '456' };
+ assert.equal((await worker.fetch(request('GET', null, { Cookie: session(456) }), env)).status, 426);
+ assert.equal((await worker.fetch(request('PUT', write(), headers), env)).status, 426);
+ const stale = { ...headers, 'X-Conduz-Catalog-Account': '123' };
+ assert.equal((await worker.fetch(request('PUT', { ...write(), schemaVersion: 3 }, stale), env)).status, 409);
+ const foreign = { ...catalog(), adsReports: [report({ sellerId: 123 })] };
+ assert.equal((await worker.fetch(request('PUT', { ...write(foreign), schemaVersion: 3 }, headers), env)).status, 400);
+ assert.equal((await (await worker.fetch(request('GET', null, headers), env)).json()).revision, 0);
+ const configuration = await (await worker.fetch(new Request(origin + '/api/catalog/status'), env)).json();
+ assert.equal(configuration.schemaVersion, 3); assert.equal(configuration.legacySellerId, '123');
+ for (const value of ['', '123,outro', '0', '123,,456']) {
+  assert.equal((await worker.fetch(request(), { ...env, CATALOG_SELLER_IDS: value })).status, 503);
+ }
+});
+
+test('consultas do Mercado Livre e desconexão recusam a identidade de uma aba antiga antes de chamar a API', async t => {
+ const { createWorker } = await load, { env } = setup(t); let calls = 0;
+ const worker = createWorker({ fetchImpl: async () => { calls++; throw Error('Não deve consultar'); } });
+ const headers = { Cookie: session(456), 'X-Conduz-Account': '123', Origin: origin, 'X-Conduz-Action': 'mercadolivre' };
+ const items = await worker.fetch(new Request(origin + '/api/ml/items', { headers }), env);
+ assert.equal(items.status, 409); assert.equal((await items.json()).error, 'ACCOUNT_CHANGED');
+ const disconnect = await worker.fetch(new Request(origin + '/api/ml/disconnect', { method: 'POST', headers }), env);
+ assert.equal(disconnect.status, 409); assert.equal(disconnect.headers.get('Set-Cookie'), null); assert.equal(calls, 0);
+ const status = await (await worker.fetch(new Request(origin + '/api/ml/status', { headers }), env)).json();
+ assert.equal(status.account.id, 456);
+});

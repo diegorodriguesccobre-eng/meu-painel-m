@@ -107,6 +107,8 @@ export function createHandler({env=process.env,fetchImpl=globalThis.fetch,now=Da
   if(action==='disconnect'){
    if(req.method!=='POST')return json({error:'METHOD_NOT_ALLOWED'},405);
    if(!sameOrigin())return json({error:'INVALID_ORIGIN'},403);
+   const s=session(req,cfg),expected=req.headers.get('x-conduz-account');
+   if(s&&expected&&expected!==String(s.userId))return json({error:'ACCOUNT_CHANGED',message:'A conta do Mercado Livre mudou em outra aba. Recarregue o painel antes de continuar.'},409);
    return json({connected:false},200,{'Set-Cookie':cookie(SESSION,'',0)});
   }
   if(!['items','item','pricing','shipping','categories','kit-pricing','ads','ads-account','ads-history','sales'].includes(action))return json({error:'NOT_FOUND'},404);
@@ -114,6 +116,8 @@ export function createHandler({env=process.env,fetchImpl=globalThis.fetch,now=Da
   if(['pricing','kit-pricing','ads','ads-account','ads-history'].includes(action)&&!sameOrigin())return json({error:'INVALID_ORIGIN'},403);
   if(req.headers.get('origin')&&req.headers.get('origin')!==cfg.origin)return json({error:'INVALID_ORIGIN'},403);
   const s=session(req,cfg);if(!s)return json({error:'CONNECT_REQUIRED',message:'Conecte sua conta do Mercado Livre para consultar os anúncios.'},401);
+  const expectedAccount=req.headers.get('x-conduz-account');
+  if(expectedAccount&&expectedAccount!==String(s.userId))return json({error:'ACCOUNT_CHANGED',message:'A conta do Mercado Livre mudou em outra aba. Recarregue o painel para consultar a empresa correta.'},409);
   try{
    if(action==='pricing'||action==='kit-pricing'||action==='ads'||action==='ads-account'||action==='ads-history'){
     if(Number(req.headers.get('content-length'))>4096)return json({message:'Consulta muito grande.'},413);

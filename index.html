@@ -371,7 +371,27 @@ Camiseta básica;25,00;0,200</pre><label>Arquivo CSV (até 2 MB e 5.000 produtos
 <dialog id="cloud-review-dialog" class="compact-dialog" aria-labelledby="cloud-review-title"><form id="cloud-review-form"><div class="section-head"><h2 id="cloud-review-title">Catálogo compartilhado</h2><button type="button" class="btn quiet" id="cloud-review-close" aria-label="Fechar">Fechar</button></div><p id="cloud-review-intro"></p><div id="cloud-review-options"></div><p class="error" id="cloud-review-error" role="alert"></p><p>Antes de aplicar a escolha, uma cópia anterior será preservada neste navegador. Relatórios e conciliações de Ads também serão compartilhados com a empresa.</p><div class="actions"><button type="button" class="btn quiet" id="cloud-use-remote">Usar somente o catálogo da empresa</button><button type="submit" class="btn primary" id="cloud-apply-merge">Combinar e sincronizar</button></div></form></dialog>
 <script>
 'use strict';
-const KEY='margem.painel.v1';
+const LEGACY_CATALOG_KEY='margem.painel.v1',ACTIVE_CATALOG_ACCOUNT='conduz.catalog.active-account.v1';
+let KEY=LEGACY_CATALOG_KEY,activeCatalogAccount=null,legacyCatalogAccount=null;
+const validCatalogAccount=id=>typeof id==='string'&&/^[1-9]\d{0,15}$/.test(id);
+function accountCatalogKey(id){if(!validCatalogAccount(id))throw Error('Conta do catálogo inválida.');return LEGACY_CATALOG_KEY+'.account.'+id;}
+function catalogOwners(data){
+ const ids=[...(data.products??[]).flatMap(p=>[p.mercadoLivre?.sellerId,p.mlAds?.sellerId]),...(data.adsReports??[]).map(r=>r.sellerId),...(data.adsAccounts??[]).map(r=>r.sellerId),...(data.adsReconciliations??[]).map(r=>r.sellerId),data.adsHistory?.sellerId,data.adsAccount?.sellerId];
+ return new Set(ids.filter(id=>id!==undefined&&id!==null).map(String));
+}
+function planAccountCatalog(data,sellerId,previousId,legacyId,read){
+ const key=accountCatalogKey(sellerId),owners=catalogOwners(data);
+ const previous=previousId??(validCatalogAccount(legacyId)?legacyId:owners.size===1?[...owners][0]:null);
+ if(previous&&[...owners].some(id=>id!==previous))throw Error('A cópia local contém dados de outra conta. Faça um backup e confira a associação antes de trocar de empresa.');
+ const raw=read(key);let next;
+ if(raw!==null){try{next=JSON.parse(raw);}catch{throw Error('Não foi possível ler o catálogo local desta conta. A cópia anterior foi preservada.');}if(!validState(next)||[...catalogOwners(next)].some(id=>id!==sellerId))throw Error('O catálogo local não corresponde à conta conectada. A cópia anterior foi preservada.');next=preserveCatalogFees(next);}
+ else next=previous===sellerId?preserveCatalogFees(data):defaults();
+ const writes=new Map();
+ if(previousId)writes.set(accountCatalogKey(previousId),JSON.stringify(data));
+ else if(previous&&read(accountCatalogKey(previous))===null)writes.set(accountCatalogKey(previous),JSON.stringify(data));
+ writes.set(key,JSON.stringify(next));
+ return {key,data:next,writes:[...writes],changed:previous!==sellerId};
+}
 const MARKETS={ml:'Mercado Livre',shopee:'Shopee'};
 const SCENARIOS={ml:'Mercado Livre Clássico',mlPremium:'Mercado Livre Premium',shopee:'Shopee'};
 // Política CNPJ verificada na Central do Vendedor em 13/11/2026. Cada cadastro guarda a versão.
@@ -848,7 +868,7 @@ function parseBackup(text){
  return backupData(backup.data);
 }
 let state=defaults(),storageProblem='',feesMigrated=false;
-try{const saved=localStorage.getItem(KEY);if(saved){const parsed=JSON.parse(saved);if(!validState(parsed))throw Error('Dados inválidos');feesMigrated=parsed.products.some(p=>p.feeSnapshot===undefined)||(parsed.kits??[]).some(k=>k.feeSnapshot===undefined);state=preserveCatalogFees(parsed);}}catch{storageProblem='Não foi possível ler os dados salvos. Esta sessão começa vazia; confira seu backup antes de salvar novos dados.';}
+try{const account=localStorage.getItem(ACTIVE_CATALOG_ACCOUNT);if(account!==null){KEY=accountCatalogKey(account);activeCatalogAccount=account;}const saved=localStorage.getItem(KEY);if(saved){const parsed=JSON.parse(saved);if(!validState(parsed))throw Error('Dados inválidos');if(activeCatalogAccount&&[...catalogOwners(parsed)].some(id=>id!==activeCatalogAccount))throw Error('Conta inválida');feesMigrated=parsed.products.some(p=>p.feeSnapshot===undefined)||(parsed.kits??[]).some(k=>k.feeSnapshot===undefined);state=preserveCatalogFees(parsed);}}catch{storageProblem='Não foi possível ler os dados salvos. Esta sessão começa vazia; confira seu backup antes de salvar novos dados.';}
 let sort={key:'name',direction:1},editing=null,deleting=null,toastTimer;
 const $=id=>document.getElementById(id);
 function setProductPane(pane){
@@ -1548,13 +1568,14 @@ async function refreshRegisteredAds(force=false){
 $('ml-refresh-ads').onclick=()=>refreshRegisteredAds(true);
 async function mlRequest(action,{query={},method='GET',body}={}){
  const params=new URLSearchParams(query),url='/api/ml/'+action+(params.size?'?'+params:'');
- const response=await fetch(url,{method,credentials:'same-origin',headers:method==='POST'?{'X-Conduz-Action':'mercadolivre',...(body?{'Content-Type':'application/json'}:{})}:{},...(body?{body:JSON.stringify(body)}:{})});
+ const owner=activeCatalogAccount??mlConnection.account?.id;
+ const response=await fetch(url,{method,credentials:'same-origin',headers:{...(method==='POST'?{'X-Conduz-Action':'mercadolivre',...(body?{'Content-Type':'application/json'}:{})}:{}),...(!['status','connect'].includes(action)&&owner?{'X-Conduz-Account':String(owner)}:{})},...(body?{body:JSON.stringify(body)}:{})});
  let data;try{data=await response.json();}catch{throw Error('A conexão não está disponível neste endereço. Abra a versão publicada do painel.');}
- if(!response.ok){if(response.status===401){mlConnection.connected=false;renderMlConnection('A conexão expirou. Conecte a conta novamente.');$('ml-ads-status').textContent='Conecte a conta para atualizar Ads. Os valores anteriores foram preservados.';}throw Object.assign(Error(data.message??'Não foi possível acessar o Mercado Livre agora.'),{status:response.status});}return data;
+ if(!response.ok){if(data.error==='ACCOUNT_CHANGED'){globalThis.ConduzCatalog?.disconnect();mlConnection.connected=false;renderMlConnection(data.message);}else if(response.status===401){mlConnection.connected=false;renderMlConnection('A conexão expirou. Conecte a conta novamente.');$('ml-ads-status').textContent='Conecte a conta para atualizar Ads. Os valores anteriores foram preservados.';}throw Object.assign(Error(data.message??'Não foi possível acessar o Mercado Livre agora.'),{status:response.status});}return data;
 }
 function saveProductDraftBeforeConnect(){
  if(!$('product-dialog').open)return true;
- try{const fields=Array.from($('product-form').elements).filter(el=>el.name&&['INPUT','SELECT'].includes(el.tagName)).map(el=>({name:el.name,value:el.type==='checkbox'?el.checked:el.value}));sessionStorage.setItem('conduz.mlProductDraft',JSON.stringify({editing,fields,linked:mlLinkedDraft}));return true;}
+ try{const fields=Array.from($('product-form').elements).filter(el=>el.name&&['INPUT','SELECT'].includes(el.tagName)).map(el=>({name:el.name,value:el.type==='checkbox'?el.checked:el.value}));sessionStorage.setItem('conduz.mlProductDraft.'+(activeCatalogAccount??'unassigned'),JSON.stringify({catalogKey:KEY,editing,fields,linked:mlLinkedDraft}));return true;}
  catch{$('ml-product-status').textContent='Não foi possível guardar o formulário temporariamente. Salve o produto antes de conectar.';return false;}
 }
 async function connectMercadoLivre(){
@@ -1633,15 +1654,47 @@ $('ml-disconnect').onclick=async()=>{try{await mlRequest('disconnect',{method:'P
 $('ml-find-item').onclick=()=>importMlItem($('ml-item-query').value.trim());
 $('ml-unlink').onclick=()=>{mlLookupVersion++;mlLinkedDraft=null;mlPricingDraft=null;mlPricingVersion++;mlShippingVersion++;$('ml-auto-fees').checked=false;renderAutomaticShipping();renderAutoPricing();$('ml-item-query').value='';renderMlLink();$('ml-product-status').textContent='Vínculo removido do formulário. Salve o produto para confirmar.';};
 let mlInitializationBusy=false,mlInitializationRetry=false;
+function activateAccountCatalog(accountId,legacyId){
+ const sellerId=String(accountId);accountCatalogKey(sellerId);
+ if(validCatalogAccount(legacyId))legacyCatalogAccount=legacyId;
+ if(activeCatalogAccount===sellerId)return false;
+ const plan=planAccountCatalog(state,sellerId,activeCatalogAccount,legacyCatalogAccount,key=>localStorage.getItem(key));
+ if(plan.changed&&(['product-dialog','restore-dialog','import-dialog','ads-reconcile-dialog','delete-dialog','kit-delete-dialog','ml-picker-dialog','cloud-review-dialog'].some(id=>$(id).open)||kitEditing||kitItems.size))throw Error('Conclua ou cancele a edição em andamento e recarregue a página para trocar de empresa. Seus dados foram preservados.');
+ // Grava todas as cópias antes de trocar a chave usada por persist() e pela sincronização.
+ for(const [key,value] of plan.writes)localStorage.setItem(key,value);
+ localStorage.setItem(ACTIVE_CATALOG_ACCOUNT,sellerId);
+ KEY=plan.key;activeCatalogAccount=sellerId;state=plan.data;
+ if(plan.changed){
+  mlLookupVersion++;mlAdsEpoch++;mlPricingVersion++;mlShippingVersion++;resetMlCatalog(sellerId);
+  importReadVersion++;restoreReadVersion++;
+  editing=null;deleting=null;sort={key:'name',direction:1};$('search').value='';
+  adsHistoryUi.epoch++;adsUi.advertisers=[];adsUi.selectedAdvertiser=null;adsUi.accountError='';adsUi.budgetTouched=false;adsUi.reconcileProduct=null;adsUi.reconcileBasis=null;
+  $('ads-history-query').value='';$('ads-saved-report').value='';resetKitEditor();
+ }
+ storageProblem='';render();return plan.changed;
+}
+function restoreProductDraftAfterConnect(){
+ try{
+  const key=['conduz.mlProductDraft.'+(activeCatalogAccount??'unassigned'),'conduz.mlProductDraft.unassigned','conduz.mlProductDraft'].find(key=>sessionStorage.getItem(key)!==null);
+  if(!key)return;const raw=sessionStorage.getItem(key);
+  const draft=JSON.parse(raw),draftKey=draft.catalogKey??LEGACY_CATALOG_KEY;
+  if(draftKey!==KEY&&!(draftKey===LEGACY_CATALOG_KEY&&activeCatalogAccount===legacyCatalogAccount)){toast('O formulário anterior pertence a outra empresa e foi mantido separado.');return;}
+  const product=draft.editing?state.products.find(p=>p.id===draft.editing):null;
+  if(draft.editing&&!product)return;
+  openProduct(product);for(const field of draft.fields??[])for(const name of field.name==='ads'?['adsMl','adsShopee']:[field.name]){const input=$('product-form').elements[name];if(input&&['INPUT','SELECT'].includes(input.tagName)){if(input.type==='checkbox')input.checked=Boolean(field.value);else input.value=String(field.value);}}
+  renderAdsRoas();if(validMlLink(draft.linked)&&String(draft.linked.sellerId)===activeCatalogAccount){mlLinkedDraft=copyMlLink(draft.linked);renderMlLink();}
+  sessionStorage.removeItem(key);
+ }catch{}
+}
 async function initializeMercadoLivre(){
  if(!['https:','http:'].includes(globalThis.location?.protocol)){renderMlConnection('Para conectar o Mercado Livre, abra o painel no endereço publicado. O cadastro manual funciona neste arquivo.');return;}
  if(mlInitializationBusy)return;
  const query=new URL(location.href).searchParams,callback=query.get('ml');
- if(callback){try{const raw=sessionStorage.getItem('conduz.mlProductDraft');sessionStorage.removeItem('conduz.mlProductDraft');if(raw){const draft=JSON.parse(raw),product=draft.editing?state.products.find(p=>p.id===draft.editing):null;if(!draft.editing||product){openProduct(product);for(const field of draft.fields??[])for(const name of field.name==='ads'?['adsMl','adsShopee']:[field.name]){const input=$('product-form').elements[name];if(input&&['INPUT','SELECT'].includes(input.tagName)){if(input.type==='checkbox')input.checked=Boolean(field.value);else input.value=String(field.value);}}renderAdsRoas();if(validMlLink(draft.linked)){mlLinkedDraft=copyMlLink(draft.linked);renderMlLink();}}}}catch{}
+ if(callback){
   const clean=new URL(location.href);clean.searchParams.delete('ml');history.replaceState(null,'',clean.href);
  }
  mlInitializationBusy=true;
- try{mlConnection=await mlRequest('status');mlInitializationRetry=false;await globalThis.ConduzCatalog?.connect(mlConnection);renderMlConnection(callback==='error'?'A autorização não foi concluída. Tente conectar novamente.':undefined);if(mlConnection.connected){$('ml-product-status').textContent='Conta conectada. Busque o anúncio ou escolha do catálogo.';if(!kitEditing&&!kitItems.size)$('kit-auto-fees').checked=true;renderKitPreview();await refreshRegisteredPrices();await refreshRegisteredAds();}}
+ try{mlConnection=await mlRequest('status');mlInitializationRetry=false;await globalThis.ConduzCatalog?.connect(mlConnection);renderMlConnection(callback==='error'?'A autorização não foi concluída. Tente conectar novamente.':undefined);if(callback&&mlConnection.connected)restoreProductDraftAfterConnect();if(mlConnection.connected){$('ml-product-status').textContent='Conta conectada. Busque o anúncio ou escolha do catálogo.';if(!kitEditing&&!kitItems.size)$('kit-auto-fees').checked=true;renderKitPreview();await refreshRegisteredPrices();await refreshRegisteredAds();}}
  catch(error){mlInitializationRetry=!error.status||error.status>=500;renderMlConnection(error.name==='TypeError'?'Sem conexão no momento. Os cadastros locais foram mantidos; tentaremos novamente quando a conexão voltar.':error.message);}
  finally{mlInitializationBusy=false;}
 }
@@ -1716,7 +1769,7 @@ resetKitEditor();showScreen('products');render();if(feesMigrated)persist();if(st
   try { localStorage.setItem(KEY, JSON.stringify(state)); localProblem = false; return true; }
   catch { localProblem = true; return false; }
  }
- function valid(data) { return data && validState({ ...state, ...data }); }
+ function valid(data) { return data && validState({ ...state, ...data }) && (typeof catalogOwners !== 'function' || [...catalogOwners(data)].every(id => id === seller)); }
  function apply(data) {
   if (!valid(data)) throw Error('O catálogo contém uma combinação inválida de produtos e kits. Confira as dependências antes de combinar.');
   const incoming = normalize(copy(data)), previousHistory = state.adsHistory, previousAccount = state.adsAccount, localArchives = collectAdsArchives(state);
@@ -1732,18 +1785,18 @@ resetKitEditor();showScreen('products');render();if(feesMigrated)persist();if(st
   const preferredAdvertiser = (typeof adsUi !== 'undefined' ? adsUi?.selectedAdvertiser : null) ?? previousAccount?.advertiserId, currentPeriod = adsCurrentPeriod();
   const account = accounts.find(a => (!preferredAdvertiser || a.advertiserId === preferredAdvertiser) && a.dateFrom === currentPeriod.dateFrom && a.dateTo === currentPeriod.dateTo) ?? accounts.find(a => previousAccount && adsAccountKey(a) === adsAccountKey(previousAccount)) ?? accounts[0];
   if (account) state.adsAccount = copyAdsAccount(account);
-  localWrite(); render();
+  if (localWrite() && typeof storageProblem !== 'undefined') storageProblem = ''; render();
  }
  function editingDraft() { return Boolean(ui('product-dialog').open || ui('restore-dialog').open || ui('import-dialog').open || ui('ads-reconcile-dialog').open || kitEditing || kitItems.size || (typeof adsHistoryUi !== 'undefined' && adsHistoryUi?.busy) || (typeof adsUi !== 'undefined' && adsUi?.busy)); }
  async function request(method = 'GET', body, revision) {
   const response = await fetch('/api/catalog', {
    method, credentials: 'same-origin', cache: 'no-store',
-   headers: { ...(method === 'PUT' ? { 'Content-Type': 'application/json', 'X-Conduz-Action': 'catalog' } : {}), ...(revision > 0 ? { 'If-None-Match': '"' + revision + '"' } : {}) },
+   headers: { 'X-Conduz-Catalog-Account': seller, ...(method === 'PUT' ? { 'Content-Type': 'application/json', 'X-Conduz-Action': 'catalog' } : {}), ...(revision > 0 ? { 'If-None-Match': '"' + revision + '"' } : {}) },
    ...(body ? { body: JSON.stringify(body) } : {}), signal: AbortSignal.timeout(30000)
   });
   if (response.status === 304) return null;
   const value = await response.json();
-  if (!response.ok) throw Object.assign(new Error(value.message || 'Não foi possível sincronizar o catálogo.'), { status: response.status });
+  if (!response.ok) throw Object.assign(new Error(value.message || 'Não foi possível sincronizar o catálogo.'), { status: response.status, code: value.error });
   if (method === 'GET' && (value.data !== null && !valid(value.data) || !Number.isSafeInteger(value.revision) || value.revision < 0)) throw Error('O catálogo compartilhado retornou dados incompatíveis. A cópia local foi preservada.');
   if (method === 'GET' && value.data) value.data = normalize(value.data);
   return value;
@@ -1791,7 +1844,7 @@ resetKitEditor();showScreen('products');render();if(feesMigrated)persist();if(st
     apply(combined.data); meta = { revision: result.revision, base: copy(remote) }; saveMeta(); status('Catálogo sincronizado com a empresa.'); return;
    }
    const beforeWrite = snapshot();
-   const saved = await request('PUT', { schemaVersion: 2, revision: result.revision, mutationId: crypto.randomUUID(), data: combined.data });
+   const saved = await request('PUT', { schemaVersion: 3, revision: result.revision, mutationId: crypto.randomUUID(), data: combined.data });
    if (account !== seller || generation !== epoch) return;
    meta = { revision: saved.revision, base: copy(combined.data) }; saveMeta();
    // Não substitui edições feitas enquanto a gravação estava em andamento.
@@ -1802,7 +1855,7 @@ resetKitEditor();showScreen('products');render();if(feesMigrated)persist();if(st
    status(pending ? 'Primeira gravação confirmada; salvando as alterações seguintes…' : 'Catálogo sincronizado com a empresa.', pending);
   } catch (error) {
    if (account !== seller || generation !== epoch) return;
-   if (error.status === 401 || error.status === 403) { phase = 'off'; status(error.message + ' A cópia local foi mantida.', true); }
+   if (error.status === 401 || error.status === 403 || error.status === 426 || error.code === 'ACCOUNT_CHANGED') { phase = 'off'; retryConnection = null; status(error.message + ' A cópia local foi mantida.', true); }
    else status(error.status === 409 ? 'Outro funcionário salvou uma alteração. Vamos conferir a nova versão.' : error.message + ' Alterações locais aguardam nova tentativa.', true);
   } finally {
    if (activeSync === task) busy = false;
@@ -1823,11 +1876,15 @@ resetKitEditor();showScreen('products');render();if(feesMigrated)persist();if(st
    const configuration = await response.json();
    if (generation !== epoch) return;
    if (!configuration?.configured) { retryConnection = null; status('Catálogo compartilhado aguardando configuração. Seus dados continuam salvos neste navegador.'); return; }
+   if (typeof activateAccountCatalog === 'function') {
+    try { activateAccountCatalog(connection.account.id, configuration.legacySellerId); }
+    catch (error) { error.accountStorage = true; throw error; }
+   }
    seller = String(connection.account.id); const account = seller;
    const result = await request();
    if (seller !== account || generation !== epoch) return;
    let cached, localSourceValid = false;
-   try { cached = JSON.parse(localStorage.getItem(cacheKey())); localSourceValid = validState(JSON.parse(localStorage.getItem(KEY))); } catch {}
+   try { cached = JSON.parse(localStorage.getItem(cacheKey())); localSourceValid = !(typeof storageProblem !== 'undefined' && storageProblem) && valid(JSON.parse(localStorage.getItem(KEY))); } catch {}
    // Uma cópia local ausente ou corrompida não representa exclusão de toda a empresa.
    if (localSourceValid && cached && Number.isSafeInteger(cached.revision) && cached.revision <= result.revision && valid(cached.base)) {
     meta = { ...cached, base: normalize(cached.base) }; phase = 'ready'; await sync(); return;
@@ -1840,10 +1897,11 @@ resetKitEditor();showScreen('products');render();if(feesMigrated)persist();if(st
    apply(remote); meta = { revision: result.revision, base: copy(remote) }; saveMeta(); phase = 'ready'; status('Catálogo compartilhado carregado.');
   } catch (error) {
    if (generation === epoch) {
-    const retryable = !error.status || error.status >= 500;
+    const retryable = !error.accountStorage && (!error.status || error.status >= 500);
     phase = retryable ? 'retry' : 'off'; if (!retryable) retryConnection = null;
     status((error.name === 'TypeError' ? 'Não foi possível acessar o catálogo da empresa.' : error.message) + ' A cópia local foi mantida.' + (retryable ? ' Vamos tentar novamente quando a conexão voltar; você também pode clicar em Sincronizar agora.' : ''), retryable);
    }
+   if (error.accountStorage) throw error;
   }
  }
  function confirmReview(remoteOnly = false) {

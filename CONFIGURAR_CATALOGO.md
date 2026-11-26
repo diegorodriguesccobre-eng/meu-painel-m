@@ -1,4 +1,4 @@
-# Catálogo compartilhado da Conduz Cobre
+# Catálogos compartilhados por empresa
 
 O catálogo pode guardar **produtos, kits, configurações de taxas, relatórios e conciliações de Ads** no Cloudflare D1.
 Os funcionários acessam a mesma base ao conectar a conta autorizada da empresa no
@@ -7,8 +7,12 @@ Mercado Livre. O cadastro manual em arquivo continua disponível com armazenamen
 ## Acesso e configuração
 
 O Worker exige a sessão OAuth criptografada já usada pelo painel. Não há senha nova.
-Cada navegador precisa conectar a conta do Mercado Livre cujo ID está configurado
-em `CATALOG_SELLER_ID`. Uma conta diferente não recebe nem altera o catálogo.
+Cada navegador precisa conectar uma conta do Mercado Livre explicitamente permitida.
+`CATALOG_SELLER_IDS` contém os IDs autorizados, separados por vírgula. Cada ID recebe
+seu próprio catálogo no mesmo banco: produtos, kits, taxas, relatórios e conciliações
+de uma empresa não são compartilhados com a outra.
+Sem essa lista, a configuração anterior com apenas `CATALOG_SELLER_ID` continua válida.
+Uma conta fora da configuração não recebe nem altera catálogos compartilhados.
 Sem ID permitido ou sem binding D1, a sincronização permanece desativada.
 Não há cadastro público, escolha do vendedor pelo cliente nem associação automática
 da primeira conta que acessar o endereço.
@@ -23,13 +27,40 @@ secrets existentes do Mercado Livre:
 
 ```json
 "vars": {
-  "CATALOG_SELLER_ID": "ID_NUMERICO_DA_CONTA_DA_EMPRESA"
+  "CATALOG_SELLER_ID": "ID_NUMERICO_DA_CONTA_ORIGINAL",
+  "CATALOG_SELLER_IDS": "ID_NUMERICO_CONDUZ_COBRE,ID_NUMERICO_CONDUZ_ENERGIA"
 }
 ```
 
 Confirme o ID em `/api/ml/status`, no navegador conectado, dentro de `account.id`.
 Não use o App ID como se fosse o ID do vendedor. O usuário do painel só precisa
 conectar o Mercado Livre; configurar o ID é tarefa do responsável pela implantação.
+
+Mantenha `CATALOG_SELLER_ID` com a conta original: ele também identifica a empresa
+à qual pertence o catálogo local anterior à separação. Acrescente a nova empresa
+à lista, preservando a conta original. Não use curingas nem libere a primeira conta
+que fizer login automaticamente. Uma lista inválida desativa o serviço em vez de ampliar o acesso.
+
+As consultas ao banco usam exclusivamente o ID da sessão OAuth validada. O cabeçalho
+`X-Conduz-Catalog-Account` confere se a aba ainda está usando essa mesma conta; ele
+não escolhe outro catálogo. Se a sessão mudar em outra aba, a operação é recusada
+e o painel pede para recarregar, preservando a cópia local.
+
+## Troca de empresa no navegador
+
+Ao conectar outra conta, o painel guarda e carrega a cópia própria de cada empresa
+em `margem.painel.v1.account.<sellerId>`. A preferência da última empresa fica em
+`conduz.catalog.active-account.v1`. A chave antiga `margem.painel.v1` é mantida na
+migração; os dados anteriores são associados à conta original, não à empresa nova.
+Rascunhos de produtos preparados para a conexão também são separados por conta.
+
+Uma empresa nova começa com catálogo próprio. Conectar a Conduz Energia não copia
+os produtos, kits ou dados de Ads da Conduz Cobre. Concluir ou cancelar formulários
+abertos é necessário antes de trocar de empresa na mesma página.
+
+As abas do mesmo perfil de navegador compartilham a sessão do Mercado Livre. Para
+usar as duas empresas simultaneamente, utilize perfis distintos do navegador.
+Se trocar a sessão em um perfil, recarregue as outras abas antes de continuar.
 
 As tabelas são criadas com a migração versionada:
 
@@ -122,8 +153,10 @@ autorizada. Dados de outra conta permanecem locais. O backup **v18** inclui os a
 de relatórios e resumos e continua aceitando versões anteriores. Restaurar um backup
 antigo não remove relatórios nem conciliações que já estão na base compartilhada.
 
-A API exige a versão 2 do protocolo de gravação. Abas antigas recebem um aviso para
-atualizar a página, sem permissão para substituir a base e apagar os novos campos.
+A API usa a versão 3 do protocolo de gravação e a conferência da conta da aba.
+Com várias empresas configuradas, abas antigas recebem um aviso para atualizar a
+página, sem permissão para substituir a base de outra empresa. A versão 2 permanece
+compatível apenas na configuração antiga de uma única conta.
 Não há nova tabela, credencial, permissão do Mercado Livre ou serviço pago.
 
 ## Plano gratuito e limites
@@ -150,6 +183,10 @@ O painel não apresenta uma tela de restauração dessas revisões nesta etapa.
 
 `tests/catalog-server.test.cjs` verifica a autenticação, isolamento da conta,
 origem, transações, conflito de versão, integridade Unicode e validação usando SQLite.
+Também verifica duas empresas autorizadas com revisões independentes e bloqueio
+de abas antigas ou de cabeçalhos incompatíveis com a sessão.
+`tests/account-storage.test.cjs` verifica migração sem perda, cópias locais separadas,
+troca de conta, rascunhos, armazenamento indisponível e proteção contra mistura de Ads.
 `tests/catalog-sync.test.cjs` verifica dois funcionários, revisão de conflitos,
 migração inicial, falha de rede e alterações durante gravações.
 `tests/catalog-resilience.test.cjs` usa HTTP local e o mesmo handler de produção,
