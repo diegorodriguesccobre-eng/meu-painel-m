@@ -26,6 +26,7 @@ O painel ajuda a definir preços no Mercado Livre e na Shopee, comparar o lucro 
 - [5. Entender preços, lucros e cores](#precos)
 - [6. Entender tarifas, impostos e frete](#tarifas)
 - [7. Montar e manter kits](#kits)
+  - [Atualizar a cotação quando o custo dos componentes mudar](#atualizar-cotacao-kit)
 - [8. Importar e exportar CSV](#csv)
   - [Exportar produtos filtrados em CSV](#exportar-produtos-filtrados)
   - [Exportar no computador](#exportar-csv-computador)
@@ -497,9 +498,30 @@ Em **Medidas da embalagem**, informe altura, largura e comprimento do kit embala
 
 ### O que muda em um kit salvo
 
-O kit guarda suas taxas e sua cotação. Os custos e pesos dos componentes continuam acompanhando o catálogo. Se uma mudança nos componentes tornar a cotação incompatível, atualize-a antes de usar as sugestões. Para modificar o conjunto, use **Editar kit**. **Limpar / novo kit** limpa a montagem em edição para iniciar outra.
+O kit guarda suas taxas e sua cotação. Os custos e pesos dos componentes continuam acompanhando o catálogo. Se uma mudança nos componentes tornar a cotação incompatível, [atualize a cotação do próprio kit](#atualizar-cotacao-kit) antes de usar as sugestões. Para modificar o conjunto, use **Editar kit**. **Limpar / novo kit** limpa a montagem em edição para iniciar outra.
 
 Os kits montados mantêm Ads manual. O anúncio usado como referência logística não identifica publicidade do kit. Para acompanhar um kit que já possui anúncio próprio, cadastre-o como produto e vincule esse anúncio.
+
+<a id="atualizar-cotacao-kit"></a>
+
+### Atualizar a cotação quando o custo dos componentes mudar
+
+Quando o custo de um produto componente muda, o kit passa a somar esse novo custo. Uma cotação oficial calculada com o custo anterior pode deixar de servir: os cartões do Mercado Livre mostram **Recalcular** e **Atualize a cotação: os dados mudaram.** Isso evita apresentar como válida uma sugestão baseada em parâmetros antigos.
+
+1. Em **Meus produtos**, confira se o novo custo do componente já foi salvo. Com o catálogo compartilhado ativo, aguarde **Catálogo sincronizado com a empresa** antes de atualizar o kit.
+2. Abra **Montar kits** pelo menu lateral e localize o conjunto em **Meus kits salvos**. Confira os componentes e as quantidades, principalmente quando dois kits tiverem o mesmo nome.
+3. Clique em **Editar kit** nesse conjunto. Mantenha a **Margem desejada (%)** que já estava salva, além dos componentes, quantidades, Ads de cada marketplace e custo adicional.
+4. Mantenha **Calcular frete e comissões oficiais para este kit** marcado, com a categoria, a referência de logística e as medidas já cadastradas. A consulta pode começar automaticamente ao abrir a edição; use **Atualizar cotação** para refazê-la quando necessário. Aguarde a confirmação da consulta.
+5. Confira **Custo dos produtos**, peso, preços sugeridos e **Lucros**. No celular e em janelas menores, abra a aba **Preços**. Em **Ver custos e taxas**, confira o frete e a comissão aplicados a cada modalidade, além do imposto preservado do kit.
+6. Clique em **Salvar kit** para gravar a cotação no mesmo cadastro. Se estiver na aba **Preços**, volte à aba **Montagem** para encontrar o botão. **Limpar / novo kit** inicia outra montagem; não é o comando para atualizar um kit salvo.
+7. Com compartilhamento ativo, aguarde **Catálogo sincronizado com a empresa**. Se houver conflito, siga as [instruções de revisão de alterações](#conflitos) antes de considerar a atualização concluída.
+8. Recarregue a página, volte a **Montar kits** e confira o cartão em **Meus kits salvos**: custo atual dos componentes, mesma margem desejada e nova cotação preservada. A conferência pode ser feita no cartão, sem abrir outra edição.
+
+**Manter a margem:** a atualização recalcula os preços para buscar a meta existente. Em um exemplo ilustrativo, se o custo total passar de R$ 50,00 para R$ 54,00 e a meta for 20%, mantenha **20** no campo de margem e consulte novamente. O lucro efetivo pode ficar ligeiramente acima da meta pelo arredondamento dos preços. O frete e a comissão são consultados para o conjunto e para cada preço simulado; Clássico, Premium e a referência para 10% podem usar fretes diferentes.
+
+**Preservar os demais cadastros:** salvar essa cotação atualiza somente o kit em edição. Os produtos individuais, outros kits, taxas gerais e conciliações de Ads não são editados por essa ação. Outros kits que também usam um componente cujo custo já mudou devem ser conferidos separadamente; suas cotações não são renovadas ao salvar este kit. A Shopee recalcula o preço com o custo atual; confira suas taxas e serviços em **Ver custos e taxas**, conforme as [regras da Shopee](#tarifas). Em cadastros com taxas legadas, a edição prepara a política incorporada atual ao salvar esse registro.
+
+Se a consulta falhar ou os cartões continuarem pedindo **Recalcular**, confira a conexão com a conta correta, a categoria, a referência de logística e a mensagem exibida. Aguarde uma cotação válida antes de salvar no modo oficial. Durante a navegação, a automação de Ads pode renovar a data das consultas dos produtos; isso é independente da atualização do kit.
 
 <a id="csv"></a>
 
@@ -846,7 +868,7 @@ Isso pode indicar falta de histórico, permissão, separação de diretas e indi
 | “O frete não entrou abaixo de R$ 100.” | Confira se é o modo manual. O automático usa a cotação reconhecida e tem condições próprias. |
 | “As comissões estão bloqueadas.” | Confira se o modo oficial está ativo. Nesse modo os campos mostram a consulta. |
 | “Não consigo salvar a cotação.” | Confira conexão, valores obrigatórios e a mensagem de atualização pendente ou inviável. Refaça a consulta. |
-| “O lucro do kit mudou.” | Confira se custos, pesos ou quantidades dos componentes mudaram e se a cotação precisa ser atualizada. |
+| “O lucro do kit mudou” ou “Recalcular” nos cartões do kit. | Confira se custos, pesos ou quantidades dos componentes mudaram. Use o [passo a passo para atualizar a cotação do kit](#atualizar-cotacao-kit), mantendo a margem desejada e salvando somente o conjunto escolhido. |
 | “Ads mudou sozinho.” | Produtos vinculados podem receber o ACOS real dos últimos 30 dias encerrados. Confira período, conta e última consulta. |
 | “Tenho ROAS, mas não tenho TACOS.” | Confira Vendas em Leitura e os detalhes da base de pedidos. As fontes são diferentes. |
 | “Meu total difere do Letzee ou de outro aplicativo.” | Compare anúncio, datas, fuso, atribuição, descontos, cancelamentos e base do faturamento. Não se presume igualdade entre metodologias. |
