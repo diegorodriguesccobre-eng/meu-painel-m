@@ -8,7 +8,7 @@ import { itemSalesPage } from '../lib/ml-sales.mjs';
 
 const API='https://api.mercadolibre.com';
 const SESSION='__Host-conduz_ml_session', FLOW='__Host-conduz_ml_oauth';
-export const ACCESS_POLICY_VERSION='2026-11-26';
+export const ACCESS_POLICY_VERSION='2026-11-26.1';
 const ACCESS_ROLES=['colaborador','administrador','dono','analista'];
 function validAccessProfile(profile,userId){return profile&&profile.accountId===userId&&typeof profile.nickname==='string'&&profile.nickname.trim().length>=2&&profile.nickname.length<=60&&!/[\u0000-\u001f\u007f]/.test(profile.nickname)&&ACCESS_ROLES.includes(profile.role)&&profile.termsVersion===ACCESS_POLICY_VERSION&&profile.privacyVersion===ACCESS_POLICY_VERSION&&typeof profile.acceptedAt==='string'&&Number.isFinite(Date.parse(profile.acceptedAt));}
 export const config={path:'/api/ml/:action'};
@@ -38,13 +38,13 @@ export function normalizeItem(item){
   if(m&&Number(m[1])>0)weight=Math.round(Number(m[1]))/1000;
  }
  if(!Number.isFinite(weight)||weight<=0||weight>1e6)weight=null;
- return {itemId:id,title:item.title.slice(0,256),categoryId:/^MLB\d+$/.test(item.category_id)?item.category_id:null,
+ return {...(['active','paused','closed','under_review','inactive'].includes(item.status)?{status:item.status}:{}),itemId:id,title:item.title.slice(0,256),categoryId:/^MLB\d+$/.test(item.category_id)?item.category_id:null,
   listingType:String(item.listing_type_id??'').slice(0,50),catalogProductId:/^MLB\d+$/.test(item.catalog_product_id)?item.catalog_product_id:null,
   permalink:safeUrl(item.permalink,'mercadolivre.com.br')??`https://produto.mercadolivre.com.br/MLB-${id.slice(3)}-_JM`,
   thumbnail:safeUrl(item.secure_thumbnail??item.pictures?.[0]?.secure_url??'','mlstatic.com'),weight,...(sellerSkus(item).length?{skus:sellerSkus(item)}:{}),
   variationCount:Array.isArray(item.variations)?item.variations.length:0};
 }
-export function createHandler({env=process.env,fetchImpl=globalThis.fetch,now=Date.now}={}){
+export function createHandler({env=process.env,fetchImpl=globalThis.fetch,now=Date.now,accountControl=null}={}){
  const headers={'Cache-Control':'no-store','Referrer-Policy':'no-referrer','X-Content-Type-Options':'nosniff','Vary':'Cookie'};
  function json(data,status=200,extra={}){return Response.json(data,{status,headers:{...headers,...extra}});}
  function settings(){
@@ -58,18 +58,21 @@ export function createHandler({env=process.env,fetchImpl=globalThis.fetch,now=Da
  function unseal(value,key,type){try{const b=Buffer.from(value??'','base64url');if(b.length<29)return null;const decipher=createDecipheriv('aes-256-gcm',key,b.subarray(0,12));decipher.setAuthTag(b.subarray(12,28));const data=JSON.parse(Buffer.concat([decipher.update(b.subarray(28)),decipher.final()]).toString());return data.type===type&&data.exp>now()?data:null;}catch{return null;}}
  const cookie=(name,value,seconds)=>`${name}=${value}; Path=/; Max-Age=${seconds}; Secure; HttpOnly; SameSite=Lax`;
  function cookies(req){return Object.fromEntries((req.headers.get('cookie')??'').split(';').map(s=>s.trim().split('=')));}
- async function api(path,token,version){
+ async function rawApi(path,token,version,accountId){
+  await accountControl?.beforeCall(accountId);
   const response=await fetchImpl(API+path,{headers:{Authorization:'Bearer '+token,Accept:'application/json',...(version?{'Api-Version':String(version)}:{})},redirect:'manual',signal:AbortSignal.timeout(12000)});
+  await accountControl?.blocked(accountId,response);
   if(!response.ok){const e=new Error('API_ERROR');e.status=response.status;try{const body=await response.json();if(typeof body.error==='string'&&/^[a-zA-Z0-9_.-]{1,80}$/.test(body.error))e.apiCode=body.error;}catch{}throw e;}
   return response.json();
  }
  function session(req,cfg){return unseal(cookies(req)[SESSION],cfg.key,'session');}
  function identity(s,cfg){const required=env.PANEL_LOGIN_REQUIRED!=='false',profile=s&&validAccessProfile(s.profile,s.userId)?s.profile:null;return {configured:Boolean(cfg),connected:Boolean(s),account:s?{id:s.userId,nickname:s.nickname}:null,expiresAt:s?new Date(s.exp).toISOString():null,...(cfg?{accessRequired:required,accessGranted:!required||Boolean(profile),profile,policyVersion:ACCESS_POLICY_VERSION}:{})};}
  return async function handler(req,context={}){
+  let accountSession=null;const api=(path,token,version)=>rawApi(path,token,version,accountSession?.userId);
   const action=context.params?.action??new URL(req.url).pathname.split('/').pop(),cfg=settings();
   if(action==='status'){
    if(req.method!=='GET')return json({error:'METHOD_NOT_ALLOWED'},405);
-   const s=cfg&&session(req,cfg);return json(identity(s,cfg));
+   const s=cfg&&session(req,cfg);const dataPolicy=s&&accountControl?await accountControl.authorize(s):null;return json({...identity(s,cfg),...(dataPolicy?{dataPolicy}:{})});
   }
   if(!cfg)return json({error:'NOT_CONFIGURED',message:'A conexão com o Mercado Livre ainda precisa ser configurada pelo responsável pelo painel.'},503);
   const sameOrigin=()=>req.headers.get('origin')===cfg.origin&&req.headers.get('x-conduz-action')==='mercadolivre';
@@ -98,7 +101,8 @@ export function createHandler({env=process.env,fetchImpl=globalThis.fetch,now=Da
     if(typeof token.access_token!=='string'||!Number.isFinite(token.expires_in)||token.expires_in<60)throw Error('INVALID_TOKEN');
     failure='profile';const user=await api('/users/me',token.access_token);if(!Number.isSafeInteger(user.id)||user.id<=0)throw Error('INVALID_USER');
     failure='session';
-    const seconds=Math.floor(Math.min(token.expires_in,21600)),value=seal({type:'session',accessToken:token.access_token,userId:user.id,nickname:String(user.nickname??'Conta Mercado Livre').slice(0,80),exp:now()+seconds*1000},cfg.key);
+    const dataEpoch=accountControl?await accountControl.connected(user.id):0;
+    const seconds=Math.floor(Math.min(token.expires_in,21600)),value=seal({type:'session',dataEpoch,accessToken:token.access_token,userId:user.id,nickname:String(user.nickname??'Conta Mercado Livre').slice(0,80),exp:now()+seconds*1000},cfg.key);
     if(value.length>3800)throw Error('SESSION_TOO_LARGE');h.append('Set-Cookie',cookie(SESSION,value,seconds));destination.searchParams.set('ml','connected');
    }catch(error){
     // Somente etapa e códigos permitidos; nunca inclui tokens, descrições da API ou credenciais.
@@ -130,15 +134,17 @@ export function createHandler({env=process.env,fetchImpl=globalThis.fetch,now=Da
    if(value.length>3800)return json({message:'A sessão excedeu o tamanho permitido. Entre novamente para continuar.'},400);
    return json(identity(updated,cfg),200,{'Set-Cookie':cookie(SESSION,value,seconds)});
   }
- if(!['items','catalog-items','item','pricing','shipping','categories','kit-pricing','ads','ads-account','ads-history','sales'].includes(action))return json({error:'NOT_FOUND'},404);
-  if(req.method!==(['pricing','kit-pricing','ads','ads-account','ads-history'].includes(action)?'POST':'GET'))return json({error:'METHOD_NOT_ALLOWED'},405);
-  if(['pricing','kit-pricing','ads','ads-account','ads-history'].includes(action)&&!sameOrigin())return json({error:'INVALID_ORIGIN'},403);
+ if(!['items','catalog-items','item','pricing','shipping','categories','kit-pricing','ads','ads-account','ads-history','sales','refresh-lease'].includes(action))return json({error:'NOT_FOUND'},404);
+  if(req.method!==(['pricing','kit-pricing','ads','ads-account','ads-history','refresh-lease'].includes(action)?'POST':'GET'))return json({error:'METHOD_NOT_ALLOWED'},405);
+  if(['pricing','kit-pricing','ads','ads-account','ads-history','refresh-lease'].includes(action)&&!sameOrigin())return json({error:'INVALID_ORIGIN'},403);
   if(req.headers.get('origin')&&req.headers.get('origin')!==cfg.origin)return json({error:'INVALID_ORIGIN'},403);
   const s=session(req,cfg);if(!s)return json({error:'CONNECT_REQUIRED',message:'Conecte sua conta do Mercado Livre para consultar os anúncios.'},401);
   if(env.PANEL_LOGIN_REQUIRED!=='false'&&!validAccessProfile(s.profile,s.userId))return json({error:'PANEL_ACCESS_REQUIRED',message:'Conclua a identificação e o aceite na tela de entrada para acessar o painel.'},403);
   const expectedAccount=req.headers.get('x-conduz-account');
   if(expectedAccount&&expectedAccount!==String(s.userId))return json({error:'ACCOUNT_CHANGED',message:'A conta do Mercado Livre mudou em outra aba. Recarregue o painel para consultar a empresa correta.'},409);
+  if(accountControl)await accountControl.authorize(s);accountSession=s;
   try{
+   if(action==='refresh-lease'){if(!accountControl)return json({acquired:true,owner:null});if(Number(req.headers.get('content-length'))>1024)return json({message:'Confirmação de atualização inválida.'},400);const raw=await req.text();if(raw.length>1024)return json({message:'Confirmação de atualização inválida.'},400);const input=JSON.parse(raw);return json(await accountControl.lease(s.userId,input.owner,input.complete===true,input.release===true));}
    if(action==='pricing'||action==='kit-pricing'||action==='ads'||action==='ads-account'||action==='ads-history'){
     if(Number(req.headers.get('content-length'))>4096)return json({message:'Consulta muito grande.'},413);
     const raw=await req.text();if(raw.length>4096)return json({message:'Consulta muito grande.'},413);
@@ -186,15 +192,16 @@ export function createHandler({env=process.env,fetchImpl=globalThis.fetch,now=Da
    const id=itemId(query.get('id'));if(!id)return json({error:'INVALID_ID',message:'Informe o ID MLB ou o link do anúncio da sua conta.'},400);
    const item=await api('/items/'+id,s.accessToken);if(Number(item.seller_id)!==s.userId)return json({error:'NOT_YOUR_ITEM',message:'Este anúncio não pertence à conta conectada.'},403);
    const normalized=normalizeItem(item);let categoryName=normalized.categoryId,price=null;
-   if(normalized.categoryId)try{const category=await api('/categories/'+normalized.categoryId,s.accessToken);if(typeof category.name==='string')categoryName=category.name.slice(0,80);}catch{}
-   try{const sale=await api('/items/'+id+'/sale_price',s.accessToken);if(sale.currency_id==='BRL'&&Number.isFinite(sale.amount)&&sale.amount>=0)price=sale.amount;}catch{}
+   if(normalized.categoryId)try{const category=await api('/categories/'+normalized.categoryId,s.accessToken);if(typeof category.name==='string')categoryName=category.name.slice(0,80);}catch(error){if(error.accountControl||[401,429].includes(error.status))throw error;}
+   try{const sale=await api('/items/'+id+'/sale_price',s.accessToken);if(sale.currency_id==='BRL'&&Number.isFinite(sale.amount)&&sale.amount>=0)price=sale.amount;}catch(error){if(error.accountControl||[401,429].includes(error.status))throw error;}
    let shipping=null,shippingMessage=null;
-   try{shipping=await shippingQuote({item,price,api:path=>api(path,s.accessToken),now});}catch(error){if(action==='shipping')throw error;shippingMessage=error.shipping?error.message:'Não foi possível consultar o frete do vendedor. Tente novamente.';}
+   try{shipping=await shippingQuote({item,price,api:path=>api(path,s.accessToken),now});}catch(error){if(action==='shipping'||error.accountControl||[401,429].includes(error.status))throw error;shippingMessage=error.shipping?error.message:'Não foi possível consultar o frete do vendedor. Tente novamente.';}
    if(action==='shipping')return json({shipping});
    let commissions=null;
-   try{commissions=await commissionReference({item,price,billableWeight:shipping?.billableWeight,api:path=>api(path,s.accessToken),now});}catch{}
+   try{commissions=await commissionReference({item,price,billableWeight:shipping?.billableWeight,api:path=>api(path,s.accessToken),now});}catch(error){if(error.accountControl||[401,429].includes(error.status))throw error;}
    return json({item:{...normalized,categoryName,price,sellerId:s.userId,fetchedAt:new Date(now()).toISOString(),...(shipping?{shippingQuote:shipping}:{})},shippingMessage,commissions});
   }catch(error){
+   if(error.accountControl)throw error;
    if(error.ads)return json({error:'ADS_UNAVAILABLE',message:error.message},error.status??422);
    if(error.pricing)return json({error:'PRICING_UNAVAILABLE',message:error.message},422);
    const status=error.status;

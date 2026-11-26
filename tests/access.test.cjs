@@ -9,7 +9,7 @@ function session(extra = {}) {
  const encrypted=Buffer.concat([cipher.update(JSON.stringify({type:'session',userId:123,nickname:'CONTA FICTÍCIA',accessToken:'TEST_ACCESS_NOT_REAL',exp:time+3600000,...extra})),cipher.final()]);
  return '__Host-conduz_ml_session='+Buffer.concat([iv,cipher.getAuthTag(),encrypted]).toString('base64url');
 }
-const input = () => ({ nickname:'Diego teste',role:'analista',acceptedTerms:true,acceptedPrivacy:true,termsVersion:'2026-11-26',privacyVersion:'2026-11-26' });
+const input = () => ({ nickname:'Diego teste',role:'analista',acceptedTerms:true,acceptedPrivacy:true,termsVersion:'2026-11-26.1',privacyVersion:'2026-11-26.1' });
 function request(action, token, data, headers = {}) {
  const post=data!==undefined;
  return new Request(origin+'/api/ml/'+action,{method:post?'POST':'GET',headers:{...(token?{Cookie:token}:{}),...(post?{Origin:origin,'Content-Type':'application/json','X-Conduz-Action':'mercadolivre','X-Conduz-Account':'123'}:{}),...headers},...(post?{body:JSON.stringify(data)}:{})});
@@ -49,7 +49,7 @@ test('versões antigas, sessão expirada, cookie adulterado e perfil de outra co
 function uiApp() {
  const nodes=new Map(),calls=[],get=id=>{if(!nodes.has(id))nodes.set(id,{value:'',textContent:'',checked:false,disabled:false,inert:false,open:false,classList:{values:new Set(),toggle(k,v){v?this.values.add(k):this.values.delete(k);}},setAttribute(){},focus(){},reset(){},reportValidity(){return true;}});return nodes.get(id);};
  const c=vm.createContext({document:{getElementById:get,querySelectorAll:()=>[]},setTimeout:()=>1,clearTimeout(){},Date,mlRequest:async(...args)=>{calls.push(args);return {};},initializeMercadoLivre:async()=>{},connectMercadoLivre(){},toast(){},renderMlConnection(){},ConduzCatalog:{disconnect(){}},resetMlCatalog(){},resetKitEditor(){}});
- vm.runInContext('let activeCatalogAccount="123",mlConnection={configured:true,connected:true,account:{id:123,nickname:"TESTE"},policyVersion:"2026-11-26"},mlLookupVersion=0,mlAdsEpoch=0;',c);
+ vm.runInContext('let activeCatalogAccount="123",mlConnection={configured:true,connected:true,account:{id:123,nickname:"TESTE"},policyVersion:"2026-11-26.1"},mlLookupVersion=0,mlAdsEpoch=0;',c);
  vm.runInContext(fs.readFileSync('src/panel-access.js','utf8'),c);return {get,c,calls,api:c.ConduzAccess,run:s=>vm.runInContext(s,c)};
 }
 test('tela de entrada mantém painel oculto, aceites vazios e não revela dados de outra empresa',async()=>{

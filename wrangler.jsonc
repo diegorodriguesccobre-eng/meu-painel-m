@@ -9,7 +9,8 @@
   "workers_dev": true,
   "preview_urls": false,
   "vars": {
-    "CATALOG_SELLER_ID": "311509489"
+    "CATALOG_SELLER_ID": "311509489",
+    "ML_ACCOUNT_CONTROLS": "true"
   },
   "d1_databases": [
     {

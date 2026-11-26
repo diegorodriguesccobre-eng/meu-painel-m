@@ -29,6 +29,7 @@ O painel ajuda a definir preços no Mercado Livre e na Shopee, comparar o lucro 
   - [Acompanhar a importação automática dos anúncios](#importacao-automatica-anuncios)
   - [Concluir produtos pendentes de custo](#concluir-pendentes-custo)
   - [Preencher pendências com CSV de SKU e custo](#custos-por-sku)
+  - [Atualização, limites e retenção dos dados importados](#atualizacao-retencao-limites)
 - [5. Entender preços, lucros e cores](#precos)
 - [6. Entender tarifas, impostos e frete](#tarifas)
 - [7. Montar e manter kits](#kits)
@@ -484,6 +485,33 @@ O custo deve corresponder à unidade anunciada: um anúncio de kit com dez peça
 Fechar ou cancelar descarta a revisão. Se outra pessoa concluir ou editar a pendência durante a conferência, o painel pede para ler o arquivo novamente, preservando os dados mais recentes. Uma sessão inválida ou mudança de empresa também impede aplicar a revisão. Os novos produtos começam com Ads em 0%, como no cadastro individual; após salvar, a automação já existente poderá atualizar o Ads do Mercado Livre pelo histórico aplicável. Confira o indicador de histórico antes de interpretar esse zero como publicidade gratuita.
 
 O CSV pode ser preparado a partir do ERP, como a Olist, mas esta função **não conecta o painel à API da Olist**. Exporte ou organize os códigos e custos no formato acima e confira a correspondência dos SKUs antes de confirmar.
+
+<a id="atualizacao-retencao-limites"></a>
+
+#### Atualização, limites e retenção dos dados importados
+
+Durante o uso, o painel coordena a renovação dos anúncios entre os acessos da mesma empresa. Uma reserva compartilhada evita que todos os funcionários percorram o catálogo ao mesmo tempo. Depois de uma renovação completa e sincronizada, a próxima conferência fica prevista para até **cinco horas**, enquanto o painel estiver aberto, visível, conectado e sem formulário em edição. Ao voltar ao painel, a rotina confere a necessidade de atualização. Não há servidor fazendo consultas enquanto todos estiverem desconectados.
+
+**Dados com seis horas ou mais não são apresentados como atuais.** Os cartões do Mercado Livre mostram que aguardam atualização, sem classificar o lucro de um preço vencido como seguro. A ausência de um anúncio na lista, sozinha, não apaga um cadastro: o painel tenta confirmá-lo individualmente. Quando a API confirma anúncio encerrado, inativo ou não encontrado, remove do vínculo os dados de anúncio e as referências importadas indisponíveis; produtos, custos, pesos internos, margens e taxas configuradas permanecem preservados. Pendências indisponíveis não podem ser concluídas até voltarem a ter dados válidos.
+
+A renovação atualiza o vínculo, a situação, o preço e as referências oficiais para analisar o preço atual. **Não troca custos, margens, impostos, Ads ou cotações históricas de precificação por parâmetros gerais.** As automações de frete, comissões, preços sugeridos e ACOS/ROAS continuam usando os fluxos existentes. Uma falha de rede, permissão ou limite não é tratada como anúncio removido nem como custo zero. Conflitos de edição continuam exigindo revisão. A confirmação no aviso **Catálogo da empresa** indica quando a renovação chegou à nuvem.
+
+**Limites compartilhados:** o painel aplica cotas internas de **300 chamadas externas por minuto e 8.000 por dia por conta do Mercado Livre**, somando os funcionários. O limite diário reinicia à meia-noite UTC. São limites conservadores do nosso painel, e não uma promessa dos limites oficiais de cada recurso. Uma operação reserva até 40 chamadas e devolve a parte não utilizada; chamadas e falhas já enviadas são contabilizadas. Ao receber `429`, respeita a espera indicada e compartilha a pausa entre os acessos da empresa. O aviso informa quando tentar novamente. Os cadastros permanecem salvos. Não existe contratação automática de capacidade adicional no código.
+
+**Autorização:** a sessão e a conta continuam sendo verificadas no servidor. Durante o uso e as consultas protegidas, o painel revalida a autorização do Mercado Livre em intervalos de até cinco minutos por token. Uma resposta de autorização inválida bloqueia consultas e acesso ao catálogo. Uma falha temporária não dispara exclusão automática dos dados da empresa. Se o acesso foi revogado fora do painel e você não consegue reconectar, solicite o encerramento e a remoção ao contato da política de privacidade; revogação externa não equivale a um comando de exclusão já executado.
+
+**Encerrar a integração e remover importados**, no computador ou celular:
+
+1. Abra **Meus produtos → Conexão com o Mercado Livre → Privacidade e retenção dos dados importados**.
+2. Clique ou toque em **Revisar encerramento da integração**. Confira a empresa e as quantidades. Abrir ou cancelar a revisão não remove nada.
+3. A confirmação remove os vínculos, cotações oficiais, métricas e relatórios importados e as pendências sem custo. Preserva os produtos internos, kits e seus componentes, custos, margens, pesos, impostos, taxas configuradas, percentuais usados para simulação e **conciliações manuais**. Após a remoção, preços sem vínculo são sugestões com as configurações preservadas, sem dados atuais de anúncios.
+4. Para confirmar, digite **REMOVER IMPORTADOS** e use **Encerrar e remover importados**. Essa decisão afeta todos os acessos da empresa. Apelido e função continuam sendo identificação; não há uma permissão exclusiva de Dono/ADM nesta versão.
+5. O painel encerra a integração da empresa no serviço e invalida as sessões anteriores. Remove também as versões antigas mantidas pela aplicação no D1. Outros navegadores aplicam a limpeza ao se conectarem novamente. Uma aba antiga não pode reenviar os dados anteriores; restaurar um backup antigo também não os repõe na nuvem.
+6. Para retomar as consultas, faça uma nova conexão oficial com o Mercado Livre. A importação pode voltar a encontrar os anúncios como pendências de custo; os cadastros internos mantidos não são vinculados novamente por semelhança de nome. Confira os vínculos individualmente ou pela revisão do catálogo.
+
+O painel não altera anúncios, campanhas nem pedidos no Mercado Livre ao encerrar a integração. A remoção se refere ao catálogo ativo e às cópias que a aplicação controla. **Aparelhos offline não podem ser apagados remotamente**, e arquivos já baixados ficam sob responsabilidade de quem os guarda. Os backups técnicos do Cloudflare têm retenção própria; o D1 Free oferece recuperação por até sete dias. Guarde apenas o necessário e encaminhe solicitações de titulares ao contato da política. Veja [as regras de atualização e dados do Mercado Livre](https://developers.mercadolivre.com.br/pt_br/termos-e-condicoes) e [os limites e a retenção técnica do D1](https://developers.cloudflare.com/d1/platform/limits/).
+
+O painel continua no **Workers Free e D1 Free**. As novas tabelas ficam no banco já existente; não há serviços pagos, upgrade ou compra de cotas. Se a franquia gratuita for esgotada, as operações podem ficar temporariamente indisponíveis, em vez de contratar capacidade adicional.
 
 **Resultados indisponíveis e variações:** falhas de preço, frete ou cotação aparecem explicitamente e não podem ser selecionadas. Anúncios que não retornarem na listagem mantêm seus cadastros. Anúncios com variações podem ter preços e custos diferentes por unidade: os cadastros existentes exigem revisão individual e não são atualizados automaticamente em lote; anúncios novos permanecem pendentes para conferência. A rotina trabalha por anúncio, sem criar automaticamente um produto para cada variação.
 

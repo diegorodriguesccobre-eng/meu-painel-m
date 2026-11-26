@@ -55,7 +55,7 @@
  let seller = null, meta = null, phase = 'off', busy = false, timer, review = null, reviewSnapshot = null, epoch = 0, activeSync = null, localProblem = false, retryConnection = null;
  const cacheKey = () => 'conduz.catalog.sync.v1.' + seller;
  const snapshot = () => {
-  const data = backupData(state);
+  const data = backupData(globalThis.ConduzMlPolicy?.sanitizeLocal(state)??state);
   const owned = rows => (rows ?? []).filter(r => String(r.sellerId) === seller);
   return { products: data.products, kits: data.kits, pendingProducts: data.pendingProducts ?? [], fees: data.fees, adsReports: owned(data.adsReports), adsAccounts: owned(data.adsAccounts), adsReconciliations: owned(data.adsReconciliations) };
  };
@@ -95,11 +95,12 @@
  async function request(method = 'GET', body, revision) {
   const response = await fetch('/api/catalog', {
    method, credentials: 'same-origin', cache: 'no-store',
-   headers: { 'X-Conduz-Catalog-Account': seller, ...(method === 'PUT' ? { 'Content-Type': 'application/json', 'X-Conduz-Action': 'catalog' } : {}), ...(revision > 0 ? { 'If-None-Match': '"' + revision + '"' } : {}) },
+   headers: { 'X-Conduz-Catalog-Account': seller,...(globalThis.ConduzMlPolicy?{'X-Conduz-Data-Epoch':String(ConduzMlPolicy.epoch(seller))}:{}), ...(method === 'PUT' ? { 'Content-Type': 'application/json', 'X-Conduz-Action': 'catalog' } : {}), ...(revision > 0 ? { 'If-None-Match': '"' + revision + '"' } : {}) },
    ...(body ? { body: JSON.stringify(body) } : {}), signal: AbortSignal.timeout(30000)
   });
   if (response.status === 304) return null;
   const value = await response.json();
+  if(value.dataPolicy)globalThis.ConduzMlPolicy?.acceptPolicy(value.dataPolicy);
   if (!response.ok) throw Object.assign(new Error(value.message || 'Não foi possível sincronizar o catálogo.'), { status: response.status, code: value.error });
   if (method === 'GET' && (value.data !== null && !valid(value.data) || !Number.isSafeInteger(value.revision) || value.revision < 0)) throw Error('O catálogo compartilhado retornou dados incompatíveis. A cópia local foi preservada.');
   if (method === 'GET' && value.data) value.data = normalize(value.data);
@@ -160,7 +161,7 @@
    status(pending ? 'Primeira gravação confirmada; salvando as alterações seguintes…' : 'Catálogo sincronizado com a empresa.', pending);
   } catch (error) {
    if (account !== seller || generation !== epoch) return;
-   if (error.status === 401 || error.status === 403 || error.status === 426 || error.code === 'ACCOUNT_CHANGED') { phase = 'off'; retryConnection = null; status(error.message + ' A cópia local foi mantida.', true); }
+   if (error.status === 401 || error.status === 403 || error.status === 426 || ['ACCOUNT_CHANGED','DATA_POLICY_CHANGED','INTEGRATION_ENDED','AUTHORIZATION_REVOKED'].includes(error.code)) { phase = 'off'; retryConnection = null; status(error.message + ' A cópia local foi mantida.', true); }
    else status(error.status === 409 ? 'Outro funcionário salvou uma alteração. Vamos conferir a nova versão.' : error.message + ' Alterações locais aguardam nova tentativa.', true);
   } finally {
    if (activeSync === task) busy = false;
@@ -235,6 +236,7 @@
  globalThis.ConduzCatalog = {
   connect,
   readyForImport(id) { return phase === 'ready' && !busy && seller === String(id); },
+  isSynced(id) { return phase === 'ready' && !busy && seller === String(id) && meta && equal(snapshot(),meta.base); },
   onLocalChange() { if (['ready', 'retry'].includes(phase)) { status('Alteração salva neste navegador; aguardando sincronização.', true); queue(); } },
   disconnect() { epoch++; seller = null; phase = 'off'; meta = null; review = null; busy = false; activeSync = null; retryConnection = null; clearTimeout(timer); globalThis.ConduzMlImport?.onDisconnect(); ui('cloud-review-dialog').close(); status('Conexão encerrada. A cópia local foi mantida.'); },
   sync

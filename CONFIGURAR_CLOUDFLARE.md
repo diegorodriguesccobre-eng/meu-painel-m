@@ -54,6 +54,39 @@ preservadas se uma consulta não puder concluir. É necessário validar o tempo 
 e os cálculos com a conta real depois da implantação; testes locais não comprovam
 o tempo de CPU cobrado no Cloudflare.
 
+## Controles compartilhados de consulta e retenção
+
+Antes de publicar com `ML_ACCOUNT_CONTROLS="true"`, aplique a migração aditiva
+`0002_ml_account_controls.sql` ao D1 já existente. Ela cria três tabelas de
+metadados, sem modificar os cadastros. Use `npx wrangler d1 migrations apply
+conduz-cobre-catalogo --remote` e confira a lista de migrações pendentes antes da
+confirmação. Não crie outro banco nem altere o plano Free.
+
+Com os controles ativos, são reservadas até 40 chamadas externas por operação,
+deixando espaço para os controles D1 na franquia por execução. A aplicação mantém
+cotas internas por vendedor de 300 chamadas/minuto e 8.000/dia (dia UTC), com
+devolução das reservas não usadas e pausa compartilhada após 429. Essas cotas não
+substituem os limites oficiais de cada recurso do Mercado Livre.
+
+A autorização é verificada via `/users/me` com cache de até cinco minutos por
+hash do token; tokens não ficam no D1. Renovação do catálogo usa reserva de até
+20 minutos, e a próxima janela de cinco horas só é confirmada após sincronizar.
+Não há Cron, KV, R2, Durable Objects nem recurso pago adicional.
+
+O encerramento da integração está em `/api/catalog/lifecycle`, exige sessão
+autorizada, origem, conta, geração dos dados, confirmação textual e revisão atual.
+Uma transação preserva os dados internos, remove os importados, elimina revisões
+anteriores e invalida sessões antigas. O cabeçalho `X-Conduz-Data-Epoch` impede que
+clientes antigos reponham os dados removidos; a restauração é sanitizada também
+no servidor. Não execute esse encerramento em produção para testar: utilize
+`node tests/support/ml-controls-lab.cjs`, que usa D1 em memória e API fictícia.
+
+Revogação externa bloqueia o acesso quando confirmada, mas não apaga
+automaticamente o catálogo: uma resposta 401 isolada não comprova que o titular
+pediu exclusão. Solicitações sem acesso ao ML exigem atendimento pelo responsável,
+com verificação da empresa e distinção entre registros próprios e dados importados.
+Backups técnicos do provedor e arquivos exportados têm tratamento separado.
+
 Não publique arquivos `.env`, `.dev.vars`, tokens ou backups no repositório.
 Não altere o aplicativo antigo `conduz-cobre-ml-api`; ele é independente deste painel.
 

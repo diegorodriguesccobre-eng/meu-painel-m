@@ -150,14 +150,50 @@
   for (const product of data.products) if (product.mercadoLivre?.sellerId === sellerId && !ids.has(product.mercadoLivre.itemId)) rows.push({ id: 'product:' + product.id, kind: 'existing', ready: false, item: copyMlLink(product.mercadoLivre), base: clone(product), note: 'Este anúncio não apareceu na listagem da conta. O cadastro será preservado; confira sua situação no Mercado Livre.' });
   return { rows: rows.sort((a, b) => a.item.itemId.localeCompare(b.item.itemId) || a.id.localeCompare(b.id)), total: ids.size, stopped };
  }
- const api = { inspectCatalog, applyReview, importedLink, proposedProduct, pendingProduct, discoverCatalog, addDiscovered };
+ async function refreshCatalog({data,sellerId,request,active=()=>true,progress=()=>{},now=Date.now}) {
+  const listed=await readCatalog({sellerId,request,active,progress});if(!listed||!active())return null;
+  const products=[],pending=[],items=listed.items,failed=[];
+  const obtain=async item=>{
+   try {
+    const response=await request('item',{query:{id:item.itemId}}),link=importedLink(response,sellerId);
+    if(link.itemId!==item.itemId)throw Error('Anúncio incompatível com a consulta.');
+    return ['closed','inactive'].includes(link.status)?ConduzMlDataRules.unavailable(link,now()):link;
+   } catch(error){if(error.status===404)return ConduzMlDataRules.unavailable(item,now());if([401,403,409,429].includes(error.status))throw error;failed.push(item.itemId);return null;}
+  };
+  const bases=data.products.filter(p=>p.mercadoLivre?.sellerId===sellerId);
+  for(const base of bases){
+   if(!active())return null;progress('Renovando anúncios e referências oficiais… '+(products.length+failed.length+1)+' de '+bases.length+'.');
+   const link=await obtain(base.mercadoLivre);if(!link)continue;
+   const proposal={...clone(base),mercadoLivre:link};
+   if(link.availability==='unavailable'){delete proposal.mlPricing;delete proposal.mlAds;}
+   // Taxas e cotações de precificação são históricas; a consulta do preço atual não as sobrescreve.
+   products.push({base:clone(base),proposal});
+  }
+  for(const base of data.pendingProducts??[]){
+   if(base.item.sellerId!==sellerId)continue;if(!active())return null;
+   let item=items.get(base.item.itemId);
+   if(!item)item=await obtain(base.item);
+   if(item){if(['closed','inactive'].includes(item.status))item=ConduzMlDataRules.unavailable(item,now());pending.push({base:clone(base),proposal:pendingProduct(item,data.fees,base)});}
+  }
+  return {products,pending,items:[...items.values()].filter(i=>!['closed','inactive'].includes(i.status)),failed};
+ }
+ function applyRefresh(data,result,sellerId){
+  const next=addDiscovered(data,result.items,sellerId),updated={...next,products:next.products.slice(),pendingProducts:(next.pendingProducts??[]).slice()};let skipped=0;
+  for(const [field,rows] of [['products',result.products],['pendingProducts',result.pending]])for(const row of rows){
+   const i=updated[field].findIndex(p=>p.id===row.base.id);if(i>=0&&same(updated[field][i],row.base))updated[field][i]=clone(row.proposal);else skipped++;
+  }
+  if(!validState(updated)||[...catalogOwners(updated)].some(id=>id!==String(sellerId)))throw Error('A atualização contém dados incompatíveis. Os cadastros foram preservados.');
+  return {data:updated,skipped};
+ }
+ const api = { inspectCatalog, applyReview, importedLink, proposedProduct, pendingProduct, discoverCatalog, addDiscovered,refreshCatalog,applyRefresh };
  globalThis.ConduzMlImport = api;
  if (typeof document === 'undefined' || !document.getElementById('ml-import-dialog')) return;
 
  const ui = id => document.getElementById(id);
  let version = 0, busy = false, seller = null, rows = [], selected = new Set(), page = 0, complete = false, pendingPage = 0;
  const isOpen = () => ui('ml-import-dialog').open;
- api.isOpen = () => isOpen() || Boolean(globalThis.ConduzPendingCosts?.isOpen());
+ api.isReviewOpen = () => isOpen() || Boolean(globalThis.ConduzPendingCosts?.isOpen());
+ api.isOpen = () => api.isReviewOpen() || Boolean(globalThis.ConduzMlPolicy?.isRefreshing());
  let autoOwner = null, autoVersion = 0, autoBusy = false, autoDone = false, autoTimer = null, autoResult = null, autoAttempts = 0;
  const autoStatus = text => { ui('ml-catalog-auto-status').textContent = text; };
  const canImport = () => globalThis.ConduzCatalog?.readyForImport(autoOwner) && !api.isOpen() && !kitEditing && !kitItems.size && !['product-dialog', 'restore-dialog', 'import-dialog', 'ads-reconcile-dialog', 'cloud-review-dialog', 'delete-dialog', 'kit-delete-dialog'].some(id => ui(id).open);
@@ -202,10 +238,12 @@
  api.syncNewProducts = syncNewProducts;
  api.onCatalogReady = id => {
   if (!mlConnection.connected || mlConnection.account?.id !== id) return;
+  if(globalThis.ConduzMlPolicy){globalThis.ConduzMlPolicy.catalogReady(id);return;}
   if (autoOwner !== id) { api.onDisconnect(); autoOwner = id; }
   queueAuto();
  };
  api.onDisconnect = () => {
+  globalThis.ConduzMlPolicy?.disconnected();
   autoVersion++; clearTimeout(autoTimer); autoTimer = null; autoOwner = null; autoBusy = false; autoDone = false; autoResult = null; autoAttempts = 0;
   autoStatus('Os anúncios serão carregados automaticamente após concluir a entrada e confirmar o catálogo da empresa.');
  };
@@ -287,7 +325,10 @@
   ui('ml-pending-panel').classList.toggle('hidden', !total);
   ui('ml-pending-count').textContent = total + ' anúncio(s) sem custo informado';
   pendingPage = Math.min(pendingPage, Math.max(0, Math.ceil(result.length / PAGE_SIZE) - 1));
-  ui('ml-pending-list').innerHTML = result.slice(pendingPage * PAGE_SIZE, (pendingPage + 1) * PAGE_SIZE).map(p => '<article class="ml-pending-card"><span class="ml-import-badge">Custo pendente</span><h3>' + escapeHTML(p.item.title) + '</h3><p>' + escapeHTML(p.item.itemId) + '</p><p>Preço anunciado: ' + value(p.item.price) + '</p><p class="help">' + (p.item.variationCount ? p.item.variationCount + ' variações: confira preço e custo da unidade escolhida.' : 'Custo e lucro: sem dados suficientes.') + '</p><button class="btn quiet" type="button" data-complete-pending="' + escapeHTML(p.id) + '">Concluir cadastro</button></article>').join('') || '<p class="help">Nenhuma pendência corresponde à busca.</p>';
+  ui('ml-pending-list').innerHTML = result.slice(pendingPage * PAGE_SIZE, (pendingPage + 1) * PAGE_SIZE).map(p => {
+   const fresh=!globalThis.ConduzMlDataRules||ConduzMlDataRules.fresh(p.item),removed=p.item.availability==='unavailable';
+   return '<article class="ml-pending-card"><span class="ml-import-badge">'+(removed?'Anúncio indisponível':fresh?'Custo pendente':'Aguardando atualização')+'</span><h3>' + escapeHTML(fresh?p.item.title:removed?'Anúncio indisponível no Mercado Livre':'Anúncio aguardando atualização') + '</h3><p>' + escapeHTML(p.item.itemId) + '</p><p>Preço anunciado: ' + (fresh?value(p.item.price):'Sem dados atuais') + '</p><p class="help">' + (fresh&&p.item.variationCount ? p.item.variationCount + ' variações: confira preço e custo da unidade escolhida.' : 'Custo e lucro: sem dados suficientes.') + '</p><button class="btn quiet" type="button" data-complete-pending="' + escapeHTML(p.id) + '" '+(removed?'disabled':'')+'>Concluir cadastro</button></article>';
+  }).join('') || '<p class="help">Nenhuma pendência corresponde à busca.</p>';
   ui('ml-pending-page').textContent = result.length ? (pendingPage * PAGE_SIZE + 1) + '–' + Math.min((pendingPage + 1) * PAGE_SIZE, result.length) + ' de ' + result.length : '0 resultados';
   ui('ml-pending-prev').disabled = pendingPage === 0; ui('ml-pending-next').disabled = (pendingPage + 1) * PAGE_SIZE >= result.length;
  }

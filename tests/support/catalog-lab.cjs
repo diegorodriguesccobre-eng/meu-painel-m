@@ -104,6 +104,8 @@ async function startLab({ ports = [0, 0], seed = fixture(), mlRequest = null, lo
     }
     if (url.pathname !== '/') { res.writeHead(404); return res.end(); }
     let html = fs.readFileSync(path.join(root, 'src/index.html'), 'utf8')
+     .replace('/* __ML_DATA_RULES__ */', () => fs.readFileSync(path.join(root, 'shared/ml-data-rules.js'), 'utf8'))
+     .replace('/* __ML_DATA_POLICY__ */', () => fs.readFileSync(path.join(root, 'src/ml-data-policy.js'), 'utf8'))
      .replace('/* __PANEL_STYLES__ */', () => fs.readFileSync(path.join(root, 'src/styles.css'), 'utf8'))
      .replace('/* __PANEL_SCRIPT__ */', () => fs.readFileSync(path.join(root, 'src/app.js'), 'utf8'))
      .replace('/* __ACCESS_SCRIPT__ */', () => fs.readFileSync(path.join(root, 'src/panel-access.js'), 'utf8'))

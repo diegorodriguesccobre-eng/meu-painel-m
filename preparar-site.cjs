@@ -2,12 +2,14 @@ const fs = require('node:fs');
 const path = require('node:path');
 
 const SOURCES = [
+  { marker: '/* __ML_DATA_RULES__ */', filename: '../shared/ml-data-rules.js' },
   { marker: '/* __PANEL_STYLES__ */', filename: 'styles.css' },
   { marker: '/* __PANEL_SCRIPT__ */', filename: 'app.js' },
   { marker: '/* __ACCESS_SCRIPT__ */', filename: 'panel-access.js' },
   { marker: '/* __ML_IMPORT_SCRIPT__ */', filename: 'ml-catalog-import.js' },
   { marker: '/* __PENDING_COSTS_SCRIPT__ */', filename: 'pending-costs.js' },
-  { marker: '/* __CATALOG_SCRIPT__ */', filename: 'catalog-sync.js' }
+  { marker: '/* __CATALOG_SCRIPT__ */', filename: 'catalog-sync.js' },
+  { marker: '/* __ML_DATA_POLICY__ */', filename: 'ml-data-policy.js' }
 ];
 const ICONS = ['favicon.svg', 'favicon.png'];
 const PAGES = ['termos.html', 'privacidade.html'];
