@@ -30,6 +30,7 @@ O painel ajuda a definir preços no Mercado Livre e na Shopee, comparar o lucro 
   - [Concluir produtos pendentes de custo](#concluir-pendentes-custo)
   - [Preencher pendências com CSV de SKU e custo](#custos-por-sku)
   - [Atualização, limites e retenção dos dados importados](#atualizacao-retencao-limites)
+  - [Quando aparece “Anúncio encerrado”](#anuncio-encerrado)
 - [5. Entender preços, lucros e cores](#precos)
 - [6. Entender tarifas, impostos e frete](#tarifas)
 - [7. Montar e manter kits](#kits)
@@ -492,7 +493,7 @@ O CSV pode ser preparado a partir do ERP, como a Olist, mas esta função **não
 
 Durante o uso, o painel coordena a renovação dos anúncios entre os acessos da mesma empresa. Uma reserva compartilhada evita que todos os funcionários percorram o catálogo ao mesmo tempo. Depois de uma renovação completa e sincronizada, a próxima conferência fica prevista para até **cinco horas**, enquanto o painel estiver aberto, visível, conectado e sem formulário em edição. Ao voltar ao painel, a rotina confere a necessidade de atualização. Não há servidor fazendo consultas enquanto todos estiverem desconectados.
 
-**Dados com seis horas ou mais não são apresentados como atuais.** Os cartões do Mercado Livre mostram que aguardam atualização, sem classificar o lucro de um preço vencido como seguro. A ausência de um anúncio na lista, sozinha, não apaga um cadastro: o painel tenta confirmá-lo individualmente. Quando a API confirma anúncio encerrado, inativo ou não encontrado, remove do vínculo os dados de anúncio e as referências importadas indisponíveis; produtos, custos, pesos internos, margens e taxas configuradas permanecem preservados. Quando o Mercado Livre retorna o status `closed`, os cartões mostram **Anúncio encerrado**. Outros casos de indisponibilidade mantêm a identificação correspondente, sem tratar uma falha de consulta como encerramento. Pendências indisponíveis não podem ser concluídas até voltarem a ter dados válidos.
+**Dados com seis horas ou mais não são apresentados como atuais.** Os cartões do Mercado Livre mostram que aguardam atualização, sem classificar o lucro de um preço vencido como seguro. A ausência de um anúncio na lista, sozinha, não apaga um cadastro: o painel tenta confirmá-lo individualmente. Quando a API confirma anúncio encerrado, inativo ou não encontrado, remove do vínculo os dados de anúncio e as referências importadas indisponíveis; produtos, custos, pesos internos, margens e taxas configuradas permanecem preservados. Veja [quando aparece “Anúncio encerrado”](#anuncio-encerrado). Pendências indisponíveis não podem ser concluídas até voltarem a ter dados válidos.
 
 A renovação atualiza o vínculo, a situação, o preço e as referências oficiais para analisar o preço atual. **Não troca custos, margens, impostos, Ads ou cotações históricas de precificação por parâmetros gerais.** As automações de frete, comissões, preços sugeridos e ACOS/ROAS continuam usando os fluxos existentes. Uma falha de rede, permissão ou limite não é tratada como anúncio removido nem como custo zero. Conflitos de edição continuam exigindo revisão. A confirmação no aviso **Catálogo da empresa** indica quando a renovação chegou à nuvem.
 
@@ -518,6 +519,18 @@ O painel continua no **Workers Free e D1 Free**. As novas tabelas ficam no banco
 Uma falha durante a listagem impede salvar uma revisão incompleta; tente buscar novamente. Se a listagem terminar, mas algumas consultas individuais falharem, os resultados disponíveis podem ser selecionados e os demais permanecem preservados. Os limites desta versão são 10.000 anúncios por consulta, 5.000 produtos e 5.000 pendências salvas, além do limite de tamanho do catálogo. A conexão precisa continuar válida; trocar de conta invalida a revisão.
 
 Os valores do anúncio são referências consultadas, e os lucros apresentados são estimativas por venda com seus custos e impostos cadastrados. Essa função não substitui a conciliação dos resultados efetivamente cobrados nas vendas e não altera anúncios no Mercado Livre.
+
+<a id="anuncio-encerrado"></a>
+
+#### Quando aparece “Anúncio encerrado”
+
+Quando a consulta oficial do Mercado Livre retorna o status `closed` para um anúncio vinculado, os cartões **ML Clássico** e **ML Premium** mostram **“Anúncio encerrado. Custos e margens preservados.”** no lugar do aviso genérico de indisponibilidade. A identificação também aparece nos anúncios pendentes de cadastro. O comportamento é o mesmo no computador e no celular.
+
+**O produto cadastrado não é excluído.** Seu custo, margem desejada, peso interno e taxas configuradas continuam salvos. O aviso não significa custo zero nem prejuízo: enquanto o anúncio estiver encerrado, o painel não apresenta preço e lucro do Mercado Livre como atuais com base nas referências indisponíveis. Se o anúncio ainda for uma pendência, **Concluir cadastro** fica desativado enquanto não houver dados válidos.
+
+O status fica no vínculo salvo e continua identificado após recarregar a página. Confira o aviso **Catálogo sincronizado com a empresa** para saber que a atualização chegou ao catálogo compartilhado.
+
+Uma falha temporária de conexão, falta de permissão ou limite de consultas não é suficiente para classificar o anúncio como encerrado. Outros casos mantêm seus avisos de indisponibilidade ou de atualização. A mensagem não muda as automações de preços, frete, comissões, ACOS, ROAS e sincronização, nem altera o anúncio no Mercado Livre.
 
 <a id="precos"></a>
 
