@@ -11,6 +11,7 @@ O painel ajuda a definir preços no Mercado Livre e na Shopee, comparar o lucro 
 
 - [1. Começar e cuidar dos dados](#comecar)
   - [Entrar, identificar-se e aceitar os documentos](#entrada-painel)
+  - [Aceitar os termos e a privacidade lado a lado](#aceites-lado-a-lado)
   - [Acessar o catálogo compartilhado](#catalogo-compartilhado)
   - [Trocar de empresa com catálogos separados](#empresas-separadas)
   - [Entender os avisos de sincronização](#sincronizacao)
@@ -25,6 +26,8 @@ O painel ajuda a definir preços no Mercado Livre e na Shopee, comparar o lucro 
   - [Usar busca e ordenação no celular](#busca-ordenacao-celular)
 - [4. Conectar um anúncio do Mercado Livre](#mercado-livre)
   - [Importar e conferir o catálogo completo](#importar-conferir-catalogo)
+  - [Acompanhar a importação automática dos anúncios](#importacao-automatica-anuncios)
+  - [Concluir produtos pendentes de custo](#concluir-pendentes-custo)
 - [5. Entender preços, lucros e cores](#precos)
 - [6. Entender tarifas, impostos e frete](#tarifas)
 - [7. Montar e manter kits](#kits)
@@ -56,9 +59,9 @@ No computador ou celular, abra o [endereço publicado](https://precificacaocondu
 
 ### Entrar, identificar-se e aceitar os documentos
 
-1. Clique em **Entrar com Mercado Livre** e conclua a autenticação e a autorização no próprio marketplace. Se a conta já estiver conectada, confira seu nome ou use **Usar outra conta**.
+1. Clique em **Entrar com Mercado Livre** e conclua a autenticação e a autorização no próprio marketplace. Se já aparecer **Conta conectada**, confira o nome da empresa e continue pela identificação, sem repetir o login enquanto a sessão for válida. Para trocar a conta, use **Usar outra conta**.
 2. Informe **Seu apelido** e escolha **Sua função**: Colaborador, ADM, Dono ou Analista. A função é identificação autodeclarada; não altera permissões nem comprova vínculo com a empresa.
-3. Abra e leia os **Termos de uso** e a **Política de privacidade** nos links próprios. Os controles ficam lado a lado, com caixas independentes e inicialmente vazias. Marque os dois para continuar. Esse aceite não é autorização genérica para publicidade ou novos usos dos dados.
+3. Abra e leia os **Termos de uso** e a **Política de privacidade** nos links próprios. Os controles ficam lado a lado, com caixas independentes e inicialmente vazias. Marque os dois se concordar; veja [como funcionam os aceites](#aceites-lado-a-lado).
 4. Clique em **Prosseguir**. O painel só aparece com sessão válida, identificação e aceite da versão atual e carrega os dados da empresa correspondente.
 5. Após a confirmação do catálogo compartilhado, a busca dos anúncios começa automaticamente. Anúncios novos são adicionados como pendências de custo. Se houver primeira associação ou conflito, conclua essa revisão antes da importação.
 
@@ -67,6 +70,18 @@ O apelido, a função e as versões/data do aceite ficam na sessão criptografad
 Use **Sair** no menu para encerrar a sessão neste navegador; no celular, abra **Menu → Sair**. As caixas de aceite ficam vazias novamente. Sair não apaga os produtos, kits, pendências, relatórios e conciliações da empresa, nem cópias locais ou arquivos exportados. O contato informado para dúvidas de privacidade é **diego.rodriguesccobre@gmail.com**.
 
 O HTML isolado não realiza o login da versão atual. Para uso normal, utilize o site publicado. A autenticação, a sincronização e as consultas precisam de internet.
+
+<a id="aceites-lado-a-lado"></a>
+
+### Aceitar os termos e a privacidade lado a lado
+
+No computador e no celular, os dois controles aparecem **na mesma linha, lado a lado**, cada um com sua própria caixa. Em telas estreitas, o texto pode ocupar mais de uma linha dentro de cada controle, mantendo as duas opções separadas e legíveis.
+
+1. Abra os [Termos de uso](https://precificacaoconduz.conduz-cobre.workers.dev/termos.html) e a [Política de privacidade](https://precificacaoconduz.conduz-cobre.workers.dev/privacidade.html) pelos links da tela de entrada. Cada documento abre em uma nova aba; ler o documento não marca a caixa automaticamente.
+2. Volte à aba do painel e marque cada caixa somente após revisar e concordar com o documento correspondente. As caixas não vêm marcadas.
+3. Confira também **Seu apelido** e **Sua função**, depois clique em **Prosseguir**. O painel exige os dois aceites e a identificação preenchida. Marcar somente uma caixa ou deixar um campo obrigatório vazio não conclui a entrada.
+
+Esses controles registram a confirmação dos documentos apresentados; não são uma autorização genérica para publicidade ou outros usos dos dados. Se uma nova versão exigir confirmação, revise os documentos novamente. Para dúvidas ou solicitações sobre dados pessoais, use o contato indicado na política de privacidade.
 
 ### Onde ficam os dados
 
@@ -393,9 +408,26 @@ Esses botões não publicam as sugestões de preço no Mercado Livre.
 
 Depois de entrar e clicar em **Prosseguir**, o painel carrega o catálogo compartilhado e busca automaticamente todos os anúncios que a API disponibiliza para a conta conectada. Não há botão de buscar anúncios para iniciar essa importação.
 
-**Importação automática:** acompanhe o aviso em **Conexão com o Mercado Livre**. A rotina percorre os lotes até o fim, consulta o preço oficial disponível e adiciona somente anúncios ainda não vinculados a um produto nem presentes nas pendências. Não usa nomes iguais para juntar produtos. Novos anúncios ficam em **Anúncios pendentes de cadastro**, sem custo inventado. Custos, margens, nomes internos, pesos, impostos, taxas, serviços, Ads, kits e conciliações existentes são preservados.
+<a id="importacao-automatica-anuncios"></a>
+
+#### Acompanhar a importação automática dos anúncios
+
+Em **Meus produtos**, acompanhe o aviso em **Conexão com o Mercado Livre**. A rotina percorre os lotes até o fim, consulta o preço oficial disponível e adiciona somente anúncios ainda não vinculados a um produto nem presentes nas pendências. Não usa nomes iguais para juntar produtos. Novos anúncios ficam em **Anúncios pendentes de cadastro**, sem custo inventado. Custos, margens, nomes internos, pesos, impostos, taxas, serviços, Ads, kits e conciliações existentes são preservados.
+
+Depois de **Prosseguir**, confira:
+
+1. **Catálogo da empresa:** aguarde o carregamento ou a sincronização. Se houver primeira associação ou conflito, conclua essa revisão antes da importação automática. Formulários em edição também podem adiar as inclusões.
+2. **Conexão com o Mercado Livre:** o aviso mostra o andamento e, ao terminar, quantos anúncios foram encontrados e quantos novos foram adicionados como pendentes de custo. Não é necessário usar **Conferir catálogo** para iniciar a importação; esse botão tem a finalidade de revisar atualizações dos cadastros existentes.
+3. **Anúncios pendentes de cadastro:** confira os novos cartões. O preço anunciado pode estar disponível, mas o custo de compra e o lucro continuam sem dados suficientes até concluir o cadastro. Anúncios com variações mostram um aviso para conferir a unidade escolhida.
+4. **Catálogo sincronizado com a empresa:** aguarde essa confirmação antes de fechar a página para garantir que os colegas recebam as pendências salvas na nuvem.
+
+O resumo **Produtos no catálogo** conta os produtos com cadastro concluído; as pendências têm um contador próprio. Por isso, o total de anúncios encontrados no Mercado Livre pode ser maior que o número de produtos precificados. As pendências não entram nos lucros, nos kits nem no CSV de produtos.
 
 A busca acontece uma vez por abertura autenticada da página; recarregar inicia uma nova conferência de anúncios novos, sem duplicar as pendências existentes. A rotina aguarda a confirmação do catálogo da empresa e o fim de formulários em edição antes de aplicar inclusões. Falhas são mostradas no aviso e têm novas tentativas limitadas; os dados anteriores são preservados. Aguarde a sincronização para os colegas receberem as pendências na nuvem.
+
+Se a consulta terminar sem avisos de indisponibilidade e informar **0 novos**, os anúncios já estavam cadastrados ou pendentes; isso não significa que a lista foi apagada. Se houver aviso de falha, acompanhe a nova tentativa antes de considerar a importação concluída. As automações já existentes de tarifas, frete e Ads continuam funcionando. Datas de consulta podem ser renovadas sem mudar os custos e as margens que você cadastrou.
+
+No celular, abra **Menu → Meus produtos**. A importação é a mesma e acontece sem um botão adicional. Use a busca das pendências por nome, MLB ou SKU; ela considera todas as páginas, inclusive as que você ainda não abriu. **Anterior** e **Próxima** apenas mudam os cartões exibidos, sem exigir carregar manualmente mais anúncios.
 
 **Conferir atualizações dos produtos já cadastrados:**
 
@@ -409,9 +441,22 @@ A busca acontece uma vez por abertura autenticada da página; recarregar inicia 
 
 No celular, abra **Meus produtos** pelo **Menu** e siga os mesmos comandos. Os resultados aparecem em cartões e os filtros se adaptam à largura da tela.
 
-**Anúncios sem custo:** são adicionados automaticamente em **Anúncios pendentes de cadastro**. Essa lista é compartilhada com a empresa e incluída no backup v19. Pendências não entram no lucro médio, nos kits nem no CSV de produtos. Use a busca e a paginação da própria lista para encontrá-las.
+<a id="concluir-pendentes-custo"></a>
 
-Para concluir uma pendência, clique em **Concluir cadastro**, informe o custo de compra e confira peso, margem, impostos e Ads no cadastro habitual. O custo começa vazio. A pendência só vira produto calculado após **Salvar produto** com dados válidos; cancelar mantém a pendência. Ao salvar, o painel remove a pendência correspondente e preserva os demais registros. Os custos e impostos da empresa não são deduzidos do preço anunciado pelo Mercado Livre.
+#### Concluir produtos pendentes de custo
+
+As pendências são compartilhadas com a empresa e incluídas no backup v19. Para transformar um anúncio pendente em produto precificado, no computador ou celular:
+
+1. Abra **Meus produtos**; no celular, use **Menu → Meus produtos**. Localize **Anúncios pendentes de cadastro**, acima da lista dos produtos concluídos.
+2. Em **Buscar nas pendências**, pesquise por nome, MLB ou SKU, ou use **Anterior** e **Próxima**. Confira o anúncio e, no cartão correspondente, clique ou toque em **Concluir cadastro**.
+3. No formulário **Concluir cadastro pendente**, informe **Custo do produto (R$)** com seu custo de compra real, maior que zero. O campo começa vazio. O preço anunciado no Mercado Livre é o preço de venda, não o custo de compra.
+4. Confira nome, categoria, peso do pacote, margem desejada, impostos, outros custos e Ads de cada marketplace. Se o peso não vier da consulta, preencha-o. Em anúncios com variações, confira preço, peso e custo da unidade escolhida antes de continuar.
+5. Aguarde a atualização dos dados do anúncio e das cotações. A opção de tarifas oficiais é ativada ao concluir a pendência; com ela marcada, é necessária uma cotação válida para os dados do formulário antes de salvar. As consultas de frete e comissões continuam automáticas. Os custos e impostos da empresa precisam ser conferidos por você.
+6. Clique ou toque em **Salvar produto**. Se algum dado obrigatório ou cotação estiver inválido, corrija o aviso e tente novamente. Fechar o formulário ou usar **Cancelar** mantém o anúncio pendente, sem criar um produto incompleto.
+7. Confira o produto na lista de **Meus produtos** e seus cartões de preço e lucro. Após um salvamento válido, o painel remove somente a pendência correspondente, aumenta a quantidade de produtos concluídos e preserva os demais cadastros.
+8. Aguarde **Catálogo sincronizado com a empresa**. Os outros funcionários passam a receber o produto concluído e a lista de pendências atualizada, sem importar arquivos.
+
+Não substitua o custo pelo preço anunciado para tentar concluir o cadastro. O Mercado Livre não fornece ao painel seu custo de compra nem determina automaticamente a tributação da empresa. Enquanto o custo estiver ausente, o anúncio permanece pendente e o painel não inventa um lucro.
 
 **Resultados indisponíveis e variações:** falhas de preço, frete ou cotação aparecem explicitamente e não podem ser selecionadas. Anúncios que não retornarem na listagem mantêm seus cadastros. Anúncios com variações podem ter preços e custos diferentes por unidade: os cadastros existentes exigem revisão individual e não são atualizados automaticamente em lote; anúncios novos permanecem pendentes para conferência. A rotina trabalha por anúncio, sem criar automaticamente um produto para cada variação.
 
