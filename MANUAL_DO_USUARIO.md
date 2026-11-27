@@ -33,6 +33,7 @@ O painel ajuda a definir preços no Mercado Livre e na Shopee, comparar o lucro 
   - [Revisar e salvar custos por CSV no computador](#revisar-custos-csv-computador)
   - [Revisar e salvar custos por CSV no celular](#revisar-custos-csv-celular)
   - [Cancelar a revisão de custos e recarregar](#cancelar-revisao-custos-csv)
+  - [Fechar a revisão de custos pelo X e recarregar](#fechar-revisao-custos-x)
   - [Atualização, limites e retenção dos dados importados](#atualizacao-retencao-limites)
   - [Quando aparece “Anúncio encerrado”](#anuncio-encerrado)
   - [Anúncios desativados: ordem, visual e alinhamento](#anuncios-desativados)
@@ -559,6 +560,28 @@ O CSV pode ser preparado a partir do ERP, como a Olist, mas esta função **não
 **Exemplo ilustrativo:** se o cadastro tem custo de **R$ 20,00** e margem de **20%**, e o CSV propõe **R$ 22,50**, cancelar e recarregar mantém **R$ 20,00 e 20%**, tanto no computador quanto no celular. O novo custo e suas sugestões de preço não são aplicados. Os demais produtos também permanecem preservados.
 
 Para tentar novamente, abra uma nova revisão e selecione o CSV de novo. Cancelar não desfaz alterações que já foram confirmadas em **Salvar selecionados**; a sincronização de edições já salvas pela empresa continua funcionando normalmente.
+
+<a id="fechar-revisao-custos-x"></a>
+
+###### Fechar a revisão de custos pelo X e recarregar
+
+O **X**, no cabeçalho da revisão, é o botão **Fechar revisão de custos**. Ele tem o mesmo efeito de **Cancelar**: descarta a proposta aberta, sem gravar os custos do CSV. **Os custos e as margens originais continuam preservados após recarregar, no computador e no celular**, inclusive quando há produtos marcados e **Salvar selecionados** já está habilitado.
+
+**No computador:**
+
+1. Em **Meus produtos → Importar custos por SKU**, selecione o arquivo e aguarde a prévia. Confira **Custo atual**, **Novo custo (CSV)** e os preços recalculados.
+2. Para sair sem aplicar a proposta, clique no **X** no canto superior direito da revisão. Se já marcou um produto, pode fechar pelo X sem desmarcá-lo.
+3. Recarregue pelo botão do navegador ou por **Ctrl+R**. Aguarde o catálogo carregar e confira em **Meus produtos** que os custos e as margens desejadas continuam com os valores salvos antes da revisão.
+
+**No celular:**
+
+1. Abra a revisão em **Meus produtos → Importar custos por SKU**, escolha o CSV e aguarde os resultados.
+2. Toque no **X** no cabeçalho. Se estiver vendo os preços ou os controles no fim da revisão, role até o topo para encontrar o botão. O fechamento descarta a proposta mesmo com produtos marcados.
+3. Use a opção de recarregar do navegador e aguarde o painel carregar. Confira os custos e as margens em **Meus produtos**: permanecem os valores originais.
+
+**Exemplo ilustrativo:** um produto com custo de **R$ 20,00** e margem de **20%** recebe na prévia a proposta de **R$ 22,50**. Ao fechar pelo **X** e recarregar, continua com **R$ 20,00 e 20%**; os demais cadastros também permanecem preservados. Para rever a proposta, abra a importação e selecione o CSV novamente.
+
+Fechar pelo X não desfaz uma atualização já confirmada em **Salvar selecionados**. A sincronização das edições já salvas pela empresa continua funcionando normalmente, como no [cancelamento da revisão](#cancelar-revisao-custos-csv).
 
 <a id="atualizacao-retencao-limites"></a>
 
