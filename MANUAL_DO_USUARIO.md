@@ -42,6 +42,7 @@ O painel ajuda a definir preços no Mercado Livre e na Shopee, comparar o lucro 
 - [6. Entender tarifas, impostos e frete](#tarifas)
 - [7. Montar e manter kits](#kits)
   - [Coluna mais larga de “Monte seu kit”](#montagem-kit-mais-larga)
+  - [Selos dos kits no mesmo tamanho de Meus produtos](#selos-kits-produtos)
   - [Atualizar a cotação quando o custo dos componentes mudar](#atualizar-cotacao-kit)
 - [8. Importar e exportar CSV](#csv)
   - [Exportar produtos filtrados em CSV](#exportar-produtos-filtrados)
@@ -792,9 +793,19 @@ Use **Buscar produtos para o kit** para encontrar os componentes e ajuste suas q
 
 **No celular e em janelas menores**, a montagem usa a largura disponível em vez de manter duas colunas lado a lado. Abra **Menu → Montar kits** e use as abas **Montagem** e **Preços**: a primeira reúne campos e seleção dos produtos; a segunda mostra os resultados. Alternar as abas mantém os campos e os componentes selecionados. Para salvar, volte a **Montagem** e use **Salvar kit** quando quiser confirmar o cadastro.
 
-Nos kits salvos, os selos **ML Clássico**, **ML Premium** e **Shopee** seguem o mesmo tamanho usado em **Meus produtos**.
-
 A mudança de disposição e a troca de abas não alteram os produtos ou kits salvos. Custos, margens, componentes e as automações de frete, comissões e preços continuam com as regras existentes.
+
+<a id="selos-kits-produtos"></a>
+
+### Selos dos kits no mesmo tamanho de Meus produtos
+
+Em **Montar kits → Meus kits salvos**, os selos **ML Clássico**, **ML Premium** e **Shopee**, no topo dos cartões, têm o mesmo tamanho dos respectivos selos em **Meus produtos**. A padronização inclui fonte, largura, altura e espaçamento interno: o selo ML Clássico do kit corresponde ao ML Clássico do produto, e o mesmo vale para Premium e Shopee. As cores de cada marketplace são mantidas.
+
+**No computador**, abra **Montar kits** pelo menu lateral e role até **Meus kits salvos**. Os nomes dos marketplaces aparecem em selos compactos, com o mesmo padrão da lista de produtos. O nome principal do kit continua maior para identificar o conjunto.
+
+**No celular**, abra **Menu → Montar kits** e localize os kits salvos abaixo da montagem. Os cartões dos marketplaces ficam um abaixo do outro e seus selos usam o mesmo tamanho dos correspondentes em **Menu → Meus produtos**. Os tamanhos se adaptam à largura da tela; a igualdade vale ao comparar as duas áreas no mesmo formato de computador ou celular.
+
+A padronização dos selos é apenas visual: custos, margens e componentes permanecem preservados, e os cálculos de preços e as automações de frete, comissões e Ads mantêm suas regras.
 
 ### Cotação oficial do kit
 
