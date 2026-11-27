@@ -32,6 +32,7 @@ O painel ajuda a definir preços no Mercado Livre e na Shopee, comparar o lucro 
   - [Atualizar custos de produtos cadastrados](#atualizar-custos-csv)
   - [Revisar e salvar custos por CSV no computador](#revisar-custos-csv-computador)
   - [Revisar e salvar custos por CSV no celular](#revisar-custos-csv-celular)
+  - [Cancelar a revisão de custos e recarregar](#cancelar-revisao-custos-csv)
   - [Atualização, limites e retenção dos dados importados](#atualizacao-retencao-limites)
   - [Quando aparece “Anúncio encerrado”](#anuncio-encerrado)
   - [Anúncios desativados: ordem, visual e alinhamento](#anuncios-desativados)
@@ -536,6 +537,28 @@ O custo deve corresponder à unidade anunciada: um anúncio de kit com dez peça
 Fechar ou cancelar descarta a revisão. Se o produto ou a pendência mudar durante a conferência, o painel pede para ler o arquivo novamente, preservando a edição mais recente. Falha ao gravar, sessão inválida ou mudança de empresa impede aplicar a revisão. Os novos produtos começam com Ads em 0%; os produtos já cadastrados mantêm seus percentuais. Após salvar, a automação existente poderá atualizar o Ads do Mercado Livre pelo histórico aplicável. Confira o indicador de histórico antes de interpretar zero como publicidade gratuita.
 
 O CSV pode ser preparado a partir do ERP, como a Olist, mas esta função **não conecta o painel à API da Olist**. Exporte ou organize os códigos e custos no formato acima e confira a correspondência dos SKUs antes de confirmar.
+
+<a id="cancelar-revisao-custos-csv"></a>
+
+###### Cancelar a revisão de custos e recarregar
+
+**Ao clicar ou tocar em Cancelar, a proposta do CSV é descartada e os custos e as margens já salvos permanecem preservados, inclusive após recarregar a página.** Isso também vale quando você já marcou produtos e o botão **Salvar selecionados** está habilitado: marcar uma linha não grava o novo custo.
+
+**No computador:**
+
+1. Em **Meus produtos → Importar custos por SKU**, selecione o CSV e aguarde a revisão. Compare **Custo atual**, **Novo custo (CSV)** e os preços recalculados; esses valores ainda são uma prévia.
+2. Para desistir, clique em **Cancelar**, mesmo que algum produto esteja marcado. Não clique em **Salvar selecionados**.
+3. Recarregue pelo botão do navegador ou por **Ctrl+R**. Quando o catálogo carregar, confira os custos e as margens desejadas em **Meus produtos**: continuam com os valores salvos antes da revisão.
+
+**No celular:**
+
+1. Abra **Meus produtos → Importar custos por SKU**, escolha o arquivo e aguarde a prévia. Role a revisão para conferir os valores e os preços por marketplace.
+2. No fim da revisão, toque em **Cancelar**. A proposta é descartada mesmo se você já tiver marcado o produto.
+3. Use a opção de recarregar do navegador e aguarde o painel carregar. Volte a **Meus produtos**, se necessário, e confira: o custo original e a margem desejada permanecem salvos.
+
+**Exemplo ilustrativo:** se o cadastro tem custo de **R$ 20,00** e margem de **20%**, e o CSV propõe **R$ 22,50**, cancelar e recarregar mantém **R$ 20,00 e 20%**, tanto no computador quanto no celular. O novo custo e suas sugestões de preço não são aplicados. Os demais produtos também permanecem preservados.
+
+Para tentar novamente, abra uma nova revisão e selecione o CSV de novo. Cancelar não desfaz alterações que já foram confirmadas em **Salvar selecionados**; a sincronização de edições já salvas pela empresa continua funcionando normalmente.
 
 <a id="atualizacao-retencao-limites"></a>
 
