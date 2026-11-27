@@ -27,6 +27,7 @@ O painel ajuda a definir preços no Mercado Livre e na Shopee, comparar o lucro 
 - [4. Conectar um anúncio do Mercado Livre](#mercado-livre)
   - [Importar e conferir o catálogo completo](#importar-conferir-catalogo)
   - [Acompanhar a importação automática dos anúncios](#importacao-automatica-anuncios)
+  - [Anúncios pendentes em retângulos menores](#pendencias-compactas)
   - [Concluir produtos pendentes de custo](#concluir-pendentes-custo)
   - [Importar e atualizar custos por SKU](#custos-por-sku)
   - [Atualizar custos de produtos cadastrados](#atualizar-custos-csv)
@@ -40,6 +41,7 @@ O painel ajuda a definir preços no Mercado Livre e na Shopee, comparar o lucro 
 - [5. Entender preços, lucros e cores](#precos)
 - [6. Entender tarifas, impostos e frete](#tarifas)
 - [7. Montar e manter kits](#kits)
+  - [Coluna mais larga de “Monte seu kit”](#montagem-kit-mais-larga)
   - [Atualizar a cotação quando o custo dos componentes mudar](#atualizar-cotacao-kit)
 - [8. Importar e exportar CSV](#csv)
   - [Exportar produtos filtrados em CSV](#exportar-produtos-filtrados)
@@ -429,7 +431,7 @@ Depois de **Prosseguir**, confira:
 
 1. **Catálogo da empresa:** aguarde o carregamento ou a sincronização. Se houver primeira associação ou conflito, conclua essa revisão antes da importação automática. Formulários em edição também podem adiar as inclusões.
 2. **Conexão com o Mercado Livre:** o aviso mostra o andamento e, ao terminar, quantos anúncios foram encontrados e quantos novos foram adicionados como pendentes de custo. Não é necessário usar **Conferir catálogo** para iniciar a importação; esse botão tem a finalidade de revisar atualizações dos cadastros existentes.
-3. **Anúncios pendentes de cadastro:** confira os novos cartões. O preço anunciado pode estar disponível, mas o custo de compra e o lucro continuam sem dados suficientes até concluir o cadastro. Anúncios com variações mostram um aviso para conferir a unidade escolhida.
+3. **Anúncios pendentes de cadastro:** confira os novos retângulos compactos. O preço anunciado pode estar disponível, mas o custo de compra e o lucro continuam sem dados suficientes até concluir o cadastro. Anúncios com variações mostram a quantidade de variações para lembrar de conferir a unidade escolhida.
 4. **Catálogo sincronizado com a empresa:** aguarde essa confirmação antes de fechar a página para garantir que os colegas recebam as pendências salvas na nuvem.
 
 O resumo **Produtos no catálogo** conta os produtos com cadastro concluído; as pendências têm um contador próprio. Por isso, o total de anúncios encontrados no Mercado Livre pode ser maior que o número de produtos precificados. As pendências não entram nos lucros, nos kits nem no CSV de produtos.
@@ -438,7 +440,7 @@ A busca acontece uma vez por abertura autenticada da página; recarregar inicia 
 
 Se a consulta terminar sem avisos de indisponibilidade e informar **0 novos**, os anúncios já estavam cadastrados ou pendentes; isso não significa que a lista foi apagada. Se houver aviso de falha, acompanhe a nova tentativa antes de considerar a importação concluída. As automações já existentes de tarifas, frete e Ads continuam funcionando. Datas de consulta podem ser renovadas sem mudar os custos e as margens que você cadastrou.
 
-No celular, abra **Menu → Meus produtos**. A importação é a mesma e acontece sem um botão adicional. Use a busca das pendências por nome, MLB ou SKU; ela considera todas as páginas, inclusive as que você ainda não abriu. **Anterior** e **Próxima** apenas mudam os cartões exibidos, sem exigir carregar manualmente mais anúncios.
+No celular, abra **Menu → Meus produtos**. A importação é a mesma e acontece sem um botão adicional. Use a busca das pendências por nome, MLB ou SKU; ela considera todas as páginas, inclusive as que você ainda não abriu. **Anterior** e **Próxima** apenas mudam os itens exibidos, sem exigir carregar manualmente mais anúncios.
 
 **Conferir atualizações dos produtos já cadastrados:**
 
@@ -452,6 +454,20 @@ No celular, abra **Menu → Meus produtos**. A importação é a mesma e acontec
 
 No celular, abra **Meus produtos** pelo **Menu** e siga os mesmos comandos. Os resultados aparecem em cartões e os filtros se adaptam à largura da tela.
 
+<a id="pendencias-compactas"></a>
+
+#### Anúncios pendentes em retângulos menores
+
+Em **Meus produtos → Anúncios pendentes de cadastro**, os anúncios aparecem em retângulos mais baixos, com menos informações repetidas. Cada item mostra **nome**, **MLB**, **preço anunciado quando há dados atuais** e o botão **Concluir cadastro**. A quantidade de variações e os avisos de situação aparecem quando necessários. A explicação geral sobre a falta de custo fica acima da lista.
+
+**No computador**, os retângulos ficam em duas colunas quando há espaço; em uma área mais estreita, passam para uma coluna. O botão de conclusão fica ao lado das informações. Nomes longos ocupam até duas linhas; passe o mouse sobre o nome para consultar o texto completo.
+
+**No celular**, abra **Menu → Meus produtos**. As pendências ficam em **uma coluna**, com informações e botão ajustados à largura disponível, sem exigir rolagem horizontal. Nomes longos podem aparecer abreviados visualmente. Toque em **Concluir cadastro** para abrir o formulário e conferir o anúncio antes de informar o custo.
+
+Use **Buscar nas pendências** para procurar por nome, MLB ou SKU; a busca continua abrangendo todas as páginas. **Anterior** e **Próxima** mantêm a navegação pelos resultados. Anúncios desativados continuam no fim e com aparência acinzentada; situações que impedem a conclusão mantêm o botão desativado.
+
+O preço anunciado é o **preço de venda**, não o custo de compra. A disposição compacta não conclui anúncios nem altera os cadastros: as pendências continuam fora dos lucros, kits e CSV de produtos até receberem um cadastro válido.
+
 <a id="concluir-pendentes-custo"></a>
 
 #### Concluir produtos pendentes de custo
@@ -459,7 +475,7 @@ No celular, abra **Meus produtos** pelo **Menu** e siga os mesmos comandos. Os r
 As pendências são compartilhadas com a empresa e incluídas no backup v19. Para transformar um anúncio pendente em produto precificado, no computador ou celular:
 
 1. Abra **Meus produtos**; no celular, use **Menu → Meus produtos**. Localize **Anúncios pendentes de cadastro**, acima da lista dos produtos concluídos.
-2. Em **Buscar nas pendências**, pesquise por nome, MLB ou SKU, ou use **Anterior** e **Próxima**. Confira o anúncio e, no cartão correspondente, clique ou toque em **Concluir cadastro**.
+2. Em **Buscar nas pendências**, pesquise por nome, MLB ou SKU, ou use **Anterior** e **Próxima**. Confira o anúncio e, no retângulo correspondente, clique ou toque em **Concluir cadastro**.
 3. No formulário **Concluir cadastro pendente**, informe **Custo do produto (R$)** com seu custo de compra real, maior que zero. O campo começa vazio. O preço anunciado no Mercado Livre é o preço de venda, não o custo de compra.
 4. Confira nome, categoria, peso do pacote, margem desejada, impostos, outros custos e Ads de cada marketplace. Se o peso não vier da consulta, preencha-o. Em anúncios com variações, confira preço, peso e custo da unidade escolhida antes de continuar.
 5. Aguarde a atualização dos dados do anúncio e das cotações. A opção de tarifas oficiais é ativada ao concluir a pendência; com ela marcada, é necessária uma cotação válida para os dados do formulário antes de salvar. As consultas de frete e comissões continuam automáticas. Os custos e impostos da empresa precisam ser conferidos por você.
@@ -765,6 +781,20 @@ Você controla as duas caixas; elas podem ser usadas juntas. A automação preen
 6. Confira os três preços e clique em **Salvar kit**.
 
 Custos, pesos e outros custos dos componentes são multiplicados pelas quantidades. O custo adicional do kit entra uma vez. Ads é o percentual do próprio kit; os percentuais dos componentes não são somados. Comissão e frete são calculados para a venda do conjunto, sem somar os preços de venda dos produtos individuais.
+
+<a id="montagem-kit-mais-larga"></a>
+
+### Coluna mais larga de “Monte seu kit”
+
+**No computador**, abra **Montar kits** pelo menu lateral. Em telas largas, **Monte seu kit** fica à esquerda e recebe aproximadamente **57% da largura disponível entre as duas colunas**. Isso dá mais espaço ao nome, à margem, aos campos de Ads, às opções do Mercado Livre e à seleção dos componentes. **Preços do seu kit** permanece à direita; os resumos e cartões de preço se adaptam à largura desse painel para manter os valores legíveis.
+
+Use **Buscar produtos para o kit** para encontrar os componentes e ajuste suas quantidades na lista. A lista de componentes tem rolagem própria; aumentar a largura não exige exibir todos os produtos ao mesmo tempo.
+
+**No celular e em janelas menores**, a montagem usa a largura disponível em vez de manter duas colunas lado a lado. Abra **Menu → Montar kits** e use as abas **Montagem** e **Preços**: a primeira reúne campos e seleção dos produtos; a segunda mostra os resultados. Alternar as abas mantém os campos e os componentes selecionados. Para salvar, volte a **Montagem** e use **Salvar kit** quando quiser confirmar o cadastro.
+
+Nos kits salvos, os selos **ML Clássico**, **ML Premium** e **Shopee** seguem o mesmo tamanho usado em **Meus produtos**.
+
+A mudança de disposição e a troca de abas não alteram os produtos ou kits salvos. Custos, margens, componentes e as automações de frete, comissões e preços continuam com as regras existentes.
 
 ### Cotação oficial do kit
 
