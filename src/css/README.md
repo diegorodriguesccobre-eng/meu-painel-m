@@ -179,3 +179,29 @@ com a tabela na mesma ordem de
 O escopo foi a navegação e o carregamento dos arquivos CSS no GitHub. A
 conferência foi somente de leitura, sem alterar código nem cadastros reais.
 Este registro documenta o resultado observado nessa data e nessa versão.
+
+### Preservação dos arquivos no commit 9fb1655
+
+Em **27/11/2026**, o commit
+[9fb1655](https://github.com/diegorodriguesccobre-eng/meu-painel-m/commit/9fb16552831ff37e3784a8d5347e88aa075a6cdb)
+foi comparado com seu commit anterior,
+[a2ae1ea](https://github.com/diegorodriguesccobre-eng/meu-painel-m/commit/a2ae1eacd4e27c5ff460447664d707fb861121d2).
+
+| Verificação | Resultado |
+| --- | --- |
+| Arquivo alterado | Somente `src/css/README.md`. |
+| Diff da documentação | 56 linhas adicionadas e 4 removidas. |
+| Outros arquivos versionados | **99 de 99 preservados**, com os mesmos hashes de conteúdo e modos de arquivo do commit anterior. |
+
+A comparação das árvores Git confirmou 100 arquivos versionados, dos quais
+somente o guia foi modificado. Os arquivos de código, incluindo CSS, HTML,
+JavaScript e configuração, permaneceram idênticos ao commit anterior.
+
+A lista de arquivos e o diff foram conferidos no GitHub, em tela de computador
+e em celular simulado de **390 × 844**; a preservação dos outros 99 arquivos foi
+confirmada pelos identificadores retornados pela API do GitHub. A conferência
+foi somente de leitura, sem alterar código nem cadastros reais.
+
+Este resultado se refere especificamente ao commit `9fb1655` em relação a seu
+commit anterior; os registros posteriores deste guia são atualizações de
+documentação.
