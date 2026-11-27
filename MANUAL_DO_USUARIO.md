@@ -31,6 +31,7 @@ O painel ajuda a definir preços no Mercado Livre e na Shopee, comparar o lucro 
   - [Preencher pendências com CSV de SKU e custo](#custos-por-sku)
   - [Atualização, limites e retenção dos dados importados](#atualizacao-retencao-limites)
   - [Quando aparece “Anúncio encerrado”](#anuncio-encerrado)
+  - [Anúncios desativados: ordem, visual e alinhamento](#anuncios-desativados)
 - [5. Entender preços, lucros e cores](#precos)
 - [6. Entender tarifas, impostos e frete](#tarifas)
 - [7. Montar e manter kits](#kits)
@@ -345,6 +346,8 @@ No computador, os controles de ordenação ficam acima dos cartões, junto à bu
 
 Nos cartões do Mercado Livre, o preço pode ser o **atual do anúncio vinculado** ou o **sugerido**, conforme a modalidade e os dados disponíveis. Produtos com valores iguais ficam empatados no critério escolhido.
 
+**Anúncios desativados ficam sempre no fim da lista**, inclusive na ordem decrescente. O critério e a direção escolhidos continuam valendo dentro de cada grupo. Veja [como reconhecer esses produtos e seus cartões](#anuncios-desativados).
+
 Você pode combinar busca e ordenação: primeiro filtre os produtos, depois escolha o critério e a direção. Apenas os resultados encontrados são ordenados. **Exportar CSV** usa os produtos visíveis na ordem apresentada; para incluir todos, limpe a busca antes de exportar.
 
 <a id="busca-ordenacao-celular"></a>
@@ -536,6 +539,20 @@ O status fica no vínculo salvo. **No computador e no celular**, o comportamento
 **Nas duas situações, o custo e a margem desejada permanecem com os valores cadastrados.** Recarregar ou entrar novamente não zera nem substitui esses campos, e não é necessário cadastrar o produto novamente. Confira o aviso **Catálogo sincronizado com a empresa** para confirmar que a atualização chegou ao catálogo compartilhado.
 
 Uma falha temporária de conexão, falta de permissão ou limite de consultas não é suficiente para classificar o anúncio como encerrado. Outros casos mantêm seus avisos de indisponibilidade ou de atualização. A mensagem não muda as automações de preços, frete, comissões, ACOS, ROAS e sincronização, nem altera o anúncio no Mercado Livre.
+
+<a id="anuncios-desativados"></a>
+
+#### Anúncios desativados: ordem, visual e alinhamento
+
+Em **Meus produtos**, os produtos cujo anúncio vinculado do Mercado Livre esteja pausado, encerrado, desativado, em revisão ou indisponível aparecem **depois dos demais produtos**. Eles continuam acessíveis pela busca.
+
+- **Ordem da lista:** escolher outro critério ou inverter entre **↑ Crescente** e **↓ Decrescente** mantém esses anúncios no fim. A ordenação escolhida vale dentro de cada grupo. O **CSV** acompanha a lista filtrada e essa mesma ordem. Nos anúncios pendentes de cadastro, a prioridade também é aplicada antes de dividir os resultados em páginas.
+- **Aparência desativada:** o produto recebe fundo discreto, cartões acinzentados e menos destaque nos textos e valores. Um aviso abaixo do nome informa o estado, como **Anúncio pausado** ou **Anúncio encerrado**. Os botões **Editar** e **Excluir** continuam acessíveis; o visual acinzentado não bloqueia o cadastro nem representa uma nova classificação de lucro.
+- **Cartões alinhados:** **Ads (%)** e **ROAS** permanecem centralizados. O **investimento**, quando exibido, também fica centralizado, com margens laterais uniformes. Os avisos e os textos de **Dados de Product Ads** quebram em linhas dentro do cartão, inclusive ao expandir os detalhes.
+
+**No computador**, os cartões mantêm o padrão de alinhamento lado a lado. **No celular**, adaptam-se à largura da tela e ficam empilhados, preservando a centralização e a leitura dos textos sem cortes. Não é necessário ativar uma opção para obter esse comportamento.
+
+**Custos, margens e taxas cadastradas continuam preservados.** A posição e o visual do anúncio não alteram as automações de preços, frete, comissões, ACOS e ROAS. Consulte [quando aparece “Anúncio encerrado”](#anuncio-encerrado) para entender os avisos e a preservação dos dados após recarregar ou entrar novamente.
 
 <a id="precos"></a>
 
