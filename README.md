@@ -140,7 +140,7 @@ kits, CSV, backup e eventos com DOM simulado. Eles não substituem testes visuai
 ou em um celular físico. Os resultados são apresentados no terminal, sem criar arquivos
 de relatório dentro do projeto.
 
-## Registrar alterações
+## Organização dos arquivos e do CSS
 
 Os fontes ficam separados para facilitar a manutenção:
 
@@ -159,16 +159,68 @@ Os fontes ficam separados para facilitar a manutenção:
 - `netlify/lib/ml-sales-rules.mjs`: regras financeiras de descontos e pagamentos,
   sem consultas externas ou estado do navegador.
 
+### Onde editar os estilos
+
+O CSS do painel fica em `src/css/`. Use os arquivos abaixo de acordo com a área
+que deseja ajustar. Os links abrem os respectivos fontes no GitHub.
+
+| Área | Arquivos para editar | O que controlam |
+| --- | --- | --- |
+| Estilos gerais | [geral.css](src/css/geral.css) | Variáveis de cor do tema, tipografia, botões, campos, painéis, diálogos e regras base compartilhadas. |
+| Meus produtos | [listagem.css](src/css/produtos/listagem.css), [resultados.css](src/css/produtos/resultados.css) e [cadastro.css](src/css/produtos/cadastro.css) | Lista, busca, ordenação, distribuição dos resultados e cadastro compacto com suas abas no celular. |
+| Catálogo, pendências e CSV | [catalogo.css](src/css/produtos/catalogo.css), [importacao.css](src/css/produtos/importacao.css) e [custos-csv.css](src/css/produtos/custos-csv.css) | Anúncios pendentes, revisão de importação e comparação de custos por SKU. |
+| Montar kits | [montagem.css](src/css/kits/montagem.css) e [selecao.css](src/css/kits/selecao.css) | Largura das colunas, campos da montagem, seleção e quantidades dos componentes, prévia de preços, kits salvos e abas no celular. |
+| Gestão de Ads | [gestao.css](src/css/ads/gestao.css) e [historico.css](src/css/ads/historico.css) | Resumo, cartões azuis, projeções e conciliações; filtros, comparativo por períodos e tabela com rolagem horizontal. |
+| Campos de Ads e ROAS | [campos.css](src/css/ads/campos.css) | Apresentação do percentual de Ads e do ROAS equivalente nos formulários de produtos e kits. |
+| Componentes compartilhados | [cartoes-preco.css](src/css/componentes/cartoes-preco.css), [indicadores.css](src/css/componentes/indicadores.css) e [utilitarios.css](src/css/componentes/utilitarios.css) | Cartões de marketplace, selos, lucros, status e classes de apresentação reutilizadas entre telas. |
+| Cabeçalho e navegação | [cabecalho.css](src/css/layout/cabecalho.css) e [menu.css](src/css/layout/menu.css) | Marca, cabeçalho e menu lateral, incluindo recolhimento no computador e abertura no celular. |
+| Integração e sincronização | [mercado-livre.css](src/css/integracoes/mercado-livre.css) e [sincronizacao.css](src/css/sincronizacao.css) | Apresentação das consultas do Mercado Livre, avisos do catálogo compartilhado e revisão de conflitos. |
+| Entrada e documentos | [acesso.css](src/css/acesso.css) e [documentos.css](src/css/documentos.css) | Tela de entrada e aceites; aparência compartilhada pelos termos de uso e pela política de privacidade. |
+
+Por exemplo, para mudar o fundo e a fonte do painel inteiro, comece por
+`geral.css`. Para ajustar a largura de “Monte seu kit”, use `kits/montagem.css`.
+Para alterar o comparativo semanal de Ads, use `ads/historico.css`. Se a mudança
+for em um cartão de marketplace usado por produtos e kits, confira também
+`componentes/cartoes-preco.css` e as adaptações da tela correspondente.
+
+### Ordem dos módulos e adaptação ao celular
+
+[src/styles.css](src/styles.css) é somente a entrada que reúne os módulos por
+`@import`. Preserve a ordem desses imports: regras posteriores podem ajustar
+componentes definidos antes, e reordená-las pode mudar o visual.
+
+Mantenha as regras responsivas (`@media` e `@container`) junto dos estilos do
+componente no mesmo arquivo. Ao adicionar um módulo, registre seu import relativo
+em uma linha própria de `src/styles.css`, por exemplo:
+
+```css
+@import "./css/componentes/novo-componente.css";
+```
+
+Use classes para estilos fixos. As variáveis `--ads-strength` e `--cell-blue`
+continuam recebendo valores por item porque a intensidade do azul depende das
+métricas; as regras que exibem essas cores ficam nos módulos de Ads. Veja também
+o [guia de organização do CSS](src/css/README.md).
+
+## Registrar alterações
+
 Edite esses fontes, execute `npm run build` e registre as alterações em commits.
 O build gera o `index.html` da raiz e a cópia de publicação em `dist`, incorporando
-CSS e JavaScript. O arquivo final continua portátil: abre por duplo clique e pode
-ser transferido sozinho para o celular. Não edite o HTML gerado diretamente,
-pois a próxima montagem substitui seu conteúdo.
+CSS e JavaScript. Esses arquivos são gerados: não edite diretamente o `index.html`
+da raiz nem os arquivos de `dist/`, pois a próxima montagem substitui seu conteúdo.
+O HTML reúne os estilos e scripts em um arquivo, mas o login, o catálogo
+compartilhado e as consultas da versão atual exigem o site hospedado e uma sessão
+válida.
 
 Os imports locais de `src/styles.css` são incorporados durante a montagem,
 mantendo sua ordem. Termos e privacidade compartilham `src/css/documentos.css`,
 também incorporado às páginas publicadas. Nenhum CSS adicional precisa ser
 carregado pela versão final no navegador.
+
+`npm run build` executa os testes antes de gerar a publicação. Depois de mudar
+estilos, confira Meus produtos, Montar kits e Gestão de Ads em tamanhos de
+computador e celular, incluindo menu, formulários, cartões e rolagem das tabelas,
+sem salvar alterações nos cadastros reais durante a conferência visual.
 
 `validar.cjs` e os testes leem o JavaScript dos fontes. Os testes de montagem
 verificam a distribuição em arquivo único e impedem publicar fontes, documentação
