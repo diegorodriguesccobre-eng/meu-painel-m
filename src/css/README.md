@@ -218,3 +218,15 @@ modos de arquivo, incluindo CSS, HTML, JavaScript e arquivos de configuração.
 A lista de alterações e o diff foram conferidos no GitHub no computador e em
 celular simulado (390 × 844). A comparação das árvores Git confirmou a
 preservação dos 99 arquivos.
+
+### Preservação dos arquivos no commit a10f55d
+
+A comparação de `a10f55d` com seu commit anterior, `cb67d89`, confirmou que
+somente o `README.md` da raiz mudou, com 56 linhas adicionadas e 4 removidas.
+[Commit a10f55d](https://github.com/diegorodriguesccobre-eng/meu-painel-m/commit/a10f55dc9bd4172115e4c2e519f0468db1891fa4) ·
+[Commit anterior cb67d89](https://github.com/diegorodriguesccobre-eng/meu-painel-m/commit/cb67d89d24c99720350d300bc8d685fa810d62e8)
+
+Os outros **99 arquivos versionados**, incluindo os arquivos de código,
+mantiveram os mesmos hashes de conteúdo e modos de arquivo na comparação das
+árvores Git. A lista de alterações e o diff foram conferidos no GitHub no
+computador e em celular simulado (390 × 844).
