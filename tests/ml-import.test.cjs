@@ -19,7 +19,7 @@ test('pendências mantêm anúncios desativados no fim antes da paginação, sem
  const a=app(true),statuses=['closed',...Array(30).fill('active'),'paused','inactive','unavailable'];
  a.c.seedPending=statuses.map((status,index)=>a.api.pendingProduct({...fixtures.response('MLB900000000'+index).item,title:'Produto '+index,...(status==='unavailable'?{availability:'unavailable'}:{status})},fixtures.data().fees));
  a.run('state.pendingProducts=seedPending');const before=a.data();a.api.renderPending();
- assert.doesNotMatch(a.get('ml-pending-list').innerHTML,/<p>MLB900000000(?:0|31)<\/p>/);
+ assert.doesNotMatch(a.get('ml-pending-list').innerHTML,/MLB900000000(?:0|31)(?:\D|$)/);
  assert.match(a.get('ml-pending-list').innerHTML,/MLB9000000001/);
  a.get('ml-pending-next').onclick();assert.match(a.get('ml-pending-list').innerHTML,/Anúncio encerrado/);
  a.get('ml-pending-search').value='MLB9000000000';a.get('ml-pending-search').oninput();
