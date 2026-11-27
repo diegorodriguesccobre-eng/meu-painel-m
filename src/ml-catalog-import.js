@@ -318,7 +318,7 @@
 
  function pendingRows() {
   const query = normalizeQuery(ui('ml-pending-search').value.trim());
-  return (state.pendingProducts ?? []).filter(p => normalizeQuery(p.item.title + ' ' + p.item.itemId + ' ' + (p.item.skus ?? []).join(' ')).includes(query));
+  return (state.pendingProducts ?? []).filter(p => normalizeQuery(p.item.title + ' ' + p.item.itemId + ' ' + (p.item.skus ?? []).join(' ')).includes(query)).sort((a,b) => Number(inactiveMlListing(a.item))-Number(inactiveMlListing(b.item)));
  }
  function renderPending() {
   const result = pendingRows(), total = state.pendingProducts?.length ?? 0;

@@ -15,6 +15,18 @@ function app(ui = false, request) {
  vm.runInContext(moduleSource, c);
  return { api: c.ConduzMlImport, get, saved, notices, opened, c, run: s => vm.runInContext(s, c), data: () => clone(vm.runInContext('state', c)) };
 }
+test('pendências mantêm anúncios desativados no fim antes da paginação, sem alterar os dados salvos', () => {
+ const a=app(true),statuses=['closed',...Array(30).fill('active'),'paused','inactive','unavailable'];
+ a.c.seedPending=statuses.map((status,index)=>a.api.pendingProduct({...fixtures.response('MLB900000000'+index).item,title:'Produto '+index,...(status==='unavailable'?{availability:'unavailable'}:{status})},fixtures.data().fees));
+ a.run('state.pendingProducts=seedPending');const before=a.data();a.api.renderPending();
+ assert.doesNotMatch(a.get('ml-pending-list').innerHTML,/<p>MLB900000000(?:0|31)<\/p>/);
+ assert.match(a.get('ml-pending-list').innerHTML,/MLB9000000001/);
+ a.get('ml-pending-next').onclick();assert.match(a.get('ml-pending-list').innerHTML,/Anúncio encerrado/);
+ a.get('ml-pending-search').value='MLB9000000000';a.get('ml-pending-search').oninput();
+ assert.match(a.get('ml-pending-list').innerHTML,/Anúncio encerrado/);
+ assert.deepEqual(a.data(),before);assert.equal(a.saved.length,0);
+});
+
 test('consulta 41 anúncios em páginas até o fim sem alterar dados, com concorrência limitada e pendências sem custo', async () => {
  const ids = ['MLB1234567890', ...Array.from({ length: 40 }, (_, i) => 'MLB' + (9000000000 + i))], loader = fixtures.requests(ids), a = app(), before = fixtures.data();
  const result = await a.api.inspectCatalog({ data: before, sellerId: 123, request: loader.request });

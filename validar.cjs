@@ -111,6 +111,34 @@ app.get('mobile-sort').onchange({target:{value:'cost'}});
 assert.equal(app.run('visibleProducts()[0].cost'),25);
 app.get('sort-direction').onclick();
 assert.equal(app.run('visibleProducts()[0].cost'),60);
+// Anúncios fora de venda permanecem no fim em qualquer ordenação, busca e CSV.
+const listingOrder=runtime(),listingFixture=require('./tests/support/ml-import-fixtures.cjs');
+const listingStatuses=['closed','active','manual','paused','inactive','under_review','unavailable','legacy'];
+const orderedFixtures=listingStatuses.map((status,index)=>({
+ ...products[0],id:'order-'+index,name:'Ordem '+index+' '+status,category:'Ordenação',cost:(index+1)*5,
+ ...(status==='manual'?{}:{mercadoLivre:{...listingFixture.response('MLB900000000'+index).item,
+  ...(status==='unavailable'?{availability:'unavailable'}:status==='legacy'?{fetchedAt:'2020-01-01T00:00:00Z'}:{status})}})
+}));
+listingOrder.run(`state.products=${JSON.stringify(orderedFixtures)};persist();render();`);
+const savedListingData=listingOrder.run('JSON.stringify(state)');
+for(const key of ['name','cost','weight','margin','ml','mlPremium','shopee'])for(const direction of [1,-1]){
+ listingOrder.run(`sort={key:'${key}',direction:${direction}};render();`);
+ const ids=Array.from(listingOrder.run('visibleProducts().map(p=>p.id)'));
+ assert.deepEqual(ids.slice(0,3).sort(),['order-1','order-2','order-7']);
+ assert.deepEqual(ids.slice(3).sort(),['order-0','order-3','order-4','order-5','order-6']);
+}
+listingOrder.run("sort={key:'cost',direction:1};render();");
+assert.deepEqual(Array.from(listingOrder.run('visibleProducts().map(p=>p.id)')),['order-1','order-2','order-7','order-0','order-3','order-4','order-5','order-6']);
+listingOrder.get('sort-direction').onclick();
+assert.deepEqual(Array.from(listingOrder.run('visibleProducts().map(p=>p.id)')),['order-7','order-2','order-1','order-6','order-5','order-4','order-3','order-0']);
+listingOrder.get('export').onclick();
+assert.deepEqual(listingOrder.downloads.at(-1).blob.parts[0].split('\r\n').slice(1).map(row=>row.split(';')[0]),Array.from(listingOrder.run('visibleProducts().map(p=>csvCell(p.name))')));
+listingOrder.get('search').value='closed';listingOrder.get('search').oninput();
+assert.equal(listingOrder.get('table-count').textContent,'1 de 8 produtos');
+assert.equal(listingOrder.run('visibleProducts()[0].id'),'order-0');
+assert.equal(listingOrder.run('JSON.stringify(state)'),savedListingData);
+const reloadedListing=runtime(listingOrder.storage);
+assert.deepEqual(Array.from(reloadedListing.run('visibleProducts().slice(0,3).map(p=>p.id)')),['order-1','order-2','order-7']);
 app.get('add').onclick();
 const productForm={elements:Object.fromEntries(Object.entries({name:'Produto teste',category:'Teste',cost:10,weight:.3,margin:20,extra:2,mlShipping:18}).map(([k,v])=>[k,{value:String(v)}]))};
 app.get('product-form').elements=productForm.elements;
