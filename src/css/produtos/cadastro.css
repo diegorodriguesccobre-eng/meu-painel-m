@@ -1,0 +1,499 @@
+/* Formulário compacto de produto, taxas, cotações, ajuda e abas. */
+
+/* Cadastro compacto: todas as opções lado a lado em telas amplas, seções fixas no celular. */
+#product-dialog {
+  width: min(1060px,calc(100% - 32px));
+  max-width: none;
+  max-height: calc(100dvh - 32px);
+  padding: 16px;
+  overflow: auto;
+}
+
+#product-dialog .section-head {
+  margin: 0 0 10px;
+  gap: 10px;
+}
+
+#product-dialog .section-head h2 {
+  font-size: 21px;
+}
+
+.product-header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.product-header-actions .row-action {
+  padding: 4px 8px;
+}
+
+#product-dialog .product-core {
+  grid-template-columns: repeat(12,minmax(0,1fr));
+  gap: 8px 12px;
+  margin: 0 0 12px;
+}
+
+#product-dialog .product-core>label {
+  grid-column: span 2;
+}
+
+#product-dialog .product-core>.full {
+  grid-column: span 6;
+}
+
+#product-dialog label {
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+#product-dialog input:not([type="checkbox"]),#product-dialog select {
+  padding: 5px 8px;
+  margin-top: 3px;
+  font-size: 14px;
+  min-height: 32px;
+}
+
+#product-dialog input[readonly],#kits-view input[readonly] {
+  background: #252c36;
+  color: #e1e7ee;
+  border-color: #4b5463;
+}
+
+#product-dialog .help {
+  font-size: 11px;
+  line-height: 1.35;
+  margin: 6px 0 0;
+}
+
+#product-dialog .help:empty,#product-dialog .error:empty {
+  display: none;
+}
+
+#product-dialog .btn {
+  font-size: 12px;
+  padding: 6px 9px;
+  min-height: 32px;
+}
+
+#product-dialog .actions {
+  justify-content: flex-start;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 7px;
+}
+
+.product-workspace {
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 10px;
+  align-items: start;
+}
+
+#product-dialog .ml-product-panel,#product-dialog .market {
+  padding: 10px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  margin: 0;
+  min-width: 0;
+  background: #15171b;
+}
+
+#product-dialog .product-quote-controls,#product-dialog #product-rate-fields>.market[data-product-pane="ml"] {
+  background: #3b331e;
+  border-color: #766139;
+}
+
+#product-dialog #product-rate-fields>.market[data-product-pane="shopee"] {
+  background: #432c23;
+  border-color: #82513b;
+}
+
+#product-dialog #product-rate-fields>.market[data-product-pane="ml"]>strong {
+  color: #e2c979;
+}
+
+#product-dialog #product-rate-fields>.market[data-product-pane="shopee"]>strong {
+  color: #e9b28e;
+}
+
+#product-dialog .product-link-panel {
+  display: block;
+  grid-column: 1;
+  grid-row: 1/3;
+}
+
+#product-dialog .product-link-panel h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+#product-dialog .ml-toolbar {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+#product-dialog .ml-toolbar input {
+  margin: 0;
+  min-width: 0;
+  flex-basis: 0;
+}
+
+#product-dialog .ml-toolbar .btn {
+  flex: none;
+}
+
+#product-dialog .product-shipping {
+  display: block;
+  margin: 10px 0 0;
+  padding-top: 9px;
+  border-top: 1px solid var(--line);
+}
+
+#product-dialog #ml-linked-preview {
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+
+#product-dialog #ml-linked-preview p {
+  font-size: 11px;
+  margin: 5px 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+#product-dialog #ml-linked-preview img {
+  float: left;
+  width: 32px;
+  height: 32px;
+  margin: 2px 8px 2px 0;
+}
+
+#product-dialog #ml-linked-preview strong {
+  font-size: 12px;
+}
+
+#product-dialog .compact-status,#product-dialog #product-shopee-policy-status {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+}
+
+#product-dialog #ml-product-status {
+  -webkit-line-clamp: 1;
+}
+
+#product-dialog #shipping-help {
+  -webkit-line-clamp: 2;
+}
+
+#product-dialog .product-quote-controls {
+  grid-column: 2;
+  grid-row: 1;
+}
+
+#product-dialog #product-fees,#product-dialog #product-rate-fields {
+  display: contents;
+}
+
+#product-dialog #product-rate-fields>.market:first-child {
+  grid-column: 2;
+  grid-row: 2;
+}
+
+#product-dialog #product-rate-fields>.market:last-child {
+  grid-column: 3;
+  grid-row: 1/3;
+}
+
+#product-dialog .market>strong {
+  font-size: 14px;
+}
+
+#product-dialog .fields {
+  gap: 8px;
+  margin-top: 9px;
+}
+
+#product-dialog .option-question {
+  font-size: 11px;
+  gap: 6px;
+  margin-top: 0;
+  align-items: center;
+  min-height: 24px;
+}
+
+#product-dialog .option-question input {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  margin: 0;
+  accent-color: var(--orange);
+}
+
+#product-dialog .market>.option-question {
+  margin-top: 7px;
+}
+
+#product-dialog #ml-refresh-pricing {
+  margin-top: 8px;
+  width: 100%;
+}
+
+#product-dialog .kit-prices {
+  display: grid;
+  grid-template-columns: repeat(2,minmax(0,1fr));
+  gap: 6px;
+  margin-top: 8px;
+}
+
+#product-dialog .kit-prices:empty {
+  display: none;
+}
+
+.product-estimate {
+  padding: 7px;
+  background: #20242b;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  min-width: 0;
+}
+
+.product-estimate span,.product-estimate small {
+  display: block;
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.product-estimate strong {
+  display: block;
+  font-size: 19px;
+  letter-spacing: -.5px;
+}
+
+.product-estimate small {
+  margin-top: 2px;
+}
+
+#product-dialog .market .fields>div>.help {
+  display: none;
+}
+
+#product-dialog .market .help a {
+  font-size: 11px;
+}
+
+.product-form-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  border-top: 1px solid var(--line);
+  margin-top: 12px;
+  padding-top: 10px;
+}
+
+#product-dialog .dialog-actions {
+  position: static;
+  flex: none;
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  gap: 8px;
+  margin-left: auto;
+}
+
+#product-dialog .dialog-actions .btn {
+  font-size: 13px;
+  min-height: 34px;
+}
+
+#product-dialog #product-error {
+  font-size: 12px;
+  margin: 0;
+  line-height: 1.3;
+}
+
+#product-dialog .dialog-actions:only-child {
+  margin-left: auto;
+}
+
+#product-sections {
+  display: none;
+}
+
+#product-help {
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  width: min(520px,calc(100% - 32px));
+  max-height: 80dvh;
+  padding: 22px;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+#product-help::backdrop {
+  background: #0009;
+}
+
+#product-help h3 {
+  margin-top: 0;
+}
+
+#product-help p {
+  margin: 12px 0;
+}
+
+#product-help .btn {
+  margin-top: 12px;
+}
+
+@media(max-width:900px),(max-height:650px) {
+  #product-dialog {
+    width: min(620px,calc(100% - 20px));
+    padding: 12px;
+    max-height: calc(100dvh - 20px);
+  }
+  #product-sections {
+    display: grid;
+    grid-template-columns: repeat(4,minmax(0,1fr));
+    gap: 4px;
+    margin-bottom: 12px;
+    padding: 4px;
+    background: #111214;
+    border: 1px solid var(--line);
+    border-radius: 9px;
+  }
+  #product-sections button {
+    font-size: 12px;
+    padding: 8px 3px;
+    min-height: 36px;
+    background: transparent;
+    color: var(--muted);
+    border: 0;
+    border-radius: 5px;
+    white-space: normal;
+  }
+  #product-sections button[aria-selected="true"] {
+    background: var(--orange);
+    color: #21170f;
+    font-weight: 700;
+  }
+  #product-dialog .product-core {
+    grid-template-columns: repeat(2,minmax(0,1fr));
+    gap: 10px;
+    margin-bottom: 0;
+  }
+  #product-dialog .product-core>label {
+    grid-column: auto;
+  }
+  #product-dialog .product-core>.full {
+    grid-column: 1/-1;
+  }
+  #product-dialog label {
+    font-size: 12px;
+  }
+  #product-dialog input:not([type="checkbox"]),#product-dialog select {
+    font-size: 16px;
+    min-height: 36px;
+  }
+  #product-dialog .product-workspace {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  #product-dialog .product-link-panel,#product-dialog .product-quote-controls,#product-dialog #product-rate-fields>.market:nth-child(n) {
+    grid-column: auto;
+    grid-row: auto;
+  }
+  #product-dialog [data-product-pane]:not(form) {
+    display: none!important;
+  }
+  #product-form[data-product-pane="product"] [data-product-pane="product"] {
+    display: grid!important;
+  }
+  #product-form[data-product-pane="product"] .product-workspace {
+    display: none;
+  }
+  #product-form[data-product-pane="listing"] [data-product-pane="listing"],#product-form[data-product-pane="ml"] [data-product-pane="ml"],#product-form[data-product-pane="shopee"] [data-product-pane="shopee"] {
+    display: block!important;
+  }
+  #product-dialog .option-question {
+    font-size: 12px;
+    min-height: 28px;
+  }
+  #product-dialog .btn {
+    min-height: 36px;
+    font-size: 12px;
+  }
+  #product-dialog .section-head h2 {
+    font-size: 20px;
+  }
+  #product-dialog .product-form-footer {
+    margin-top: 10px;
+    padding-top: 10px;
+  }
+  #product-dialog #product-shopee-policy-status {
+    -webkit-line-clamp: 2;
+  }
+}
+
+@media(max-height:650px) {
+  #product-dialog #shipping-help {
+    display: none;
+  }
+  #product-dialog #ml-shipping-status {
+    -webkit-line-clamp: 1;
+  }
+  #product-dialog .product-link-panel .actions .btn {
+    font-size: 11px;
+    min-height: 32px;
+  }
+  #product-dialog .product-quote-controls,#product-dialog .market {
+    padding: 8px;
+  }
+  #product-dialog .product-quote-controls .compact-status {
+    -webkit-line-clamp: 1;
+  }
+  #product-dialog .product-estimate {
+    padding: 5px;
+  }
+  #product-dialog .product-estimate strong {
+    font-size: 17px;
+  }
+  #product-dialog .product-estimate small {
+    display: none;
+  }
+}
+
+@media(max-width:360px) {
+  #product-dialog #product-shopee-policy-status {
+    -webkit-line-clamp: 1;
+  }
+  #product-dialog .market>a.help {
+    display: none;
+  }
+  #product-dialog .section-head {
+    margin-bottom: 7px;
+  }
+  #product-sections {
+    margin-bottom: 8px;
+  }
+  #product-dialog .fields {
+    gap: 6px;
+  }
+  #product-dialog label {
+    font-size: 11px;
+  }
+  #product-dialog .product-core {
+    gap: 8px;
+  }
+}

@@ -1,0 +1,80 @@
+/* Termos de uso e política de privacidade. */
+
+:root {
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #111214;
+  color: #f4f4f5;
+  font: 17px/1.7 system-ui,sans-serif;
+}
+
+main {
+  max-width: 850px;
+  margin: auto;
+  padding: 32px 22px 64px;
+}
+
+header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-bottom: 1px solid #3a3e47;
+  padding-bottom: 22px;
+}
+
+header img {
+  width: 38px;
+  height: 48px;
+}
+
+header strong {
+  letter-spacing: 2px;
+}
+
+h1 {
+  line-height: 1.2;
+  font-size: 34px;
+  margin: 32px 0 10px;
+}
+
+h2 {
+  font-size: 21px;
+  color: #dea86b;
+  margin-top: 30px;
+}
+
+p,li {
+  color: #c7c9d0;
+}
+
+a {
+  color: #dfb482;
+  text-underline-offset: 3px;
+}
+
+small {
+  color: #b6b8c2;
+}
+
+.back {
+  display: inline-block;
+  margin: 26px 0;
+}
+
+li {
+  margin: 10px 0;
+}
+
+footer {
+  border-top: 1px solid #3a3e47;
+  margin-top: 35px;
+  padding-top: 22px;
+  overflow-wrap: anywhere;
+}

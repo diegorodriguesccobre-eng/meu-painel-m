@@ -1,0 +1,76 @@
+/* Campos de percentual de Ads e ROAS equivalente. */
+
+/* Reserva de Ads e ROAS equivalente, sem ícones. */
+.ads-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px;
+  flex-wrap: wrap;
+  min-height: 20px;
+}
+
+.ads-roas {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 750;
+  line-height: 1.2;
+  padding: 2px 5px;
+  border-radius: 5px;
+  color: #8cdbb0;
+  background: #20392e;
+  border: 1px solid #3b604c;
+  white-space: nowrap;
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.ads-roas.is-empty {
+  color: var(--muted);
+  background: #252a32;
+  border-color: #414b59;
+}
+
+.ads-value {
+  display: grid;
+  grid-template-columns: auto minmax(0,1fr) auto;
+  align-items: center;
+  gap: 4px;
+  min-width: 0;
+  margin-top: 3px;
+  padding: 0 8px;
+  background: #343e4c;
+  border: 1px solid #515e70;
+  border-radius: 8px;
+  color: var(--text);
+}
+
+.ads-prefix,.ads-unit {
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.ads-value:focus-within {
+  border-color: var(--orange);
+  outline: 2px solid var(--orange);
+  outline-offset: 2px;
+}
+
+#product-dialog .ads-value input,#kits-view .ads-value input {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  margin: 0;
+  min-height: 30px;
+  padding: 4px 0;
+  text-align: center;
+  font-weight: 750;
+  outline: none;
+}
+
+@media(max-width:1000px) {
+  #product-dialog .ads-value input,#kits-view .ads-value input {
+    min-height: 34px;
+  }
+}

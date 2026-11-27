@@ -3,6 +3,7 @@ const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
 const vm = require('node:vm');
+const { compilePage } = require('../../preparar-site.cjs');
 const { DatabaseSync } = require('node:sqlite');
 const { createCipheriv, randomBytes, randomUUID } = require('node:crypto');
 const { report, reconciliation, account } = require('./ads-fixtures.cjs');
@@ -100,18 +101,10 @@ async function startLab({ ports = [0, 0], seed = fixture(), mlRequest = null, lo
     }
     if (url.pathname.startsWith('/api/')) { res.writeHead(503, { 'Content-Type': 'application/json' }); return res.end(JSON.stringify({ message: 'Laboratório: nenhuma consulta externa é realizada; dados fictícios preservados.' })); }
     if (['/termos.html','/privacidade.html','/favicon.svg','/favicon.png'].includes(url.pathname)) {
-     const file=url.pathname.slice(1),isPage=file.endsWith('.html');res.writeHead(200,{'Content-Type':isPage?'text/html; charset=utf-8':file.endsWith('.svg')?'image/svg+xml':'image/png'});return res.end(fs.readFileSync(path.join(root,isPage?'src':'',file)));
+     const file=url.pathname.slice(1),isPage=file.endsWith('.html');res.writeHead(200,{'Content-Type':isPage?'text/html; charset=utf-8':file.endsWith('.svg')?'image/svg+xml':'image/png'});return res.end(isPage?compilePage(root,file):fs.readFileSync(path.join(root,file)));
     }
     if (url.pathname !== '/') { res.writeHead(404); return res.end(); }
-    let html = fs.readFileSync(path.join(root, 'src/index.html'), 'utf8')
-     .replace('/* __ML_DATA_RULES__ */', () => fs.readFileSync(path.join(root, 'shared/ml-data-rules.js'), 'utf8'))
-     .replace('/* __ML_DATA_POLICY__ */', () => fs.readFileSync(path.join(root, 'src/ml-data-policy.js'), 'utf8'))
-     .replace('/* __PANEL_STYLES__ */', () => fs.readFileSync(path.join(root, 'src/styles.css'), 'utf8'))
-     .replace('/* __PANEL_SCRIPT__ */', () => fs.readFileSync(path.join(root, 'src/app.js'), 'utf8'))
-     .replace('/* __ACCESS_SCRIPT__ */', () => fs.readFileSync(path.join(root, 'src/panel-access.js'), 'utf8'))
-     .replace('/* __ML_IMPORT_SCRIPT__ */', () => fs.readFileSync(path.join(root, 'src/ml-catalog-import.js'), 'utf8'))
-     .replace('/* __PENDING_COSTS_SCRIPT__ */', () => fs.readFileSync(path.join(root, 'src/pending-costs.js'), 'utf8'))
-     .replace('/* __CATALOG_SCRIPT__ */', () => fs.readFileSync(path.join(root, 'src/catalog-sync.js'), 'utf8'))
+    let html = compilePage(root)
      .replace('<body>', '<body><aside style="padding:8px;background:#633;color:white;text-align:center">TESTE LOCAL · DADOS FICTÍCIOS · SEM ACESSO À PRODUÇÃO</aside>');
     res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Content-Security-Policy': "default-src 'self' data:; script-src 'unsafe-inline'; style-src 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; form-action 'self'; base-uri 'none'", 'Cache-Control': 'no-store' });
     res.end(html);

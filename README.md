@@ -145,7 +145,11 @@ de relatório dentro do projeto.
 Os fontes ficam separados para facilitar a manutenção:
 
 - `src/index.html`: estrutura e campos da página.
-- `src/styles.css`: aparência e adaptação às telas.
+- `src/styles.css`: entrada dos módulos CSS, na ordem em que são aplicados.
+- `src/css/geral.css`: tema, tipografia e regras base dos componentes.
+- `src/css/`: estilos separados por componentes, produtos, kits, Ads, navegação,
+  integração, acesso e documentos. Cada módulo reúne suas regras responsivas.
+  Veja o [guia de organização do CSS](src/css/README.md).
 - `src/app.js`: cálculos, armazenamento e comportamento do painel.
 - `src/catalog-sync.js`: sincronização, primeira associação e revisão de conflitos.
 - `cloudflare/catalog.mjs`: acesso autenticado e gravação transacional do catálogo no D1.
@@ -160,6 +164,11 @@ O build gera o `index.html` da raiz e a cópia de publicação em `dist`, incorp
 CSS e JavaScript. O arquivo final continua portátil: abre por duplo clique e pode
 ser transferido sozinho para o celular. Não edite o HTML gerado diretamente,
 pois a próxima montagem substitui seu conteúdo.
+
+Os imports locais de `src/styles.css` são incorporados durante a montagem,
+mantendo sua ordem. Termos e privacidade compartilham `src/css/documentos.css`,
+também incorporado às páginas publicadas. Nenhum CSS adicional precisa ser
+carregado pela versão final no navegador.
 
 `validar.cjs` e os testes leem o JavaScript dos fontes. Os testes de montagem
 verificam a distribuição em arquivo único e impedem publicar fontes, documentação

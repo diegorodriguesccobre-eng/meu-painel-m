@@ -1,0 +1,27 @@
+/* Apresentação compartilhada e estilos estáticos retirados do HTML. */
+
+.actions.actions-wrap {
+  flex-wrap: wrap;
+}
+
+.actions.actions-start {
+  justify-content: flex-start;
+}
+
+.app-footer {
+  color: var(--muted);
+  font-size: 12px;
+}
+
+#restore-form .restore-file-field,
+#restore-status {
+  margin-top: 18px;
+}
+
+#restore-summary {
+  white-space: pre-line;
+}
+
+.saved-kit > .kit-fee-note {
+  margin-top: 8px;
+}

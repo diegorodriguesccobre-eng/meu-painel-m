@@ -1,0 +1,73 @@
+/* Estado do catálogo compartilhado, conflitos e relatórios salvos. */
+
+/* Compartilhamento: estado explícito e revisão de edições simultâneas. */
+#cloud-catalog .section-head {
+  margin-bottom: 0;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+#cloud-catalog .actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+#cloud-catalog h2 {
+  font-size: 1.05rem;
+  margin: 0 0 5px;
+}
+
+#cloud-catalog p {
+  margin: 0;
+  max-width: 75ch;
+  font-size: .9rem;
+}
+
+.cloud-conflict {
+  border: 1px solid #536075;
+  border-radius: 10px;
+  padding: 12px;
+  margin: 12px 0;
+}
+
+.cloud-conflict legend {
+  font-weight: 700;
+  padding: 0 5px;
+}
+
+.cloud-conflict label {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  margin: 10px 0;
+  overflow-wrap: anywhere;
+}
+
+#cloud-review-dialog {
+  max-width: 740px;
+  width: calc(100% - 28px);
+  max-height: 90dvh;
+  overflow: auto;
+}
+
+#cloud-review-dialog .actions {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.ads-history-options {
+  flex-wrap: wrap;
+}
+
+.ads-saved-report {
+  flex: 1;
+  min-width: min(100%,230px);
+  max-width: 460px;
+}
+
+.ads-saved-report select {
+  width: 100%;
+  max-width: 100%;
+}

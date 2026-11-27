@@ -1,0 +1,173 @@
+/* Cores de risco, selos, legendas e resumos de lucro. */
+
+/* Classificação pelo lucro líquido calculado, com texto além da cor. */
+:root {
+  --yellow:#f1cc71;
+}
+
+.health-low {
+  --health-color:var(--red);
+  --health-bg:#ff858b10;
+  --health-border:#91454d;
+}
+
+.health-risk {
+  --health-color:var(--yellow);
+  --health-bg:#f1cc7110;
+  --health-border:#8a733a;
+}
+
+.health-safe {
+  --health-color:var(--green);
+  --health-bg:#8cdbb00b;
+  --health-border:#38654c;
+}
+
+.health-pending {
+  --health-color:var(--muted);
+  --health-bg:#a6a8b10c;
+  --health-border:var(--line);
+}
+
+.health-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--health-border);
+  border-radius: 6px;
+  background: var(--health-bg);
+  color: var(--health-color);
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.5;
+  white-space: normal;
+  margin: 8px 0 4px;
+}
+
+.health-badge>span {
+  font-size: 9px;
+}
+
+#produtos tbody tr[class^="health-"] {
+  background: var(--health-bg);
+}
+
+#produtos .product-name {
+  border-left: 3px solid var(--health-border);
+}
+
+#produtos td.price-health {
+  background: var(--health-bg);
+}
+
+.margin {
+  background: #2b2d34;
+  color: var(--text);
+}
+
+.saved-kit[class*="health-"] {
+  border-color: var(--line);
+}
+
+.health-legend {
+  display: flex;
+  gap: 8px 16px;
+  flex-wrap: wrap;
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 14px;
+}
+
+.health-legend span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.health-legend b {
+  color: var(--health-color);
+  font-size: 13px;
+}
+
+.health-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 10px 0 4px;
+}
+
+.health-summary .health-badge {
+  margin: 0;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.stat .health-summary strong {
+  display: inline;
+  font-size: 17px;
+  letter-spacing: 0;
+  margin: 0;
+  color: inherit;
+}
+
+#pending-count:empty {
+  display: none;
+}
+
+@media(max-width:760px) {
+  #produtos tr[class^="health-"] {
+    border-color: var(--health-border);
+    background: var(--health-bg);
+  }
+  #produtos .product-name {
+    border-left: 0;
+  }
+  .health-legend {
+    display: grid;
+    gap: 5px;
+  }
+}
+
+@media(max-width:650px) {
+  .stat-health {
+    min-width: 0;
+  }
+  .stat-health>span {
+    overflow-wrap: anywhere;
+  }
+  .health-summary {
+    gap: 4px;
+  }
+  .health-summary .health-badge {
+    padding: 3px 5px;
+    font-size: 10px;
+  }
+  .stat .health-summary strong {
+    font-size: 14px;
+  }
+  .stat-health em {
+    overflow-wrap: anywhere;
+  }
+}
+
+.health-badge.health-product {
+  flex-wrap: wrap;
+}
+
+.health-badge>.health-average {
+  flex-basis: 100%;
+  font-size: 12px;
+}
+
+.health-average strong {
+  font-size: 15px;
+}
+
+.kit-summary .kit-average {
+  grid-column: 1/-1;
+}
+
+.kit-summary .kit-average>strong {
+  color: var(--health-color);
+}
