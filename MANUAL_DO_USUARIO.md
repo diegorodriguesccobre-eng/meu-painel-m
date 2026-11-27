@@ -27,6 +27,7 @@ O painel ajuda a definir preços no Mercado Livre e na Shopee, comparar o lucro 
 - [4. Conectar um anúncio do Mercado Livre](#mercado-livre)
   - [Importar e conferir o catálogo completo](#importar-conferir-catalogo)
   - [Acompanhar a importação automática dos anúncios](#importacao-automatica-anuncios)
+  - [Anúncios pendentes abaixo dos produtos cadastrados](#pendencias-abaixo-produtos)
   - [Anúncios pendentes em retângulos menores](#pendencias-compactas)
   - [Concluir produtos pendentes de custo](#concluir-pendentes-custo)
   - [Importar e atualizar custos por SKU](#custos-por-sku)
@@ -455,11 +456,20 @@ No celular, abra **Menu → Meus produtos**. A importação é a mesma e acontec
 
 No celular, abra **Meus produtos** pelo **Menu** e siga os mesmos comandos. Os resultados aparecem em cartões e os filtros se adaptam à largura da tela.
 
+<a id="pendencias-abaixo-produtos"></a>
+
+#### Anúncios pendentes abaixo dos produtos cadastrados
+
+Em **Meus produtos**, os produtos já cadastrados aparecem primeiro. A seção **Anúncios pendentes de cadastro** fica **abaixo de toda essa lista**, antes de **Backup dos dados**, tanto no computador quanto no celular.
+
+- **No computador:** abra **Meus produtos** pelo menu lateral e role a página até o fim da lista dos produtos cadastrados. Logo abaixo, aparecem o título **Anúncios pendentes de cadastro**, a quantidade de pendências, a busca e os retângulos dos anúncios.
+- **No celular:** abra **Menu → Meus produtos** e deslize a página até passar pelo último produto cadastrado. A seção de pendências aparece em seguida, com os retângulos em uma coluna e os controles ajustados à largura da tela.
+
+Use **Buscar nas pendências** para localizar um anúncio por nome, MLB ou SKU e **Anterior** e **Próxima** para navegar pelos resultados. Para informar o custo e concluir um item, siga as [instruções de conclusão do cadastro](#concluir-pendentes-custo). A nova posição mantém os custos e as margens dos produtos existentes e as automações de preços, frete, comissões e Ads.
+
 <a id="pendencias-compactas"></a>
 
 #### Anúncios pendentes em retângulos menores
-
-O bloco de pendências fica **abaixo da lista de produtos já cadastrados**, no computador e no celular. Os produtos cadastrados aparecem primeiro; role até o fim dessa lista para visualizar **Anúncios pendentes de cadastro**.
 
 Em **Meus produtos → Anúncios pendentes de cadastro**, os anúncios aparecem em retângulos mais baixos, com menos informações repetidas. Cada item mostra **nome**, **MLB**, **preço anunciado quando há dados atuais** e o botão **Concluir cadastro**. A quantidade de variações e os avisos de situação aparecem quando necessários. A explicação geral sobre a falta de custo fica acima da lista.
 
