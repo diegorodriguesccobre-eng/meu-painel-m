@@ -462,7 +462,7 @@ No celular, abra **Meus produtos** pelo **Menu** e siga os mesmos comandos. Os r
 
 Em **Meus produtos**, os produtos já cadastrados aparecem primeiro. A seção **Anúncios pendentes de cadastro** fica **abaixo de toda essa lista**, antes de **Backup dos dados**, tanto no computador quanto no celular.
 
-Depois de **recarregar a página** ou de **sair e entrar novamente**, no computador ou no celular, aguarde o carregamento do catálogo da empresa. A mesma ordem é mantida: produtos cadastrados primeiro e pendências abaixo, com **os custos e as margens salvos preservados**.
+Depois de **recarregar a página**, de **sair e entrar novamente** ou de realizar essas duas ações em sequência, aguarde o carregamento do catálogo da empresa. No computador e no celular, a ordem continua a mesma: produtos cadastrados primeiro e **Anúncios pendentes de cadastro** abaixo, com **os custos e as margens salvos preservados**.
 
 Na nova entrada, use a conta da mesma empresa, conclua a [identificação e os aceites](#entrada-painel) e aguarde **Catálogo sincronizado com a empresa** antes de conferir as listas. Sair encerra a sessão deste navegador; não apaga os produtos nem as pendências já sincronizados com a empresa.
 
