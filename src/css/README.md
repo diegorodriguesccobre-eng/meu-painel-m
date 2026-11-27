@@ -205,3 +205,16 @@ foi somente de leitura, sem alterar código nem cadastros reais.
 Este resultado se refere especificamente ao commit `9fb1655` em relação a seu
 commit anterior; os registros posteriores deste guia são atualizações de
 documentação.
+
+### Preservação dos arquivos no commit a2ae1ea
+
+A comparação de `a2ae1ea` com seu commit anterior, `a10f55d`, confirmou que
+somente `src/css/README.md` mudou, com 103 linhas adicionadas e 37 removidas.
+[Commit a2ae1ea](https://github.com/diegorodriguesccobre-eng/meu-painel-m/commit/a2ae1eacd4e27c5ff460447664d707fb861121d2) ·
+[Commit anterior a10f55d](https://github.com/diegorodriguesccobre-eng/meu-painel-m/commit/a10f55dc9bd4172115e4c2e519f0468db1891fa4)
+
+Os outros **99 arquivos versionados** mantiveram os mesmos hashes de conteúdo e
+modos de arquivo, incluindo CSS, HTML, JavaScript e arquivos de configuração.
+A lista de alterações e o diff foram conferidos no GitHub no computador e em
+celular simulado (390 × 844). A comparação das árvores Git confirmou a
+preservação dos 99 arquivos.
