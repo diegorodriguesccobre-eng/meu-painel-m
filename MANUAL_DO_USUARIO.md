@@ -30,6 +30,8 @@ O painel ajuda a definir preços no Mercado Livre e na Shopee, comparar o lucro 
   - [Concluir produtos pendentes de custo](#concluir-pendentes-custo)
   - [Importar e atualizar custos por SKU](#custos-por-sku)
   - [Atualizar custos de produtos cadastrados](#atualizar-custos-csv)
+  - [Revisar e salvar custos por CSV no computador](#revisar-custos-csv-computador)
+  - [Revisar e salvar custos por CSV no celular](#revisar-custos-csv-celular)
   - [Atualização, limites e retenção dos dados importados](#atualizacao-retencao-limites)
   - [Quando aparece “Anúncio encerrado”](#anuncio-encerrado)
   - [Anúncios desativados: ordem, visual e alinhamento](#anuncios-desativados)
@@ -490,6 +492,38 @@ Use o SKU exato do anúncio, incluindo maiúsculas, minúsculas e zeros iniciais
 ##### Atualizar custos de produtos cadastrados
 
 **O custo só é substituído após selecionar o produto e confirmar em Salvar selecionados.** Por exemplo, em um caso fictício, um produto com custo atual de R$ 10,00 e margem desejada de 20% pode receber o novo custo de R$ 12,50 do CSV. A revisão mostra os dois valores e os preços/lucros recalculados; a meta continua em 20%.
+
+Na revisão, compare estes campos antes de marcar o produto:
+
+| Campo | O que conferir |
+| --- | --- |
+| **Custo atual** | Valor que já está salvo no cadastro. |
+| **Novo custo (CSV)** | Valor proposto pelo arquivo, ainda sem substituir o cadastro. |
+| **Margem desejada preservada** | Meta que o painel manteve para o produto. |
+| **Preço atual** | Preço anunciado no Mercado Livre, quando disponível na modalidade vinculada. Continua sendo a referência para apurar o lucro dessa venda. |
+| **Sugestão / Sugestão para sua meta** | Preço recalculado com o novo custo, a margem desejada e as configurações daquele cadastro. |
+| **Lucro** | Valor em reais e percentual calculados com o novo custo para o preço exibido em cada canal. O lucro no preço atual pode ficar diferente da margem desejada. |
+
+As sugestões são simulações do painel: **salvar o custo não muda o preço do anúncio no Mercado Livre**. Aguarde o fim das consultas; um resultado com falha ou dados insuficientes não fica disponível para seleção.
+
+<a id="revisar-custos-csv-computador"></a>
+
+###### Revisar e salvar custos por CSV no computador
+
+1. Em **Meus produtos**, clique em **Importar custos por SKU** e escolha o arquivo em **CSV de SKU e custo**.
+2. Aguarde a revisão e confira nome, SKU e número do anúncio. Compare **Custo atual** com **Novo custo (CSV)** e examine os preços e lucros de Clássico, Premium e Shopee. Na tela larga, os resultados dos marketplaces ficam lado a lado.
+3. Confira a margem preservada e, quando houver preço atual, compare também a sugestão para a meta. A leitura do arquivo e a apresentação desses valores ainda não gravam nada.
+4. Marque apenas os produtos que deseja atualizar. **Salvar selecionados** fica desativado enquanto nenhum resultado disponível estiver marcado. Antes de confirmar, confira a quantidade de selecionados; a pesquisa pode ocultar seleções feitas anteriormente.
+5. Clique em **Salvar selecionados** e aguarde **Catálogo sincronizado com a empresa**. Para desistir, use **Cancelar** ou feche a revisão: os custos anteriores continuam salvos.
+
+<a id="revisar-custos-csv-celular"></a>
+
+###### Revisar e salvar custos por CSV no celular
+
+1. Abra **Meus produtos** e toque em **Importar custos por SKU**, junto aos controles da lista. Em **CSV de SKU e custo**, escolha o arquivo salvo no aparelho.
+2. Aguarde as consultas e role a revisão verticalmente. **Custo atual** e **Novo custo (CSV)** aparecem em duas caixas para comparação; os resultados de Clássico, Premium e Shopee ficam um abaixo do outro, com preços e lucros.
+3. Confira o SKU, a unidade anunciada, a margem preservada e cada preço recalculado antes de marcar a caixa do produto. Nada começa selecionado e a prévia não altera o cadastro.
+4. No fim da revisão, confira o total de selecionados e toque em **Salvar selecionados** somente para aplicar os custos desejados. Aguarde a confirmação de sincronização. Para apenas consultar ou desistir, toque em **Cancelar**; não é necessário salvar para ver os cálculos.
 
 Nome, categoria interna, peso, outros custos, margens, percentuais de Ads, impostos, taxas configuradas e serviços marcados continuam preservados. Uma configuração manual continua manual. As consultas oficiais usam o novo custo para recalcular as sugestões e o preço de referência para 10%; não publicam preços no Mercado Livre. A rotina de atualização de Ads continua funcionando após salvar, com suas regras de histórico.
 
