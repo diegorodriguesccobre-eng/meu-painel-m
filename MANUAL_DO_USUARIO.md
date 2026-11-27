@@ -528,7 +528,12 @@ Quando a consulta oficial do Mercado Livre retorna o status `closed` para um an�
 
 **O produto cadastrado não é excluído.** Seu custo, margem desejada, peso interno e taxas configuradas continuam salvos. O aviso não significa custo zero nem prejuízo: enquanto o anúncio estiver encerrado, o painel não apresenta preço e lucro do Mercado Livre como atuais com base nas referências indisponíveis. Se o anúncio ainda for uma pendência, **Concluir cadastro** fica desativado enquanto não houver dados válidos.
 
-O status fica no vínculo salvo. **Após recarregar a página ou fazer uma nova entrada no painel com a mesma conta da empresa, tanto no computador quanto no celular, “Anúncio encerrado” continua aparecendo nos cartões ML Clássico e ML Premium.** O custo e a margem desejada do produto permanecem com os valores cadastrados; recarregar ou entrar novamente não zera nem substitui esses campos. Não é necessário cadastrar o produto novamente. Conclua as etapas de entrada solicitadas pelo painel, aguarde o carregamento do catálogo e confira o aviso **Catálogo sincronizado com a empresa** para confirmar que a atualização chegou ao catálogo compartilhado.
+O status fica no vínculo salvo. **No computador e no celular**, o comportamento é o mesmo:
+
+- **Após recarregar a página:** aguarde o carregamento do catálogo. Os cartões **ML Clássico** e **ML Premium** continuam mostrando **“Anúncio encerrado. Custos e margens preservados.”**
+- **Após uma nova entrada:** conecte a mesma conta da empresa e conclua as etapas de entrada solicitadas pelo painel. Ao carregar o catálogo compartilhado, o aviso de anúncio encerrado volta a aparecer.
+
+**Nas duas situações, o custo e a margem desejada permanecem com os valores cadastrados.** Recarregar ou entrar novamente não zera nem substitui esses campos, e não é necessário cadastrar o produto novamente. Confira o aviso **Catálogo sincronizado com a empresa** para confirmar que a atualização chegou ao catálogo compartilhado.
 
 Uma falha temporária de conexão, falta de permissão ou limite de consultas não é suficiente para classificar o anúncio como encerrado. Outros casos mantêm seus avisos de indisponibilidade ou de atualização. A mensagem não muda as automações de preços, frete, comissões, ACOS, ROAS e sincronização, nem altera o anúncio no Mercado Livre.
 
