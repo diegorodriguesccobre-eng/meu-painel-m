@@ -459,6 +459,8 @@ No celular, abra **Meus produtos** pelo **Menu** e siga os mesmos comandos. Os r
 
 #### Anúncios pendentes em retângulos menores
 
+O bloco de pendências fica **abaixo da lista de produtos já cadastrados**, no computador e no celular. Os produtos cadastrados aparecem primeiro; role até o fim dessa lista para visualizar **Anúncios pendentes de cadastro**.
+
 Em **Meus produtos → Anúncios pendentes de cadastro**, os anúncios aparecem em retângulos mais baixos, com menos informações repetidas. Cada item mostra **nome**, **MLB**, **preço anunciado quando há dados atuais** e o botão **Concluir cadastro**. A quantidade de variações e os avisos de situação aparecem quando necessários. A explicação geral sobre a falta de custo fica acima da lista.
 
 **No computador**, os retângulos ficam em duas colunas quando há espaço; em uma área mais estreita, passam para uma coluna. O botão de conclusão fica ao lado das informações. Nomes longos ocupam até duas linhas; passe o mouse sobre o nome para consultar o texto completo.
@@ -475,7 +477,7 @@ O preço anunciado é o **preço de venda**, não o custo de compra. A disposiç
 
 As pendências são compartilhadas com a empresa e incluídas no backup v19. Para transformar um anúncio pendente em produto precificado, no computador ou celular:
 
-1. Abra **Meus produtos**; no celular, use **Menu → Meus produtos**. Localize **Anúncios pendentes de cadastro**, acima da lista dos produtos concluídos.
+1. Abra **Meus produtos**; no celular, use **Menu → Meus produtos**. Localize **Anúncios pendentes de cadastro**, abaixo da lista dos produtos já cadastrados.
 2. Em **Buscar nas pendências**, pesquise por nome, MLB ou SKU, ou use **Anterior** e **Próxima**. Confira o anúncio e, no retângulo correspondente, clique ou toque em **Concluir cadastro**.
 3. No formulário **Concluir cadastro pendente**, informe **Custo do produto (R$)** com seu custo de compra real, maior que zero. O campo começa vazio. O preço anunciado no Mercado Livre é o preço de venda, não o custo de compra.
 4. Confira nome, categoria, peso do pacote, margem desejada, impostos, outros custos e Ads de cada marketplace. Se o peso não vier da consulta, preencha-o. Em anúncios com variações, confira preço, peso e custo da unidade escolhida antes de continuar.
