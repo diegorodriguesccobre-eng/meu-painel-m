@@ -155,3 +155,27 @@ Depois de alterar CSS, confira Meus produtos, Montar kits e Gestão de Ads em
 tamanhos de computador e celular, incluindo menu, formulários, cartões e rolagem
 das tabelas. Os testes automatizados não substituem essa conferência visual.
 Durante a revisão visual, não salve alterações nos cadastros reais.
+
+## Conferência dos 20 links
+
+Em **27/11/2026**, os 20 links da [tabela de imports](#ordem-dos-imports) foram
+abertos individualmente no navegador, no GitHub, em tela de computador e em
+celular simulado.
+
+| Ambiente | Resultado |
+| --- | --- |
+| Computador | **20 de 20** arquivos abertos e carregados corretamente. |
+| Celular simulado, 390 × 844 | **20 de 20** arquivos abertos e carregados corretamente. |
+
+Foram **40 carregamentos confirmados**. Em cada abertura foram conferidos o
+endereço de destino, o nome do arquivo e a presença do conteúdo CSS. Todos os
+20 links apontaram para os arquivos correspondentes, sem falhas de carregamento
+nessa conferência.
+
+Versão conferida: [9fb1655](https://github.com/diegorodriguesccobre-eng/meu-painel-m/commit/9fb16552831ff37e3784a8d5347e88aa075a6cdb),
+com a tabela na mesma ordem de
+[src/styles.css dessa versão](https://github.com/diegorodriguesccobre-eng/meu-painel-m/blob/9fb16552831ff37e3784a8d5347e88aa075a6cdb/src/styles.css).
+
+O escopo foi a navegação e o carregamento dos arquivos CSS no GitHub. A
+conferência foi somente de leitura, sem alterar código nem cadastros reais.
+Este registro documenta o resultado observado nessa data e nessa versão.
