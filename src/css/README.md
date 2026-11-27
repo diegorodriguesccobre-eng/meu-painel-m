@@ -39,12 +39,64 @@ Os links abaixo são relativos a `src/css/` e abrem os respectivos fontes no Git
 
 ## Ordem dos imports
 
-Preserve a ordem dos módulos em [src/styles.css](../styles.css): regras
-posteriores podem ajustar componentes definidos antes. Reordenar os imports pode
-mudar o visual mesmo sem alterar as declarações de CSS.
+A sequência abaixo corresponde aos 20 imports de [src/styles.css](../styles.css),
+de cima para baixo. O caminho de cada import parte de `src/styles.css`; os links
+da tabela partem deste guia, em `src/css/`, e abrem os arquivos correspondentes.
+
+| Ordem | Caminho no import | Função do arquivo |
+| --- | --- | --- |
+| 1 | [./css/geral.css](geral.css) | Base do painel: variáveis do tema, tipografia, botões, campos, painéis, diálogos e componentes compartilhados. |
+| 2 | [./css/kits/selecao.css](kits/selecao.css) | Estrutura base da seleção de componentes, quantidades, resumos, preços e kits salvos. |
+| 3 | [./css/produtos/listagem.css](produtos/listagem.css) | Listagem de produtos, apresentação em telas pequenas e estilos de importação CSV. |
+| 4 | [./css/layout/cabecalho.css](layout/cabecalho.css) | Identidade da Conduz Cobre e distribuição do cabeçalho. |
+| 5 | [./css/integracoes/mercado-livre.css](integracoes/mercado-livre.css) | Apresentação da consulta de anúncios, categorias e logística do Mercado Livre. |
+| 6 | [./css/produtos/cadastro.css](produtos/cadastro.css) | Formulário compacto de produto, blocos de taxas e cotações, ajuda e abas. |
+| 7 | [./css/componentes/indicadores.css](componentes/indicadores.css) | Cores de risco, selos, legendas e resumos de lucro. |
+| 8 | [./css/componentes/cartoes-preco.css](componentes/cartoes-preco.css) | Cartões compartilhados de marketplace, preço, lucro e composição dos custos. |
+| 9 | [./css/produtos/resultados.css](produtos/resultados.css) | Distribuição dos resultados de precificação e adaptações dos cartões e dos kits salvos nas diferentes telas. |
+| 10 | [./css/kits/montagem.css](kits/montagem.css) | Editor de kits, largura das colunas, cotação, prévia de preços e adaptação ao espaço disponível. |
+| 11 | [./css/ads/campos.css](ads/campos.css) | Campos de percentual de Ads e selo de ROAS equivalente nos formulários de produtos e kits. |
+| 12 | [./css/produtos/catalogo.css](produtos/catalogo.css) | Catálogo compacto, busca, ações, apresentação de publicidade e anúncios desativados. |
+| 13 | [./css/ads/gestao.css](ads/gestao.css) | Publicidade consultada, resumo, cartões azuis, estimativas, projeções e conciliações. |
+| 14 | [./css/ads/historico.css](ads/historico.css) | Comparativo de Ads por períodos, filtros, tabela com rolagem e controles de exportação. |
+| 15 | [./css/sincronizacao.css](sincronizacao.css) | Avisos do catálogo compartilhado, revisão de conflitos e apresentação dos relatórios salvos. |
+| 16 | [./css/layout/menu.css](layout/menu.css) | Menu lateral, recolhimento no computador, atalhos e navegação no celular. |
+| 17 | [./css/produtos/importacao.css](produtos/importacao.css) | Revisão da importação do catálogo do Mercado Livre e anúncios pendentes de cadastro. |
+| 18 | [./css/acesso.css](acesso.css) | Tela de entrada, identificação da pessoa e aceites dos documentos. |
+| 19 | [./css/produtos/custos-csv.css](produtos/custos-csv.css) | Revisão de custos por SKU, comparação de valores e controles de seleção. |
+| 20 | [./css/componentes/utilitarios.css](componentes/utilitarios.css) | Classes de apresentação fixa para ações, rodapé, restauração de backup e notas dos kits. |
+
+As páginas de termos e privacidade incorporam [documentos.css](documentos.css)
+em suas próprias montagens, conforme a seção de documentos deste guia.
+
+### Por que preservar a sequência
+
+O build expande os imports nessa ordem e incorpora o resultado ao HTML. A
+sequência mantém a cascata validada antes da separação dos arquivos: módulos
+posteriores ajustam algumas regras de base. Por isso, arquivos da mesma pasta
+nem sempre aparecem juntos; ordenar os imports por nome ou por tela pode mudar
+o resultado.
+
+Quando duas declarações aplicáveis têm a mesma prioridade na cascata e a mesma
+especificidade, prevalece a que aparece depois. Regras com `!important`, seletores
+mais específicos e condições de `@media` ou `@container` também influenciam o
+resultado; estar no fim do arquivo não faz uma regra vencer em todos os casos.
+
+Um exemplo existente é `.saved-kits`: `kits/selecao.css` define a grade base
+com duas colunas, e `produtos/resultados.css`, carregado depois, redefine essa
+grade para uma coluna. As duas declarações usam o mesmo seletor. Inverter esses
+imports pode mudar a disposição dos kits no computador mesmo sem editar nenhuma
+declaração. As regras para telas menores também devem ser conferidas.
+
+Na manutenção de rotina, preserve a ordem atual. Uma reorganização da sequência
+exige revisar as regras que se sobrepõem e conferir Meus produtos, Montar kits e
+Gestão de Ads em tamanhos de computador e celular.
+
+### Como incluir um módulo
 
 Ao criar um módulo, inclua seu import relativo em uma linha própria do arquivo
-de entrada, por exemplo:
+de entrada, escolhendo sua posição em relação à base e às adaptações existentes,
+por exemplo:
 
 ```css
 @import "./css/componentes/novo-componente.css";
