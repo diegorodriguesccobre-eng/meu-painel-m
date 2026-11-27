@@ -1,7 +1,7 @@
 # Manual do usuário — Conduz Cobre
 
 **Painel de precificação, kits e Gestão de Ads**  
-Edição de **26/11/2026**, baseada nas funções disponíveis nesta versão.
+Edição de **27/11/2026**, baseada nas funções disponíveis nesta versão.
 
 [Abrir o painel](https://precificacaoconduz.conduz-cobre.workers.dev/) · [Página do projeto](README.md)
 
@@ -528,7 +528,7 @@ Quando a consulta oficial do Mercado Livre retorna o status `closed` para um an�
 
 **O produto cadastrado não é excluído.** Seu custo, margem desejada, peso interno e taxas configuradas continuam salvos. O aviso não significa custo zero nem prejuízo: enquanto o anúncio estiver encerrado, o painel não apresenta preço e lucro do Mercado Livre como atuais com base nas referências indisponíveis. Se o anúncio ainda for uma pendência, **Concluir cadastro** fica desativado enquanto não houver dados válidos.
 
-O status fica no vínculo salvo. **Após recarregar a página, tanto no computador quanto no celular, “Anúncio encerrado” continua aparecendo nos cartões ML Clássico e ML Premium.** O custo e a margem desejada do produto permanecem com os valores cadastrados; recarregar não zera nem substitui esses campos. Não é necessário cadastrar o produto novamente. Aguarde o carregamento do catálogo e confira o aviso **Catálogo sincronizado com a empresa** para confirmar que a atualização chegou ao catálogo compartilhado.
+O status fica no vínculo salvo. **Após recarregar a página ou fazer uma nova entrada no painel com a mesma conta da empresa, tanto no computador quanto no celular, “Anúncio encerrado” continua aparecendo nos cartões ML Clássico e ML Premium.** O custo e a margem desejada do produto permanecem com os valores cadastrados; recarregar ou entrar novamente não zera nem substitui esses campos. Não é necessário cadastrar o produto novamente. Conclua as etapas de entrada solicitadas pelo painel, aguarde o carregamento do catálogo e confira o aviso **Catálogo sincronizado com a empresa** para confirmar que a atualização chegou ao catálogo compartilhado.
 
 Uma falha temporária de conexão, falta de permissão ou limite de consultas não é suficiente para classificar o anúncio como encerrado. Outros casos mantêm seus avisos de indisponibilidade ou de atualização. A mensagem não muda as automações de preços, frete, comissões, ACOS, ROAS e sincronização, nem altera o anúncio no Mercado Livre.
 
