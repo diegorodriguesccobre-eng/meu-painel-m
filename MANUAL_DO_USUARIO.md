@@ -466,6 +466,8 @@ Depois de **recarregar a página**, de **sair e entrar novamente** ou de realiza
 
 Na nova entrada, use a conta da mesma empresa, conclua a [identificação e os aceites](#entrada-painel) e aguarde **Catálogo sincronizado com a empresa** antes de conferir as listas. Sair encerra a sessão deste navegador; não apaga os produtos nem as pendências já sincronizados com a empresa.
 
+Para conferir os custos e as margens preservados, veja **Custo** e **Margem desejada** nos produtos já cadastrados, no computador ou no celular. A recarga e a nova entrada mantêm os valores salvos, sem precisar editar ou salvar os produtos novamente.
+
 - **No computador:** abra **Meus produtos** pelo menu lateral e role a página até o fim da lista dos produtos cadastrados. Logo abaixo, aparecem o título **Anúncios pendentes de cadastro**, a quantidade de pendências, a busca e os retângulos dos anúncios.
 - **No celular:** abra **Menu → Meus produtos** e deslize a página até passar pelo último produto cadastrado. A seção de pendências aparece em seguida, com os retângulos em uma coluna e os controles ajustados à largura da tela.
 
