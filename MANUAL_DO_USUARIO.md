@@ -462,10 +462,12 @@ No celular, abra **Meus produtos** pelo **Menu** e siga os mesmos comandos. Os r
 
 Em **Meus produtos**, os produtos já cadastrados aparecem primeiro. A seção **Anúncios pendentes de cadastro** fica **abaixo de toda essa lista**, antes de **Backup dos dados**, tanto no computador quanto no celular.
 
+Depois de **recarregar a página**, no computador ou no celular, aguarde o carregamento do catálogo da empresa. A mesma ordem é mantida: produtos cadastrados primeiro e pendências abaixo, com **os custos e as margens salvos preservados**.
+
 - **No computador:** abra **Meus produtos** pelo menu lateral e role a página até o fim da lista dos produtos cadastrados. Logo abaixo, aparecem o título **Anúncios pendentes de cadastro**, a quantidade de pendências, a busca e os retângulos dos anúncios.
 - **No celular:** abra **Menu → Meus produtos** e deslize a página até passar pelo último produto cadastrado. A seção de pendências aparece em seguida, com os retângulos em uma coluna e os controles ajustados à largura da tela.
 
-Use **Buscar nas pendências** para localizar um anúncio por nome, MLB ou SKU e **Anterior** e **Próxima** para navegar pelos resultados. Para informar o custo e concluir um item, siga as [instruções de conclusão do cadastro](#concluir-pendentes-custo). A nova posição mantém os custos e as margens dos produtos existentes e as automações de preços, frete, comissões e Ads.
+Use **Buscar nas pendências** para localizar um anúncio por nome, MLB ou SKU e **Anterior** e **Próxima** para navegar pelos resultados. Para informar o custo e concluir um item, siga as [instruções de conclusão do cadastro](#concluir-pendentes-custo). A busca, a paginação, a conclusão de cadastro e as automações de preços, frete, comissões e Ads continuam funcionando.
 
 <a id="pendencias-compactas"></a>
 
