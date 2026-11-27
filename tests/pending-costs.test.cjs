@@ -22,6 +22,9 @@ function app(ui = false, request = fixtures.requests().request) {
 }
 const csv='sku;custo\nSKU-MLB9000000001;12,50\nSKU-MLB9000000002;23,40';
 const inspect=(a,data,text=csv,request=fixtures.requests().request)=>a.api.inspectCosts({data,csvRows:a.api.parseCostsCSV(text),sellerId:123,request});
+function existingRequests() {
+ const loader=fixtures.requests();return {calls:loader.calls,request:async(action,options)=>{const r=await loader.request(action,options);if(action==='item'&&options.query.id==='MLB1234567890')r.item.skus=['EXISTENTE'];return r;}};
+}
 
 test('CSV de custos preserva SKU e aceita formatos comuns de exportação sem confundir códigos com números',()=>{
  const a=app();
@@ -40,9 +43,89 @@ test('duplicatas inclusive iguais e valores inválidos não permitem aplicar cus
  const a=app(),rows=a.api.parseCostsCSV('sku;custo\na;2\na;2\nb;0\nc;-1\nd;1.000,00\ne;1,234\nf;R$ 2\n;2');
  assert.ok(rows.every(r=>r.problem));assert.match(rows[0].problem,/repetido/);assert.match(rows[1].problem,/repetido/);
 });
-test('apenas pendências com SKU exato são associadas, e custos existentes ficam visíveis e protegidos',()=>{
+test('SKU exato associa produtos e pendências e apresenta o custo atual antes da seleção',()=>{
  const a=app(),data=a.seed(),rows=a.api.matchCosts(data,a.api.parseCostsCSV('sku;custo\nEXISTENTE;999\nsku-MLB9000000001;3\nSKU-MLB9000000001;12,50'),123);
- assert.equal(rows[0].kind,'existing');assert.equal(rows[0].existingCost,10);assert.equal(rows[0].ready,false);assert.equal(rows[1].kind,'missing');assert.equal(rows[2].eligible,true);
+ assert.equal(rows[0].kind,'existing');assert.equal(rows[0].existingCost,10);assert.equal(rows[0].cost,999);assert.equal(rows[0].eligible,true);assert.equal(rows[0].ready,false);assert.equal(rows[1].kind,'missing');assert.equal(rows[2].eligible,true);
+});
+
+test('novo custo renova cotação oficial e preserva margem, peso, nome, Ads, taxas, serviços e histórico',async()=>{
+ for(const policy of [false,true]){
+  const a=app(),data=a.seed(),p=data.products[0];p.margin=27;p.extra=3;p.adsMl=7.5;p.adsShopee=4;p.feeSnapshot.ml.tax=9;p.feeSnapshot.ml.commission=12;p.feeSnapshot.ml.premiumCommission=17;p.feeSnapshot.shopee.tax=11;p.feeSnapshot.shopee.easyReturnEnabled=true;p.feeSnapshot.shopee.officialEventEnabled=true;
+  if(policy){a.c.fees=p.feeSnapshot;p.feeSnapshot=clone(a.run('withShopeePolicy(fees)'));}
+  const before=clone(data),loader=existingRequests(),rows=await inspect(a,data,'sku;custo\nEXISTENTE;12,50',loader.request),row=rows[0],next=row.proposal;
+  assert.equal(row.ready,true,row.note);assert.equal(row.existingCost,10);assert.equal(next.cost,12.5);assert.equal(row.kitCount,1);assert.deepEqual(data,before);assert.equal(a.saved.length,0);
+  for(const field of ['id','name','category','weight','margin','extra','adsMl','adsShopee','feeSnapshot','mlAds'])assert.deepEqual(clone(next[field]),before.products[0][field]);
+  assert.equal(next.mlPricing.inputs.cost,12.5);assert.equal(next.mlPricing.inputs.margin,27);assert.equal(next.mlPricing.inputs.weight,.2);assert.equal(next.mlPricing.inputs.ads,7.5);assert.equal(next.mlPricing.inputs.autoShipping,true);assert.equal(next.mercadoLivre.price,55);assert.equal(next.mercadoLivre.currentShipping.price,55);
+  const q=next.mlPricing.quotes.ml.desired;assert.ok(q.margin>=27);assert.ok(Math.abs(q.profit-(q.price-12.5-3-5-q.feeAmount-q.price*(9+7.5)/100))<1e-8);
+  assert.equal(loader.calls.filter(c=>c.action==='pricing').length,1);
+ }
+});
+
+test('produto manual mantém cálculo manual e frete configurado sem converter suas taxas para outra política',async()=>{
+ const a=app(),data=a.seed(),p=data.products[0];delete p.mlPricing;p.mlShipping=18;p.extra=2;p.feeSnapshot.ml.commission=12;
+ const before=clone(p),loader=existingRequests(),row=(await inspect(a,data,'sku;custo\nEXISTENTE;130',loader.request))[0];
+ assert.equal(row.ready,true,row.note);assert.equal(row.proposal.mlPricing,undefined);assert.equal(row.proposal.cost,130);assert.equal(row.proposal.mlShipping,18);assert.deepEqual(clone(row.proposal.feeSnapshot),before.feeSnapshot);
+ for(const field of ['margin','weight','extra','adsMl','adsShopee'])assert.equal(row.proposal[field],before[field]);assert.equal(loader.calls.filter(c=>c.action==='pricing').length,0);
+ a.c.proposal=row.proposal;assert.equal(a.run('calculate(proposal,proposal.feeSnapshot.ml,"ml").shippingApplied'),18);assert.ok(a.run('calculate(proposal,proposal.feeSnapshot.ml,"ml").margin')>=before.margin);
+});
+
+test('custo igual ao atual não consulta a API e variações ou múltiplos SKUs exigem revisão individual',async()=>{
+ const a=app(),data=a.seed(),loader=existingRequests(),sameRows=await inspect(a,data,'sku;custo\nEXISTENTE;10',loader.request);
+ assert.equal(sameRows[0].unchanged,true);assert.equal(sameRows[0].ready,false);assert.equal(loader.calls.length,0);
+ for(const mutate of [p=>p.mercadoLivre.variationCount=2,p=>p.mercadoLivre.skus.push('OUTRO')]){const changed=clone(data);mutate(changed.products[0]);const rows=await inspect(a,changed,'sku;custo\nEXISTENTE;12',loader.request);assert.equal(rows[0].ready,false);assert.match(rows[0].note,/individualmente/);}
+ assert.equal(loader.calls.length,0);
+});
+
+test('cotação oficial mantém frete manual quando a automação de frete estava desmarcada',async()=>{
+ const a=app(),data=a.seed(),p=data.products[0];p.mlShipping=18;delete p.mlPricing.inputs.autoShipping;delete p.mlPricing.shippingQuote;p.mlPricing.inputs.mlShipping=18;
+ const before=clone(p),loader=existingRequests(),row=(await inspect(a,data,'sku;custo\nEXISTENTE;130',loader.request))[0];
+ assert.equal(row.ready,true,row.note);assert.equal(row.proposal.mlShipping,18);assert.equal(row.proposal.mlPricing.inputs.autoShipping,undefined);assert.equal(row.proposal.mlPricing.inputs.mlShipping,18);assert.equal(row.proposal.mlPricing.quotes.ml.desired.shippingApplied,18);assert.deepEqual(clone(row.proposal.feeSnapshot),before.feeSnapshot);
+ assert.equal(loader.calls.find(c=>c.action==='pricing').options.body.autoShipping,undefined);
+});
+
+test('SKU compartilhado por produtos cadastrados preserva a margem de cada um e permite atualizar somente um',async()=>{
+ const a=app(),data=a.seed(),second=clone(data.products[0]);second.id='teste-outro';second.name='Outro cadastro';second.margin=30;data.products.push(second);const before=clone(data);
+ const rows=await inspect(a,data,'sku;custo\nEXISTENTE;12,50',existingRequests().request);assert.equal(rows.length,2);assert.ok(rows.every(r=>r.ready));assert.equal(rows[0].proposal.margin,20);assert.equal(rows[1].proposal.margin,30);
+ const next=a.api.applyCosts(data,rows,new Set([rows[1].id]),123);assert.deepEqual(clone(next.products.slice(0,2)),before.products.slice(0,2));assert.equal(next.products[2].cost,12.5);assert.equal(next.products[2].margin,30);assert.deepEqual(data,before);
+});
+
+test('salva atualização selecionada sem duplicar produtos nem alterar kits, relatórios ou conciliações',async()=>{
+ const a=app(),data=a.seed(),before=clone(data),rows=await inspect(a,data,'sku;custo\nEXISTENTE;12,50',existingRequests().request),next=a.api.applyCosts(data,rows,new Set([rows[0].id]),123);
+ assert.equal(next.products.length,2);assert.equal(next.products[0].cost,12.5);assert.deepEqual(clone(next.products[1]),before.products[1]);
+ for(const field of ['kits','fees','adsReports','adsAccounts','adsReconciliations','pendingProducts'])assert.deepEqual(clone(next[field]),before[field]);assert.deepEqual(data,before);
+ a.c.updated=next;assert.equal(a.run('kitTotals(updated.kits[0],updated.products).cost'),25);assert.equal(next.kits[0].margin,before.kits[0].margin);
+ assert.throws(()=>a.api.applyCosts(next,rows,new Set([rows[0].id]),123),/mudou/);
+});
+
+test('lote mistura atualização e conclusão e aplica apenas as linhas marcadas',async()=>{
+ const a=app(),data=a.seed(),before=clone(data),rows=await inspect(a,data,'sku;custo\nEXISTENTE;12,50\nSKU-MLB9000000001;23,40',existingRequests().request);
+ assert.ok(rows.every(r=>r.ready));const next=a.api.applyCosts(data,rows,new Set(rows.map(r=>r.id)),123);assert.equal(next.products.length,3);assert.equal(next.products[0].cost,12.5);assert.equal(next.products[2].cost,23.4);assert.equal(next.pendingProducts.length,1);assert.deepEqual(clone(next.products[1]),before.products[1]);assert.deepEqual(data,before);
+});
+
+test('edição ou exclusão concorrente, taxas legadas e troca de conta impedem gravação parcial de custos',async()=>{
+ const a=app(),data=a.seed(),rows=await inspect(a,data,'sku;custo\nSKU-MLB9000000001;23,40\nEXISTENTE;12,50',existingRequests().request),selected=new Set(rows.map(r=>r.id));
+ for(const field of ['cost','margin','weight','extra','adsMl']){const changed=clone(data);changed.products[0][field]++;const before=clone(changed);assert.throws(()=>a.api.applyCosts(changed,rows,selected,123),/mudou/);assert.deepEqual(changed,before);}
+ const deleted=clone(data);deleted.products.shift();assert.throws(()=>a.api.applyCosts(deleted,rows,selected,123),/mudou/);assert.equal(deleted.products.length,1);assert.throws(()=>a.api.applyCosts(data,rows,selected,456),/outra empresa/);
+ const legacy=clone(data);delete legacy.products[0].feeSnapshot;const legacyRows=await inspect(a,legacy,'sku;custo\nEXISTENTE;12,50',existingRequests().request);assert.equal(legacyRows[0].ready,true,legacyRows[0].note);legacy.fees.ml.tax++;assert.throws(()=>a.api.applyCosts(legacy,legacyRows,new Set([legacyRows[0].id]),123),/taxas/);
+});
+
+test('falha de frete, cotação incompatível, SKU alterado e anúncio sem preço preservam custo existente',async()=>{
+ for(const fault of ['network','cost','category','sku','price']){
+  const a=app(),data=a.seed(),before=clone(data),loader=existingRequests();let pricingCalls=0;
+  const rows=await inspect(a,data,'sku;custo\nEXISTENTE;12,50',async(action,options)=>{const r=await loader.request(action,options);if(action==='item'){if(fault==='sku')r.item.skus=['ALTERADO'];if(fault==='price')r.item.price=null;}if(action==='pricing'){pricingCalls++;if(fault==='network')throw Error('Frete indisponível');if(fault==='cost')r.pricing.inputs.cost++;if(fault==='category')r.pricing.categoryId='MLB999';}return r;});
+  assert.equal(rows[0].ready,false);assert.deepEqual(data,before);assert.equal(a.saved.length,0);assert.throws(()=>a.api.applyCosts(data,rows,new Set([rows[0].id]),123),/indisponíveis/);if(['sku','price'].includes(fault))assert.equal(pricingCalls,0);
+ }
+});
+
+test('revisão de atualização mostra custo atual e novo, começa sem seleção e salva somente após confirmar',async()=>{
+ const loader=existingRequests(),a=app(true,loader.request),before=clone(a.seed(0));a.get('pending-costs-open').onclick();await a.upload('sku;custo\nEXISTENTE;12,50');
+ assert.match(a.get('pending-costs-rows').innerHTML,/Custo atual/);assert.match(a.get('pending-costs-rows').innerHTML,/Novo custo \(CSV\)/);assert.match(a.get('pending-costs-status').textContent,/1 atualização/);assert.equal(a.get('pending-costs-save').disabled,true);assert.equal(a.saved.length,0);assert.deepEqual(a.data(),before);
+ a.get('pending-costs-select').onclick();a.get('pending-costs-save').onclick();assert.equal(a.saved.length,1);assert.equal(a.data().products.length,2);assert.equal(a.data().products[0].cost,12.5);assert.equal(a.data().products[0].margin,before.products[0].margin);assert.equal(a.api.isOpen(),false);assert.equal(a.c.refreshed,1);
+});
+
+test('cancelar atualização ou falhar ao gravar mantém custos anteriores e revisão disponível',async()=>{
+ const loader=existingRequests(),a=app(true,loader.request),before=clone(a.seed());a.get('pending-costs-open').onclick();await a.upload('sku;custo\nEXISTENTE;12,50');a.get('pending-costs-cancel').onclick();assert.deepEqual(a.data(),before);assert.equal(a.saved.length,0);
+ a.get('pending-costs-open').onclick();await a.upload('sku;custo\nEXISTENTE;12,50');a.get('pending-costs-select').onclick();a.c.failStorage=true;a.get('pending-costs-save').onclick();assert.deepEqual(a.data(),before);assert.equal(a.api.isOpen(),true);assert.match(a.get('pending-costs-error').textContent,/gravar/);
 });
 test('confere frete e comissões oficiais antes da seleção, preservando margem, imposto, serviços e preço atual',async()=>{
  const a=app(),data=a.seed();data.pendingProducts[0].margin=27;data.pendingProducts[0].feeSnapshot.ml.tax=9;data.pendingProducts[0].feeSnapshot.shopee.tax=11;data.pendingProducts[0].feeSnapshot.shopee.easyReturnEnabled=true;

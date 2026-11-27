@@ -28,7 +28,8 @@ O painel ajuda a definir preços no Mercado Livre e na Shopee, comparar o lucro 
   - [Importar e conferir o catálogo completo](#importar-conferir-catalogo)
   - [Acompanhar a importação automática dos anúncios](#importacao-automatica-anuncios)
   - [Concluir produtos pendentes de custo](#concluir-pendentes-custo)
-  - [Preencher pendências com CSV de SKU e custo](#custos-por-sku)
+  - [Importar e atualizar custos por SKU](#custos-por-sku)
+  - [Atualizar custos de produtos cadastrados](#atualizar-custos-csv)
   - [Atualização, limites e retenção dos dados importados](#atualizacao-retencao-limites)
   - [Quando aparece “Anúncio encerrado”](#anuncio-encerrado)
   - [Anúncios desativados: ordem, visual e alinhamento](#anuncios-desativados)
@@ -466,9 +467,9 @@ Não substitua o custo pelo preço anunciado para tentar concluir o cadastro. O 
 
 <a id="custos-por-sku"></a>
 
-#### Preencher pendências com CSV de SKU e custo
+#### Importar e atualizar custos por SKU
 
-Para concluir vários anúncios sem digitar cada custo, prepare um CSV com as colunas **SKU** e **custo**. Este recurso preenche somente pendências: **um custo já cadastrado nunca é substituído pelo CSV**. No computador e no celular, o caminho é **Meus produtos → Anúncios pendentes de cadastro → Importar custos por SKU**.
+Prepare um CSV com as colunas **SKU** e **custo** para concluir anúncios pendentes ou revisar novos custos de produtos cadastrados. No computador e no celular, o caminho é **Meus produtos → Importar custos por SKU**, junto aos controles de importação e exportação. O botão também está disponível quando não há pendências.
 
 ```csv
 sku;custo
@@ -479,14 +480,26 @@ PRODUTO-002;20,00
 Use o SKU exato do anúncio, incluindo maiúsculas, minúsculas e zeros iniciais. O custo deve ser maior que zero, com até duas casas decimais, sem `R$` nem separador de milhares. O arquivo aceita ponto ou vírgula decimal e separação por ponto e vírgula, vírgula ou tabulação; valores que contêm o separador precisam estar entre aspas. O limite é de **2 MB e 5.000 linhas**. Também são reconhecidos os cabeçalhos **Código**, **Código (SKU)**, **Preço de custo** e **Custo (R$)**; mantenha uma única coluna de cada tipo.
 
 1. Abra **Importar custos por SKU** e selecione o arquivo em **CSV de SKU e custo**. A leitura e as consultas não salvam produtos.
-2. Aguarde a conferência de cada anúncio. O painel consulta o vínculo, o preço atual, o frete e as comissões oficiais e calcula os preços com o custo do CSV e a margem já guardada na pendência. O imposto da empresa e as marcações dos serviços da Shopee são preservados; o cálculo da Shopee usa sua política automática vigente.
-3. Revise custo, anúncio, margem e preços/lucros por marketplace. O canal vinculado mostra o preço atual; os outros mostram sugestões. Produtos já concluídos aparecem com **Custo existente preservado**, sem possibilidade de seleção.
-4. Marque apenas os anúncios que deseja concluir. Nada começa selecionado. A pesquisa aceita SKU, nome ou MLB; **Selecionar disponíveis desta busca** inclui todas as páginas dos resultados atuais. **Desmarcar todos** limpa também seleções que ficaram fora da busca.
-5. Clique ou toque em **Concluir selecionados**. Somente os marcados viram produtos e saem das pendências. Os demais produtos, kits, margens, relatórios e conciliações permanecem preservados. Aguarde a confirmação de sincronização com a empresa.
+2. Aguarde a conferência dos anúncios e dos cálculos. O painel usa o custo do CSV e a margem de cada cadastro ou pendência. Nos produtos que usam tarifas oficiais, renova a cotação mantendo o modo de frete já utilizado. Nos produtos em modo manual, mantém as taxas e o frete configurados. Novas pendências usam as automações de frete, comissões e Shopee do fluxo de conclusão.
+3. Confira o nome, o SKU e o anúncio de cada resultado. Produtos cadastrados mostram **Custo atual** e **Novo custo (CSV)**; pendências mostram o custo a preencher. Revise a margem e os preços/lucros por marketplace. O preço atual do anúncio continua identificado e, nesse canal, a revisão também apresenta a sugestão para a meta de margem.
+4. Marque somente os resultados que deseja aplicar. Nada começa selecionado. A pesquisa aceita SKU, nome ou MLB; **Selecionar disponíveis desta busca** inclui todas as páginas dos resultados atuais. **Desmarcar todos** limpa também seleções que ficaram fora da busca.
+5. Clique ou toque em **Salvar selecionados**. Os produtos escolhidos recebem o novo custo, sem duplicar o cadastro; as pendências escolhidas viram novos produtos. Os demais cadastros, relatórios e conciliações são preservados. Aguarde **Catálogo sincronizado com a empresa**.
 
-O custo deve corresponder à unidade anunciada: um anúncio de kit com dez peças precisa do custo das dez peças. **Variações, vários SKUs no mesmo anúncio, peso ausente, código alterado ou falha de cotação** exigem conclusão individual e continuam pendentes. Se o CSV repetir um SKU, todas as linhas desse código ficam bloqueadas até corrigir o arquivo. Um SKU que aparece em vários anúncios gera uma revisão para cada anúncio; selecione apenas os desejados. Códigos não encontrados não criam produtos por nome.
+<a id="atualizar-custos-csv"></a>
 
-Fechar ou cancelar descarta a revisão. Se outra pessoa concluir ou editar a pendência durante a conferência, o painel pede para ler o arquivo novamente, preservando os dados mais recentes. Uma sessão inválida ou mudança de empresa também impede aplicar a revisão. Os novos produtos começam com Ads em 0%, como no cadastro individual; após salvar, a automação já existente poderá atualizar o Ads do Mercado Livre pelo histórico aplicável. Confira o indicador de histórico antes de interpretar esse zero como publicidade gratuita.
+##### Atualizar custos de produtos cadastrados
+
+**O custo só é substituído após selecionar o produto e confirmar em Salvar selecionados.** Por exemplo, em um caso fictício, um produto com custo atual de R$ 10,00 e margem desejada de 20% pode receber o novo custo de R$ 12,50 do CSV. A revisão mostra os dois valores e os preços/lucros recalculados; a meta continua em 20%.
+
+Nome, categoria interna, peso, outros custos, margens, percentuais de Ads, impostos, taxas configuradas e serviços marcados continuam preservados. Uma configuração manual continua manual. As consultas oficiais usam o novo custo para recalcular as sugestões e o preço de referência para 10%; não publicam preços no Mercado Livre. A rotina de atualização de Ads continua funcionando após salvar, com suas regras de histórico.
+
+**Custos iguais aos atuais não exigem alteração:** essas linhas ficam sem seleção e não disparam novas consultas. Produtos sem SKU vinculado não são associados por semelhança de nome. Anúncios com variações ou vários SKUs exigem conferência individual.
+
+Quando o produto compõe kits, a revisão informa essa utilização. O custo dos componentes passa a acompanhar o novo custo do produto, sem mudar a margem dos kits. Cotações oficiais anteriores podem precisar de atualização: siga [como atualizar a cotação do kit](#atualizar-cotacao-kit), mantendo a meta desejada.
+
+O custo deve corresponder à unidade anunciada: um anúncio de kit com dez peças precisa do custo das dez peças. **Variações, vários SKUs no mesmo anúncio, peso insuficiente para a cotação, código alterado ou falha de consulta** impedem a seleção daquele resultado. Se o CSV repetir um SKU, todas as linhas desse código ficam bloqueadas até corrigir o arquivo. Um SKU que aparece em vários anúncios ou cadastros gera uma revisão para cada um; confira a unidade e selecione apenas os desejados.
+
+Fechar ou cancelar descarta a revisão. Se o produto ou a pendência mudar durante a conferência, o painel pede para ler o arquivo novamente, preservando a edição mais recente. Falha ao gravar, sessão inválida ou mudança de empresa impede aplicar a revisão. Os novos produtos começam com Ads em 0%; os produtos já cadastrados mantêm seus percentuais. Após salvar, a automação existente poderá atualizar o Ads do Mercado Livre pelo histórico aplicável. Confira o indicador de histórico antes de interpretar zero como publicidade gratuita.
 
 O CSV pode ser preparado a partir do ERP, como a Olist, mas esta função **não conecta o painel à API da Olist**. Exporte ou organize os códigos e custos no formato acima e confira a correspondência dos SKUs antes de confirmar.
 

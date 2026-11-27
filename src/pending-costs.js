@@ -36,14 +36,19 @@
    if (csv.problem) { rows.push({ ...base, id: 'line:' + csv.line, kind: 'invalid', note: csv.problem }); continue; }
    const existing = data.products.filter(p => p.mercadoLivre?.sellerId === sellerId && skus(p.mercadoLivre).includes(csv.sku));
    const pending = (data.pendingProducts ?? []).filter(p => p.item.sellerId === sellerId && skus(p.item).includes(csv.sku));
-   for (const p of existing) rows.push({ ...base, id: 'existing:' + csv.line + ':' + p.id, kind: 'existing', name: p.name, item: p.mercadoLivre, existingCost: p.cost, note: 'Produto já cadastrado: custo existente preservado. O CSV não altera este registro.' });
+   for (const p of existing) {
+    const ambiguous = p.mercadoLivre.variationCount > 0 || skus(p.mercadoLivre).length !== 1, unchanged = p.cost === csv.cost;
+    rows.push({ ...base, id: 'existing:' + csv.line + ':' + p.id, kind: 'existing', name: p.name, item: p.mercadoLivre, base: clone(p), existingCost: p.cost, unchanged, eligible: !ambiguous && !unchanged,
+     fallbackFees: p.feeSnapshot ? null : clone(data.fees), kitCount: (data.kits ?? []).filter(k => k.items.some(i => i.productId === p.id)).length,
+     note: unchanged ? 'O custo do CSV é igual ao atual. Nenhuma alteração necessária.' : ambiguous ? 'Anúncio com variações ou vários SKUs: confira o custo da unidade individualmente.' : existing.length + pending.length > 1 ? 'SKU compartilhado por vários cadastros ou anúncios. Confira o custo da unidade e selecione somente os desejados.' : 'Atualização de custo encontrada. Aguardando conferência dos cálculos.' });
+   }
    for (const p of pending) {
     const registered = data.products.some(product => product.mercadoLivre && key(product.mercadoLivre) === key(p.item));
     const ambiguous = p.item.variationCount > 0 || skus(p.item).length !== 1;
     rows.push({ ...base, id: 'pending:' + p.id, kind: 'pending', name: p.item.title, item: p.item, base: clone(p), eligible: !registered && !ambiguous,
      note: registered ? 'Este anúncio já possui um produto cadastrado. O custo existente será preservado.' : ambiguous ? 'Anúncio com variações ou vários SKUs: conclua o cadastro individualmente para conferir a unidade.' : pending.length > 1 ? 'Este SKU aparece em vários anúncios. Confira cada anúncio e selecione somente os desejados.' : 'Custo encontrado pelo SKU exato. Aguardando cotação oficial.' });
    }
-   if (!existing.length && !pending.length) rows.push({ ...base, id: 'missing:' + csv.line, kind: 'missing', note: 'SKU não encontrado nos anúncios pendentes desta empresa. Nenhum produto será criado por nome.' });
+   if (!existing.length && !pending.length) rows.push({ ...base, id: 'missing:' + csv.line, kind: 'missing', note: 'SKU não encontrado nos produtos ou anúncios pendentes desta empresa. Nenhum produto será criado por nome.' });
   }
   return rows;
  }
@@ -55,10 +60,26 @@
     try {
      const item = ConduzMlImport.importedLink(await request('item', { query: { id: row.item.itemId } }), sellerId);
      if (!active()) return;
-     if (item.itemId !== row.item.itemId || item.variationCount || skus(item).length !== 1 || skus(item)[0] !== row.sku) throw Error('O SKU ou as variações do anúncio mudaram. Confira individualmente; a pendência foi preservada.');
+     if (item.itemId !== row.item.itemId || item.variationCount || skus(item).length !== 1 || skus(item)[0] !== row.sku) throw Error('O SKU ou as variações do anúncio mudaram. Confira individualmente; o cadastro anterior foi preservado.');
+     if (!(item.price > 0) || !['gold_special','gold_pro'].includes(item.listingType)) throw Error('Preço ou modalidade indisponível para calcular e conferir o lucro.');
+     if (row.kind === 'existing') {
+      const product = { ...clone(row.base), cost: row.cost };
+      if (!product.feeSnapshot) product.feeSnapshot = copyFees(row.fallbackFees);
+      let pricing;
+      if (product.mlPricing) {
+       const input = savedAdsPricingInput(product), response = await request('pricing', { method: 'POST', body: input });
+       if (!active()) return;
+       pricing = response.pricing;
+       if (pricing?.categoryId !== item.categoryId) throw Error('A categoria da cotação mudou. Consulte novamente antes de atualizar o custo.');
+      }
+      const proposal = ConduzMlImport.proposedProduct(product, item, pricing, data.fees);
+      if (Object.keys(SCENARIOS).some(s => !calculate(proposal, data.fees[marketOf(s)], s))) throw Error('O novo custo não permite calcular todos os preços com as configurações preservadas.');
+      row.item = item; row.proposal = proposal; row.ready = true;
+      row.note = 'Custo atual de ' + money(row.existingCost) + ' → novo custo de ' + money(row.cost) + '. Margem de ' + number(proposal.margin) + '%, Ads e taxas configuradas preservados. ' + (product.mlPricing ? 'Cotação oficial renovada no modo de frete já utilizado.' : 'Cálculos refeitos com as taxas e o frete cadastrados.');
+      continue;
+     }
      const weight = item.weight ?? row.base.item.weight;
      if (!(weight > 0)) throw Error('Peso indisponível. Conclua individualmente para informar o peso e consultar o frete.');
-     if (!(item.price > 0) || !['gold_special','gold_pro'].includes(item.listingType)) throw Error('Preço ou modalidade indisponível para calcular e conferir o lucro.');
      const fees = withShopeePolicy(row.base.feeSnapshot);
      const product = { id: 'ml-product-' + sellerId + '-' + item.itemId, name: item.title.slice(0,120), category: (item.categoryName ?? item.categoryId ?? 'Mercado Livre').slice(0,80), cost: row.cost, weight, margin: row.base.margin, extra: 0, adsMl: 0, adsShopee: 0, mlShipping: 0, feeSnapshot: fees, mercadoLivre: copyMlLink(item) };
      const input = { ...savedAdsPricingInput(product), autoShipping: true };
@@ -74,25 +95,33 @@
      if (!validState({ products: [product], kits: [], fees: data.fees }) || Object.keys(SCENARIOS).some(s => !calculate(product, data.fees[marketOf(s)], s)) || !saleResult(product, fees.ml, currentScenario(product))) throw Error('Dados insuficientes para concluir este anúncio com os cálculos válidos.');
      row.item = item; row.proposal = product; row.ready = true;
      row.note = 'Custo do CSV e margem de ' + number(product.margin) + '%; frete e comissões consultados automaticamente. Confira os preços antes de selecionar.';
-    } catch (error) { row.note = error.message; if ([401,409,429].includes(error.status)) stopped = error.message; }
+    } catch (error) { row.note = error.message; if ([401,403,409,429].includes(error.status)) stopped = error.message; }
     finally { finished++; if (active()) progress('Conferindo custos e cotações… ' + finished + ' de ' + candidates.length + ' anúncios.'); }
    }
   }
   await Promise.all([worker(), worker()]);
   if (!active()) return null;
-  for (const row of candidates.slice(index)) row.note = stopped || 'Consulta não concluída. A pendência foi preservada.';
+  for (const row of candidates.slice(index)) row.note = stopped || 'Consulta não concluída. Os dados anteriores foram preservados.';
   return rows;
  }
  function applyCosts(data, rows, selected, sellerId) {
   const chosen = rows.filter(r => selected.has(r.id));
-  if (!chosen.length) throw Error('Selecione ao menos um anúncio disponível na revisão.');
+  if (!chosen.length || chosen.length !== selected.size) throw Error('Selecione ao menos um resultado disponível na revisão.');
   const next = { ...data, products: data.products.slice(), pendingProducts: (data.pendingProducts ?? []).slice() }, used = new Set();
   for (const row of chosen) {
-   if (!row.ready || !row.proposal || row.base?.item.sellerId !== sellerId || row.item.sellerId !== sellerId || used.has(row.base.id)) throw Error('A seleção contém dados indisponíveis, repetidos ou de outra empresa.');
+   const baseLink = row.kind === 'existing' ? row.base?.mercadoLivre : row.base?.item, identity = row.kind + ':' + row.base?.id;
+   if (!['existing','pending'].includes(row.kind) || !row.ready || !row.proposal || baseLink?.sellerId !== sellerId || row.item?.sellerId !== sellerId || key(baseLink) !== key(row.item) || key(row.proposal.mercadoLivre) !== key(baseLink) || row.proposal.cost !== row.cost || used.has(identity)) throw Error('A seleção contém dados indisponíveis, repetidos ou de outra empresa.');
+   if (row.kind === 'existing') {
+    const index = next.products.findIndex(p => p.id === row.base.id);
+    if (index < 0 || !same(next.products[index], row.base)) throw Error('Um produto mudou durante a revisão. Leia o arquivo novamente para preservar a edição mais recente.');
+    if (row.fallbackFees && !same(data.fees, row.fallbackFees)) throw Error('As taxas usadas na revisão mudaram. Leia o arquivo novamente.');
+    next.products[index] = clone(row.proposal); used.add(identity);
+    continue;
+   }
    const pending = next.pendingProducts.find(p => p.id === row.base.id);
    if (!pending || !same(pending, row.base)) throw Error('Uma pendência mudou durante a revisão. Leia o arquivo novamente para preservar os dados mais recentes.');
    if (next.products.some(p => p.id === row.proposal.id || p.mercadoLivre && key(p.mercadoLivre) === key(row.item))) throw Error('Um anúncio selecionado já recebeu um custo. Leia novamente o CSV; o cadastro existente será preservado.');
-   next.products.push(clone(row.proposal)); next.pendingProducts = next.pendingProducts.filter(p => p.id !== row.base.id); used.add(row.base.id);
+   next.products.push(clone(row.proposal)); next.pendingProducts = next.pendingProducts.filter(p => p.id !== row.base.id); used.add(identity);
   }
   if (next.products.length > 5000 || !validState(next) || [...catalogOwners(next)].some(id => id !== String(sellerId))) throw Error('O catálogo atingiu um limite ou contém dados incompatíveis. Nada foi salvo.');
   return next;
@@ -111,8 +140,9 @@
  };
  function rowHTML(row) {
   const p = row.proposal;
-  const prices = p ? '<div class="pending-cost-prices">' + Object.keys(SCENARIOS).map(s => { const r = saleResult(p, p.feeSnapshot[marketOf(s)], s); return '<div><strong>' + SCENARIOS[s] + '</strong><span>' + (r?.basis === 'current' ? 'Preço atual: ' : 'Sugestão: ') + (r ? money(r.price) : 'Sem dados suficientes') + '</span><span>Lucro: ' + (r ? money(r.profit) + ' · ' + number(r.margin) + '%' : 'Sem dados suficientes') + '</span></div>'; }).join('') + '</div>' : '';
-  return '<article class="pending-cost-row"><label class="pending-cost-choice"><input type="checkbox" data-cost-row="' + escapeHTML(row.id) + '" aria-label="Selecionar ' + escapeHTML(row.name ?? row.sku ?? 'linha') + '" ' + (selected.has(row.id) ? 'checked ' : '') + (row.ready ? '' : 'disabled ') + '><strong>' + escapeHTML(row.name ?? row.sku ?? 'Linha inválida') + '</strong></label><p>Linha ' + row.line + ' · SKU: ' + escapeHTML(row.sku || '(vazio)') + (row.item ? ' · ' + escapeHTML(row.item.itemId) : '') + '</p><p>Custo no CSV: <strong>' + moneyOrEmpty(row.cost) + '</strong>' + (row.kind === 'existing' ? ' · Custo existente preservado: <strong>' + money(row.existingCost) + '</strong>' : p ? ' · Margem desejada preservada: <strong>' + number(p.margin) + '%</strong>' : '') + '</p><p class="help">' + escapeHTML(row.note) + '</p>' + prices + '</article>';
+  const prices = p ? '<div class="pending-cost-prices">' + Object.keys(SCENARIOS).map(s => { const fee = p.feeSnapshot[marketOf(s)], r = saleResult(p, fee, s), suggestion = r?.basis === 'current' ? calculate(p, fee, s) : null; return '<div><strong>' + SCENARIOS[s] + '</strong><span>' + (r?.basis === 'current' ? 'Preço atual: ' : 'Sugestão: ') + (r ? money(r.price) : 'Sem dados suficientes') + '</span><span>Lucro: ' + (r ? money(r.profit) + ' · ' + number(r.margin) + '%' : 'Sem dados suficientes') + '</span>' + (suggestion ? '<span>Sugestão para ' + number(p.margin) + '%: ' + money(suggestion.price) + '</span>' : '') + '</div>'; }).join('') + '</div>' : '';
+  const comparison = row.kind === 'existing' ? '<div class="pending-cost-comparison"><div><span>Custo atual</span><strong>' + moneyOrEmpty(row.existingCost) + '</strong></div><div><span>Novo custo (CSV)</span><strong>' + moneyOrEmpty(row.cost) + '</strong></div></div>' : '<p>Custo no CSV: <strong>' + moneyOrEmpty(row.cost) + '</strong></p>';
+  return '<article class="pending-cost-row"><label class="pending-cost-choice"><input type="checkbox" data-cost-row="' + escapeHTML(row.id) + '" aria-label="Selecionar ' + escapeHTML(row.name ?? row.sku ?? 'linha') + '" ' + (selected.has(row.id) ? 'checked ' : '') + (row.ready ? '' : 'disabled ') + '><strong>' + escapeHTML(row.name ?? row.sku ?? 'Linha inválida') + '</strong></label><p>' + (row.kind === 'existing' ? 'Produto cadastrado · ' : row.kind === 'pending' ? 'Custo pendente · ' : '') + 'Linha ' + row.line + ' · SKU: ' + escapeHTML(row.sku || '(vazio)') + (row.item ? ' · ' + escapeHTML(row.item.itemId) : '') + '</p>' + comparison + (row.base ? '<p>Margem desejada preservada: <strong>' + number(row.base.margin) + '%</strong></p>' : '') + '<p class="help">' + escapeHTML(row.note) + '</p>' + (row.kitCount ? '<p class="help">Usado em ' + row.kitCount + ' kit(s). O custo dos componentes acompanha o produto; confira e atualize as cotações dos kits se necessário, mantendo suas margens.</p>' : '') + prices + '</article>';
  }
  function renderReview() {
   const found = filtered(); page = Math.min(page, Math.max(0, Math.ceil(found.length / PAGE_SIZE) - 1));
@@ -122,12 +152,12 @@
   ui('pending-costs-file').disabled = busy;
   ui('pending-costs-select').disabled = busy || !rows.some(r => r.ready); ui('pending-costs-clear').disabled = busy || !selected.size;
   ui('pending-costs-save').disabled = busy || !selected.size || !mlConnection.connected || mlConnection.account?.id !== owner;
-  ui('pending-costs-save').textContent = 'Concluir selecionados' + (selected.size ? ' (' + selected.size + ')' : '');
+  ui('pending-costs-save').textContent = 'Salvar selecionados' + (selected.size ? ' (' + selected.size + ')' : '');
  }
  function cancel() { version++; busy = false; rows = []; selected.clear(); ui('pending-costs-dialog').close(); }
  ui('pending-costs-open').onclick = () => {
   if (!mlConnection.connected) { toast('Conecte a conta da empresa para importar custos.'); return; }
-  if (currentPricesBusy || mlAdsBusy || adsUi.busy || adsHistoryUi.busy) { toast('Aguarde a consulta automática em andamento e tente novamente.'); return; }
+  if (currentPricesBusy || mlAdsBusy || adsUi.busy || adsHistoryUi.busy || globalThis.ConduzMlImport?.isOpen?.()) { toast('Aguarde ou feche a consulta ou revisão em andamento e tente novamente.'); return; }
   version++; owner = mlConnection.account.id; busy = false; rows = []; selected = new Set(); page = 0;
   ui('pending-costs-file').value = ''; ui('pending-costs-search').value = ''; ui('pending-costs-error').textContent = '';
   ui('pending-costs-account').textContent = 'Conta: ' + mlConnection.account.nickname;
@@ -146,17 +176,17 @@
    const result = await inspectCosts({ data: baseline, csvRows, sellerId, request: mlRequest, active, progress: s => { if (active()) ui('pending-costs-status').textContent = s; } });
    if (!active() || !result) return;
    rows = result;
-   ui('pending-costs-status').textContent = csvRows.length + ' linha(s) no CSV · ' + rows.filter(r => r.ready).length + ' anúncio(s) disponível(is) para concluir · ' + rows.filter(r => r.kind === 'existing').length + ' cadastro(s) com custo preservado · ' + rows.filter(r => !r.ready && r.kind !== 'existing').length + ' resultado(s) sem aplicação. Revise e marque os anúncios desejados.';
+   ui('pending-costs-status').textContent = csvRows.length + ' linha(s) no CSV · ' + rows.filter(r => r.ready && r.kind === 'existing').length + ' atualização(ões) de custo · ' + rows.filter(r => r.ready && r.kind === 'pending').length + ' pendência(s) para concluir · ' + rows.filter(r => r.unchanged).length + ' custo(s) sem alteração · ' + rows.filter(r => !r.ready && !r.unchanged).length + ' resultado(s) sem aplicação. Revise e marque somente os desejados.';
   } catch (error) { if (active()) { ui('pending-costs-error').textContent = error.message + ' Nada foi salvo.'; ui('pending-costs-status').textContent = 'Corrija o arquivo ou a conexão e selecione o CSV novamente.'; } }
   finally { if (generation === version) { busy = false; ui('pending-costs-file').value = ''; renderReview(); } }
  };
  ui('pending-costs-save').onclick = () => {
   if (busy || !mlConnection.connected || mlConnection.account?.id !== owner) return;
   try {
-   const previous = state, next = applyCosts(state, rows, selected, owner), count = selected.size;
+   const previous = state, next = applyCosts(state, rows, selected, owner), updated = rows.filter(r => selected.has(r.id) && r.kind === 'existing').length, completed = rows.filter(r => selected.has(r.id) && r.kind === 'pending').length;
    state = next;
    if (!persist()) { state = previous; throw Error('Não foi possível gravar. As pendências e os custos anteriores foram preservados. Confira o armazenamento do navegador.'); }
-   cancel(); render(); toast(count + ' produto(s) concluído(s). Confira a sincronização da empresa.'); refreshRegisteredAds();
+   cancel(); render(); toast(updated + ' custo(s) atualizado(s) · ' + completed + ' produto(s) concluído(s). Confira a sincronização da empresa.'); refreshRegisteredAds();
   } catch (error) { ui('pending-costs-error').textContent = error.message; }
  };
  ui('pending-costs-select').onclick = () => { for (const r of filtered()) if (r.ready) selected.add(r.id); renderReview(); };
